@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Account;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Validator;
 
 class AccountController extends Controller
@@ -65,6 +66,16 @@ class AccountController extends Controller
         $account = Account::with(['product', 'topUpRequests' => fn($q) => $q->latest()->limit(5)])
             ->where('account_number', $accountNumber)
             ->firstOrFail();
+
+        try {
+            $smptUrl = env('SMPT_URL', 'http://localhost:8000');
+            $studentRes = Http::get("{$smptUrl}/api/main/student/{$account->customer_id}");
+            if ($studentRes->successful()) {
+                $account->student = $studentRes->json('data');
+            }
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::warning('Failed to fetch student from SMPT: ' . $e->getMessage());
+        }
 
         return response()->json(['status' => 'success', 'data' => $account]);
     }

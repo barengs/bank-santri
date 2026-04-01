@@ -12,7 +12,7 @@ class ProductController extends Controller
     public function index(Request $request)
     {
         $products = Product::when($request->search, fn($q, $s) => $q->where('product_name', 'like', "%{$s}%"))
-            ->paginate($request->get('per_page', 15));
+            ->get();
 
         return response()->json(['status' => 'success', 'data' => $products]);
     }

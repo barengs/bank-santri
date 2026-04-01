@@ -44,50 +44,26 @@ class TransactionController extends Controller
             'account_number' => 'required|exists:accounts,account_number',
             'amount'         => 'required|numeric|min:1000',
             'description'    => 'nullable|string',
-            'teller_id'      => 'nullable|string',
         ]);
 
-        return DB::transaction(function () use ($request) {
-            $account = Account::where('account_number', $request->account_number)->lockForUpdate()->firstOrFail();
-
-            if (!in_array($account->status, ['AKTIF'])) {
-                return response()->json(['status' => 'error', 'message' => 'Rekening tidak aktif.'], 422);
-            }
-
-            $ref = 'DEP-' . date('Ymd') . '-' . strtoupper(Str::random(8));
-
-            $transaction = Transaction::create([
-                'id'                  => Str::uuid(),
-                'destination_account' => $account->account_number,
-                'reference_number'    => $ref,
-                'amount'              => $request->amount,
-                'description'         => $request->description ?? 'Setoran tunai',
-                'status'              => 'success',
-                'channel'             => 'teller',
-                'akad_type'           => 'wadiah',
-            ]);
-
-            // Update saldo dan catat mutasi
-            $balanceBefore = $account->balance;
-            $account->balance += $request->amount;
-            $account->save();
-
-            AccountMovement::create([
-                'account_number' => $account->account_number,
-                'transaction_id' => $transaction->id,
-                'amount'         => $request->amount,
-                'type'           => 'credit',
-                'balance_before' => $balanceBefore,
-                'balance_after'  => $account->balance,
-                'description'    => $transaction->description,
-            ]);
+        try {
+            $transaction = app(\App\Services\AccountingService::class)->recordTransaction(
+                'CASH-DEP',
+                $request->amount,
+                null,
+                $request->account_number,
+                $request->description ?? 'Setoran tunai',
+                'teller'
+            );
 
             return response()->json([
                 'status'  => 'success',
-                'message' => 'Setoran tunai berhasil. Saldo baru: Rp ' . number_format($account->balance, 0, ',', '.'),
+                'message' => 'Setoran tunai berhasil diproses.',
                 'data'    => $transaction,
             ], 201);
-        });
+        } catch (\Exception $e) {
+            return response()->json(['status' => 'error', 'message' => $e->getMessage()], 422);
+        }
     }
 
     /**
@@ -101,50 +77,24 @@ class TransactionController extends Controller
             'description'    => 'nullable|string',
         ]);
 
-        return DB::transaction(function () use ($request) {
-            $account = Account::where('account_number', $request->account_number)->lockForUpdate()->firstOrFail();
-
-            if ($account->status !== 'AKTIF') {
-                return response()->json(['status' => 'error', 'message' => 'Rekening tidak aktif.'], 422);
-            }
-
-            if ($account->balance < $request->amount) {
-                return response()->json(['status' => 'error', 'message' => 'Saldo tidak mencukupi.'], 422);
-            }
-
-            $ref = 'WDR-' . date('Ymd') . '-' . strtoupper(Str::random(8));
-
-            $transaction = Transaction::create([
-                'id'             => Str::uuid(),
-                'source_account' => $account->account_number,
-                'reference_number' => $ref,
-                'amount'         => $request->amount,
-                'description'    => $request->description ?? 'Penarikan tunai',
-                'status'         => 'success',
-                'channel'        => 'teller',
-                'akad_type'      => 'wadiah',
-            ]);
-
-            $balanceBefore  = $account->balance;
-            $account->balance -= $request->amount;
-            $account->save();
-
-            AccountMovement::create([
-                'account_number' => $account->account_number,
-                'transaction_id' => $transaction->id,
-                'amount'         => $request->amount,
-                'type'           => 'debit',
-                'balance_before' => $balanceBefore,
-                'balance_after'  => $account->balance,
-                'description'    => $transaction->description,
-            ]);
+        try {
+            $transaction = app(\App\Services\AccountingService::class)->recordTransaction(
+                'CASH-WDR',
+                $request->amount,
+                $request->account_number,
+                null,
+                $request->description ?? 'Penarikan tunai',
+                'teller'
+            );
 
             return response()->json([
                 'status'  => 'success',
-                'message' => 'Penarikan berhasil. Saldo sisa: Rp ' . number_format($account->balance, 0, ',', '.'),
+                'message' => 'Penarikan tunai berhasil diproses.',
                 'data'    => $transaction,
             ], 201);
-        });
+        } catch (\Exception $e) {
+            return response()->json(['status' => 'error', 'message' => $e->getMessage()], 422);
+        }
     }
 
     /**
@@ -159,66 +109,24 @@ class TransactionController extends Controller
             'description'         => 'nullable|string',
         ]);
 
-        return DB::transaction(function () use ($request) {
-            $source = Account::where('account_number', $request->source_account)->lockForUpdate()->firstOrFail();
-            $dest   = Account::where('account_number', $request->destination_account)->lockForUpdate()->firstOrFail();
-
-            if ($source->status !== 'AKTIF') {
-                return response()->json(['status' => 'error', 'message' => 'Rekening sumber tidak aktif.'], 422);
-            }
-
-            if ($source->balance < $request->amount) {
-                return response()->json(['status' => 'error', 'message' => 'Saldo tidak mencukupi.'], 422);
-            }
-
-            $ref = 'TRF-' . date('Ymd') . '-' . strtoupper(Str::random(8));
-
-            $transaction = Transaction::create([
-                'id'                  => Str::uuid(),
-                'source_account'      => $source->account_number,
-                'destination_account' => $dest->account_number,
-                'reference_number'    => $ref,
-                'amount'              => $request->amount,
-                'description'         => $request->description ?? 'Transfer antar rekening',
-                'status'              => 'success',
-                'channel'             => 'system',
-                'akad_type'           => 'wadiah',
-            ]);
-
-            // Debet source
-            $srcBefore      = $source->balance;
-            $source->balance -= $request->amount;
-            $source->save();
-            AccountMovement::create([
-                'account_number' => $source->account_number,
-                'transaction_id' => $transaction->id,
-                'amount'         => $request->amount,
-                'type'           => 'debit',
-                'balance_before' => $srcBefore,
-                'balance_after'  => $source->balance,
-                'description'    => 'Transfer ke ' . $dest->account_number,
-            ]);
-
-            // Kredit destination
-            $dstBefore    = $dest->balance;
-            $dest->balance += $request->amount;
-            $dest->save();
-            AccountMovement::create([
-                'account_number' => $dest->account_number,
-                'transaction_id' => $transaction->id,
-                'amount'         => $request->amount,
-                'type'           => 'credit',
-                'balance_before' => $dstBefore,
-                'balance_after'  => $dest->balance,
-                'description'    => 'Transfer dari ' . $source->account_number,
-            ]);
+        try {
+            $transaction = app(\App\Services\AccountingService::class)->recordTransaction(
+                'FUND-TRF', // Make sure this exists
+                $request->amount,
+                $request->source_account,
+                $request->destination_account,
+                $request->description ?? 'Transfer antar rekening',
+                'system'
+            );
 
             return response()->json([
                 'status'  => 'success',
-                'message' => 'Transfer berhasil.',
+                'message' => 'Transfer antar rekening berhasil diproses.',
                 'data'    => $transaction,
             ], 201);
-        });
+        } catch (\Exception $e) {
+            return response()->json(['status' => 'error', 'message' => $e->getMessage()], 422);
+        }
     }
 
     /**

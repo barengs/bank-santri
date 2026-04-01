@@ -8,6 +8,7 @@ class TopUpRequest extends Model
 {
     protected $fillable = [
         'account_number',
+        'payment_package_id',
         'student_id',        // ID di smpt (untuk referensi)
         'amount',
         'channel',           // cash | bank_transfer | midtrans
@@ -27,5 +28,10 @@ class TopUpRequest extends Model
     public function account()
     {
         return $this->belongsTo(Account::class, 'account_number', 'account_number');
+    }
+
+    public function package()
+    {
+        return $this->belongsTo(PaymentPackage::class, 'payment_package_id');
     }
 }
