@@ -4,6 +4,10 @@
     </IfModule>
 
     RewriteEngine On
+    
+    # Handle Preflight (OPTIONS) requests
+    RewriteCond %{REQUEST_METHOD} OPTIONS
+    RewriteRule ^(.*)$ index.php [L]
 
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
