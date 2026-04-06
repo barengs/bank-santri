@@ -57,6 +57,7 @@ Route::group(['prefix' => 'main', 'middleware' => ['auth:api']], function () {
     Route::post('transaction/cash-withdrawal', [TransactionController::class, 'cashWithdrawal']);
     Route::post('transaction/fund-transfer',   [TransactionController::class, 'fundTransfer']);
     Route::post('transaction/{id}/reverse',    [TransactionController::class, 'reverseTransaction']);
+    Route::put('transaction/{id}/activate',   [TransactionController::class, 'activate']);
     Route::get('transaction/account/{accountNumber}/last-7-days', [TransactionController::class, 'getLast7DaysTransactions']);
     Route::get('account/{accountNumber}/transactions', [TransactionController::class, 'getByAccount']);
     Route::apiResource('transaction',      TransactionController::class);
@@ -94,3 +95,13 @@ Route::group(['prefix' => 'koperasi', 'middleware' => ['koperasi.key']], functio
 
 // Midtrans Webhook (public — validasi via signature di dalam method)
 Route::post('midtrans/webhook', [TopUpController::class, 'midtransWebhook']);
+
+// Internal Service-to-Service Routes (SMPT <-> Bank Santri)
+// Diproteksi oleh X-Internal-Key header, bukan JWT
+Route::group(['prefix' => 'internal', 'middleware' => ['internal.key']], function () {
+    // Buat rekening santri saat pendaftaran (dipanggil oleh SMPT)
+    Route::post('account', [AccountController::class, 'store']);
+    Route::get('product/{id}', [ProductController::class, 'show']);
+    Route::post('transaction', [\App\Http\Controllers\Api\Main\TransactionController::class, 'storeInternal']);
+    Route::put('transaction/{id}/activate', [TransactionController::class, 'activate']);
+});

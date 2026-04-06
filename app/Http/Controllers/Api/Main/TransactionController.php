@@ -221,4 +221,78 @@ class TransactionController extends Controller
             ]);
         });
     }
+
+    /**
+     * Aktivasi / Konfirmasi transaksi pending (misal pembayaran pendaftaran)
+     */
+    public function activate(Request $request, string $id)
+    {
+        $transaction = Transaction::findOrFail($id);
+
+        if ($transaction->status !== 'pending') {
+            return response()->json(['status' => 'error', 'message' => 'Hanya transaksi pending yang bisa diaktivasi.'], 400);
+        }
+
+        try {
+            DB::transaction(function () use ($transaction, $request) {
+                // Update nominal jika kasir menginput nominal bayar yang berbeda (opsional)
+                if ($request->has('amount')) {
+                    $transaction->amount = $request->amount;
+                }
+
+                $transaction->status = 'success';
+                $transaction->save();
+
+                // Terapkan mutasi saldo
+                app(\App\Services\AccountingService::class)->applyBalanceMovement($transaction);
+            });
+
+            return response()->json([
+                'status'  => 'success',
+                'message' => 'Pembayaran berhasil dikonfirmasi.',
+                'data'    => $transaction->load(['sourceAccount', 'destinationAccount']),
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['status' => 'error', 'message' => $e->getMessage()], 422);
+        }
+    }
+
+    /**
+     * Store internal transaction from SMPT registration
+     */
+    public function storeInternal(Request $request) 
+    {
+        $request->validate([
+            'transaction_type_id' => 'required|exists:transaction_types,id',
+            'amount' => 'required|numeric',
+            'source_account' => 'required|exists:accounts,account_number',
+            'reference_number' => 'required|string',
+            'channel' => 'required|string',
+            'description' => 'required|string',
+        ]);
+
+        try {
+            $type = \App\Models\TransactionType::findOrFail($request->transaction_type_id);
+
+            $transaction = app(\App\Services\AccountingService::class)->recordTransaction(
+                $type->code,
+                $request->amount,
+                $request->source_account,
+                null, // destination_account
+                $request->description,
+                $request->channel,
+                [
+                    'reference_number' => $request->reference_number,
+                    'status' => 'pending',
+                ]
+            );
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $transaction
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json(['status' => 'error', 'message' => $e->getMessage()], 422);
+        }
+    }
 }

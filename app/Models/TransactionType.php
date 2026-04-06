@@ -15,4 +15,9 @@ class TransactionType extends Model
     {
         return $this->hasMany(Transaction::class, 'transaction_type_id', 'id');
     }
+
+    public function rules()
+    {
+        return $this->hasMany(TransactionRule::class);
+    }
 }
