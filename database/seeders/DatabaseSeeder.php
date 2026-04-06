@@ -20,14 +20,18 @@ class DatabaseSeeder extends Seeder
             'updated_at' => now(),
         ]);
 
-        // Produk tabungan default (Wadiah)
-        DB::table('products')->insertOrIgnore([
-            ['product_code' => 'TAB-WADIAH', 'product_name' => 'Tabungan Wadiah Santri', 'product_type' => 'Tabungan', 'interest_rate' => 0, 'admin_fee' => 0, 'opening_fee' => 0, 'is_active' => 1, 'created_at' => now(), 'updated_at' => now()],
-            ['product_code' => 'TAB-MUDH',   'product_name' => 'Tabungan Mudharabah',    'product_type' => 'Tabungan', 'interest_rate' => 2, 'admin_fee' => 0, 'opening_fee' => 0, 'is_active' => 1, 'created_at' => now(), 'updated_at' => now()],
-        ]);
+        // Produk tabungan default (Tibyan & Kubar) - Memastikan ID konsisten
+        DB::table('products')->updateOrInsert(
+            ['id' => 1],
+            ['product_code' => 'TAB001', 'product_name' => 'Tabungan Tibyan', 'product_type' => 'Tabungan', 'interest_rate' => 0, 'admin_fee' => 0, 'opening_fee' => 50000, 'is_active' => 1, 'updated_at' => now()]
+        );
+        DB::table('products')->updateOrInsert(
+            ['id' => 2],
+            ['product_code' => 'TAB002', 'product_name' => 'Tabungan Kubar', 'product_type' => 'Tabungan', 'interest_rate' => 0, 'admin_fee' => 0, 'opening_fee' => 50000, 'is_active' => 1, 'updated_at' => now()]
+        );
 
         // Transaction Types
-        DB::table('transaction_types')->insertOrIgnore([
+        $types = [
             ['code' => 'CASH-DEP',  'name' => 'Setoran Tunai',        'category' => 'cash_operation', 'is_debit' => false, 'is_credit' => true,  'is_active' => 1, 'created_at' => now(), 'updated_at' => now()],
             ['code' => 'CASH-WDR',  'name' => 'Penarikan Tunai',      'category' => 'cash_operation', 'is_debit' => true,  'is_credit' => false, 'is_active' => 1, 'created_at' => now(), 'updated_at' => now()],
             ['code' => 'TOPUP-CASH','name' => 'Top-Up Tunai',         'category' => 'topup',          'is_debit' => false, 'is_credit' => true,  'is_active' => 1, 'created_at' => now(), 'updated_at' => now()],
@@ -35,7 +39,12 @@ class DatabaseSeeder extends Seeder
             ['code' => 'FUND-TRF',  'name' => 'Transfer Antar Rekening','category' => 'transfer',     'is_debit' => true,  'is_credit' => true,  'is_active' => 1, 'created_at' => now(), 'updated_at' => now()],
             ['code' => 'ADMIN-PAY', 'name' => 'Pembayaran Administrasi','category' => 'payment',      'is_debit' => true,  'is_credit' => false, 'is_active' => 1, 'created_at' => now(), 'updated_at' => now()],
             ['code' => 'COOP-BUY',  'name' => 'Belanja Koperasi',     'category' => 'payment',        'is_debit' => true,  'is_credit' => false, 'is_active' => 1, 'created_at' => now(), 'updated_at' => now()],
-        ]);
+            ['code' => 'REG-FEE',   'name' => 'Biaya Pendaftaran',    'category' => 'payment',        'is_debit' => true,  'is_credit' => false, 'is_active' => 1, 'created_at' => now(), 'updated_at' => now()],
+        ];
+
+        foreach ($types as $t) {
+            DB::table('transaction_types')->updateOrInsert(['code' => $t['code']], $t);
+        }
 
         // COA Syariah Dasar — parent rows FIRST
         // Level 1 (root accounts — no parent_coa_code)

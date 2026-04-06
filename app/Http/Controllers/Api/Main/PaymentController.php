@@ -62,9 +62,9 @@ class PaymentController extends Controller
      * 2. Item non-saku → langsung dieksekusi (debit dari balance)
      * 3. Item saku → dikreditkan kembali ke account sebagai "uang saku"
      *    (semantik: sudah terpisah dari dana paket, tetap di rekening)
-     * 4. Catat payment_record + payment_record_items
-     * 5. Catat account_movement
-        public function store(Request $request)
+     * 6. Catat account_movement
+     */
+    public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'account_number'    => 'required|exists:accounts,account_number',
