@@ -14,7 +14,7 @@ class InternalApiKey
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $expectedKey = env('INTERNAL_API_KEY', '');
+        $expectedKey = config('services.smpt.internal_key');
         $providedKey = $request->header('X-Internal-Key');
 
         if (empty($expectedKey) || $providedKey !== $expectedKey) {
