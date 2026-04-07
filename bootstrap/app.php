@@ -14,6 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'internal.key' => \App\Http\Middleware\InternalApiKey::class,
+            'autoprovision' => \App\Http\Middleware\AutoProvisionUser::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

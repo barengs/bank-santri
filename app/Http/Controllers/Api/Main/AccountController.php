@@ -113,4 +113,27 @@ class AccountController extends Controller
         $account->delete();
         return response()->json(['status' => 'success', 'message' => 'Rekening berhasil dihapus.']);
     }
+
+    /**
+     * Proxy search for students from SMPT microservice.
+     */
+    public function smptSearch(Request $request)
+    {
+        $search = $request->get('search');
+        try {
+            $smptUrl = env('SMPT_URL', 'http://localhost:8000');
+            $response = Http::get("{$smptUrl}/api/main/student", [
+                'search' => $search,
+                'per_page' => 10
+            ]);
+
+            if ($response->successful()) {
+                return response()->json($response->json());
+            }
+            
+            return response()->json(['status' => 'error', 'message' => 'Failed to reach SMPT'], 502);
+        } catch (\Exception $e) {
+            return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
+        }
+    }
 }

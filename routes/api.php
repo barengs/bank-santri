@@ -21,7 +21,7 @@ use App\Http\Controllers\Api\Koperasi\KoperasiController;
 */
 
 // Auth routes
-Route::group(['middleware' => 'api', 'prefix' => 'auth'], function () {
+Route::group(['middleware' => ['api', 'autoprovision'], 'prefix' => 'auth'], function () {
     Route::post('login',   [AuthController::class, 'login']);
     Route::post('logout',  [AuthController::class, 'logout']);
     Route::post('refresh', [AuthController::class, 'refresh']);
@@ -29,7 +29,7 @@ Route::group(['middleware' => 'api', 'prefix' => 'auth'], function () {
 });
 
 // Master Data (butuh auth)
-Route::group(['prefix' => 'master', 'middleware' => ['auth:api']], function () {
+Route::group(['prefix' => 'master', 'middleware' => ['autoprovision', 'auth:api']], function () {
     Route::apiResource('product', ProductController::class);
     Route::get('chart-of-account/header-accounts', [ChartOfAccountController::class, 'headerAccounts']);
     Route::get('chart-of-account/detail-accounts', [ChartOfAccountController::class, 'detailAccounts']);
@@ -44,12 +44,13 @@ Route::group(['prefix' => 'master', 'middleware' => ['auth:api']], function () {
 });
 
 // Main Bank Operations (butuh auth)
-Route::group(['prefix' => 'main', 'middleware' => ['auth:api']], function () {
+Route::group(['prefix' => 'main', 'middleware' => ['autoprovision', 'auth:api']], function () {
 
     // Dashboard
     Route::get('dashboard/summary', [DashboardController::class, 'summary']);
 
     // Rekening santri
+    Route::get('account/smpt-search', [AccountController::class, 'smptSearch']);
     Route::apiResource('account', AccountController::class);
 
     // Transaksi
