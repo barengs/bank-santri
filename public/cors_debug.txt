@@ -26,3 +26,6 @@
 2026-04-08 00:35:48 - OPTIONS http://localhost:8080 /api/main/dashboard/summary
 2026-04-08 00:35:57 - OPTIONS http://localhost:8080 /api/main/transaction?
 2026-04-08 00:36:10 - OPTIONS http://localhost:8080 /api/main/transaction?
+2026-04-08 06:36:39 - OPTIONS http://localhost:8080 /api/main/transaction?
+2026-04-08 11:26:37 - OPTIONS http://localhost:8080 /api/master/product?
+2026-04-08 11:26:37 - OPTIONS http://localhost:8080 /api/main/transaction-type?

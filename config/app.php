@@ -54,6 +54,9 @@ return [
 
     'url' => env('APP_URL', 'http://localhost'),
 
+    'portal_url' => env('SMPT_PORTAL_URL', 'http://localhost:5173'),
+    'bank_santri_url' => env('BANK_SANTRI_URL', 'http://localhost:8001'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone

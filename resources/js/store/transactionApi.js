@@ -37,12 +37,17 @@ export const transactionApi = baseApi.injectEndpoints({
             }),
             invalidatesTags: ['Transaction', 'Account', 'Dashboard'],
         }),
+        getTransactionDetail: builder.query({
+            query: (id) => `/main/transaction/${id}`,
+            providesTags: (result, error, id) => [{ type: 'Transaction', id }],
+        }),
     }),
 });
 
 export const { 
     useGetTransactionsQuery, 
     useGetAccountTransactionsQuery,
+    useGetTransactionDetailQuery,
     useCashDepositMutation, 
     useCashWithdrawalMutation, 
     useFundTransferMutation 

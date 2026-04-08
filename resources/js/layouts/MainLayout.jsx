@@ -21,7 +21,7 @@ const MainLayout = () => {
 
             {/* Main Content Area */}
             <div 
-                className={`flex flex-col flex-1 min-w-0 transition-all duration-300 ${
+                className={`flex flex-col h-screen min-w-0 transition-all duration-300 ${
                     isSidebarOpen ? 'pl-64' : 'pl-20'
                 }`}
             >
@@ -29,7 +29,7 @@ const MainLayout = () => {
                 <Topbar isSidebarOpen={isSidebarOpen} />
 
                 {/* Content */}
-                <main className="flex-1 mt-16 p-6 overflow-x-hidden">
+                <main className="flex-1 mt-16 p-6 overflow-y-auto overflow-x-hidden no-scrollbar">
                     <div className="max-w-7xl mx-auto space-y-6">
                         <Outlet />
                     </div>

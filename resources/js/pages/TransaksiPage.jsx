@@ -1,39 +1,38 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { 
-    Download, 
-    Upload, 
-    ArrowRightLeft, 
     Search, 
-    Loader2, 
-    CheckCircle2, 
-    Wallet,
-    AlertTriangle,
-    Printer,
-    ArrowDownCircle,
-    ArrowUpCircle
+    Filter, 
+    Download, 
+    Plus, 
+    MoreHorizontal, 
+    Eye, 
+    Printer, 
+    FileSpreadsheet,
+    ArrowRightCircle,
+    ChevronDown,
+    Clock,
+    CheckCircle2,
+    XCircle,
+    AlertCircle
 } from 'lucide-react';
-import { useLazyGetAccountDetailQuery } from '../store/accountApi';
-import { 
-    useCashDepositMutation, 
-    useCashWithdrawalMutation, 
-    useFundTransferMutation 
-} from '../store/transactionApi';
+import { useNavigate } from 'react-router-dom';
+import { useGetTransactionsQuery } from '../store/transactionApi';
+import DataTable from '../components/DataTable';
 
 const TransaksiPage = () => {
-    const [activeTab, setActiveTab] = useState('deposit');
-    const [accountNumber, setAccountNumber] = useState('');
-    const [destAccountNumber, setDestAccountNumber] = useState('');
-    const [amount, setAmount] = useState('');
-    const [description, setDescription] = useState('');
-    const [receipt, setReceipt] = useState(null);
+    const navigate = useNavigate();
+    const [page, setPage] = useState(1);
+    const [search, setSearch] = useState('');
+    const [status, setStatus] = useState('');
+    const [channel, setChannel] = useState('');
 
-    // API Hooks
-    const [fetchAccount, { data: accountRes, isFetching: isFetchingAccount }] = useLazyGetAccountDetailQuery();
-    const [fetchDestAccount, { data: destAccountRes, isFetching: isFetchingDest }] = useLazyGetAccountDetailQuery();
-    
-    const [deposit, { isLoading: isDepositing }] = useCashDepositMutation();
-    const [withdraw, { isLoading: isWithdrawing }] = useCashWithdrawalMutation();
-    const [transfer, { isLoading: isTransferring }] = useFundTransferMutation();
+    const { data: transRes, isLoading } = useGetTransactionsQuery({
+        page,
+        search,
+        status,
+        channel,
+        per_page: 10
+    });
 
     const formatIDR = (amount) => {
         return new Intl.NumberFormat('id-ID', {
@@ -43,264 +42,178 @@ const TransaksiPage = () => {
         }).format(amount);
     };
 
-    const handleAccountCheck = (val) => {
-        setAccountNumber(val);
-        if (val.length >= 4) {
-            fetchAccount(val);
-        }
-    };
+    const columns = useMemo(() => [
+        {
+            accessorKey: 'created_at',
+            header: 'Tanggal',
+            cell: ({ row }) => (
+                <div className="flex flex-col">
+                    <span className="text-xs font-bold text-gray-900">{new Date(row.original.created_at).toLocaleDateString('id-ID')}</span>
+                    <span className="text-[10px] text-gray-400 font-bold uppercase">{new Date(row.original.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit'})}</span>
+                </div>
+            )
+        },
+        {
+            accessorKey: 'destination_account',
+            header: 'Rekening Tujuan',
+            cell: ({ row }) => (
+                <div className="flex flex-col">
+                    <span className="text-xs font-black text-indigo-600 font-mono tracking-tighter">
+                        {row.original.destination_account || '-'}
+                    </span>
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                        {row.original.destination_account_name || 'System / Cash'}
+                    </span>
+                </div>
+            )
+        },
+        {
+            accessorKey: 'description',
+            header: 'Deskripsi',
+            cell: ({ row }) => (
+                <div className="flex flex-col max-w-[200px]">
+                    <span className="text-xs font-bold text-gray-700 truncate">{row.original.description}</span>
+                    <span className="text-[10px] font-bold text-slate-300 uppercase truncate">Ref: {row.original.reference_number}</span>
+                </div>
+            )
+        },
+        {
+            accessorKey: 'channel',
+            header: 'Channel',
+            cell: ({ row }) => (
+                <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest bg-blue-50 text-blue-600 border border-blue-100/50 shadow-sm shadow-blue-50">
+                    {row.original.channel}
+                </span>
+            )
+        },
+        {
+            accessorKey: 'amount',
+            header: 'Jumlah',
+            cell: ({ row }) => (
+                <span className="text-sm font-black text-gray-900">
+                    {formatIDR(row.original.amount)}
+                </span>
+            )
+        },
+        {
+            accessorKey: 'status',
+            header: 'Status',
+            cell: ({ row }) => {
+                const s = row.original.status;
+                const config = {
+                    success: { bg: 'bg-emerald-50 text-emerald-600 border-emerald-100', icon: CheckCircle2 },
+                    pending: { bg: 'bg-orange-50 text-orange-600 border-orange-100', icon: Clock },
+                    failed: { bg: 'bg-rose-50 text-rose-600 border-rose-100', icon: XCircle },
+                    reversed: { bg: 'bg-slate-50 text-slate-600 border-slate-100', icon: AlertCircle },
+                }[s] || { bg: 'bg-gray-50 text-gray-600 border-gray-100', icon: AlertCircle };
 
-    const handleDestAccountCheck = (val) => {
-        setDestAccountNumber(val);
-        if (val.length >= 4) {
-            fetchDestAccount(val);
-        }
-    };
-
-    const resetForm = () => {
-        setAccountNumber('');
-        setDestAccountNumber('');
-        setAmount('');
-        setDescription('');
-        setReceipt(null);
-    };
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        try {
-            let res;
-            if (activeTab === 'deposit') {
-                res = await deposit({ account_number: accountNumber, amount: Number(amount), description }).unwrap();
-            } else if (activeTab === 'withdraw') {
-                res = await withdraw({ account_number: accountNumber, amount: Number(amount), description }).unwrap();
-            } else if (activeTab === 'transfer') {
-                res = await transfer({ 
-                    source_account: accountNumber, 
-                    destination_account: destAccountNumber, 
-                    amount: Number(amount), 
-                    description 
-                }).unwrap();
+                return (
+                    <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border shadow-sm ${config.bg}`}>
+                        <config.icon className="w-3 h-3" />
+                        {s}
+                    </div>
+                );
             }
-
-            setReceipt(res.data);
-            alert('Transaksi Berhasil!');
-        } catch (err) {
-            alert('Gagal: ' + (err.data?.message || 'Terjadi kesalahan sistem'));
+        },
+        {
+            id: 'actions',
+            header: 'Aksi',
+            cell: ({ row }) => (
+                <button 
+                    onClick={() => navigate(`/transaksi/${row.original.id}`)}
+                    className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-all group"
+                >
+                    <MoreHorizontal className="w-4 h-4 group-hover:scale-110" />
+                </button>
+            )
         }
-    };
-
-    const tabs = [
-        { id: 'deposit', label: 'Setoran Tunai', icon: ArrowDownCircle, color: 'emerald' },
-        { id: 'withdraw', label: 'Penarikan Tunai', icon: ArrowUpCircle, color: 'rose' },
-        { id: 'transfer', label: 'Transfer Antar Santri', icon: ArrowRightLeft, color: 'indigo' },
-    ];
-
-    const currentAccount = accountRes?.data;
-    const currentDestAccount = destAccountRes?.data;
+    ], [navigate]);
 
     return (
-        <div className="max-w-4xl mx-auto space-y-6">
-            {/* Header */}
-            <div className="text-center space-y-2 mb-8">
-                <h1 className="text-3xl font-black text-gray-900 tracking-tight">Olah Transaksi</h1>
-                <p className="text-sm text-gray-400 font-bold uppercase tracking-widest">Teller Counter POS</p>
+        <div className="space-y-6">
+            {/* Page Header */}
+            <div className="space-y-1">
+                <h1 className="text-2xl font-black text-gray-900 tracking-tight">Manajemen Transaksi</h1>
+                <p className="text-sm text-gray-400 font-medium">Kelola semua transaksi di bank santri.</p>
             </div>
 
-            {/* Tabs */}
-            <div className="flex p-1.5 bg-gray-100 rounded-2xl gap-1">
-                {tabs.map((tab) => (
-                    <button
-                        key={tab.id}
-                        onClick={() => { setActiveTab(tab.id); resetForm(); }}
-                        className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-black transition-all ${
-                            activeTab === tab.id 
-                            ? `bg-white text-${tab.color}-600 shadow-sm shadow-gray-200` 
-                            : 'text-gray-400 hover:text-gray-600'
-                        }`}
-                    >
-                        <tab.icon className="w-5 h-5" />
-                        {tab.label}
-                    </button>
-                ))}
-            </div>
-
-            {/* Main Form Area */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Left Side: Inputs */}
-                <div className="md:col-span-2 space-y-6">
-                    <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-6">
-                        <form onSubmit={handleSubmit} className="space-y-6">
-                            {/* Account Input */}
-                            <div className="space-y-2">
-                                <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest">
-                                    {activeTab === 'transfer' ? 'Rekening Sumber' : 'Rekening Santri'}
-                                </label>
-                                <div className="relative group">
-                                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                                    <input 
-                                        type="text"
-                                        placeholder="Masukkan nomor rekening (NIS)..."
-                                        value={accountNumber}
-                                        onChange={(e) => handleAccountCheck(e.target.value)}
-                                        className="w-full pl-12 pr-4 py-4 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-indigo-600 focus:outline-none transition-all text-lg font-bold placeholder:font-medium tracking-tight"
-                                        required
-                                    />
-                                    {isFetchingAccount && (
-                                        <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 animate-spin text-indigo-600" />
-                                    )}
-                                </div>
-                            </div>
-
-                            {activeTab === 'transfer' && (
-                                <div className="space-y-2 slide-in-bottom">
-                                    <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Rekening Tujuan</label>
-                                    <div className="relative group">
-                                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                                        <input 
-                                            type="text"
-                                            placeholder="Masukkan nomor rekening tujuan..."
-                                            value={destAccountNumber}
-                                            onChange={(e) => handleDestAccountCheck(e.target.value)}
-                                            className="w-full pl-12 pr-4 py-4 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-indigo-600 focus:outline-none transition-all text-lg font-bold placeholder:font-medium tracking-tight"
-                                            required
-                                        />
-                                        {isFetchingDest && (
-                                            <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 animate-spin text-indigo-600" />
-                                        )}
-                                    </div>
-                                    {currentDestAccount && (
-                                        <div className="p-3 bg-indigo-50 rounded-xl flex items-center justify-between border border-indigo-100">
-                                            <span className="text-xs font-bold text-indigo-700">{currentDestAccount.customer_name}</span>
-                                            <CheckCircle2 className="w-4 h-4 text-indigo-500" />
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-
-                            {/* Nominal Input */}
-                            <div className="space-y-2">
-                                <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Nominal Transaksi</label>
-                                <div className="relative">
-                                    <div className="absolute left-4 top-1/2 -translate-y-1/2 font-black text-gray-400">Rp</div>
-                                    <input 
-                                        type="number"
-                                        placeholder="0"
-                                        value={amount}
-                                        onChange={(e) => setAmount(e.target.value)}
-                                        className="w-full pl-12 pr-4 py-4 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-indigo-600 focus:outline-none transition-all text-2xl font-black text-indigo-600"
-                                        required
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Keterangan (Opsional)</label>
-                                <textarea 
-                                    rows="2"
-                                    placeholder="Catatan tambahan..."
-                                    value={description}
-                                    onChange={(e) => setDescription(e.target.value)}
-                                    className="w-full p-4 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-indigo-600 focus:outline-none transition-all text-sm font-medium"
-                                ></textarea>
-                            </div>
-
-                            <button 
-                                type="submit"
-                                disabled={!currentAccount || (activeTab === 'transfer' && !currentDestAccount) || isDepositing || isWithdrawing || isTransferring}
-                                className={`w-full py-5 rounded-2xl font-black text-lg shadow-xl transition-all active:scale-95 flex items-center justify-center gap-3 ${
-                                    currentAccount 
-                                    ? 'bg-indigo-600 text-white shadow-indigo-600/30 hover:bg-indigo-700' 
-                                    : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                                }`}
-                            >
-                                {(isDepositing || isWithdrawing || isTransferring) ? <Loader2 className="w-6 h-6 animate-spin" /> : <Printer className="w-5 h-5" />}
-                                KONFIRMASI & PROSES
-                            </button>
-                        </form>
+            {/* Filter Card */}
+            <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm flex flex-col md:flex-row gap-4 items-end">
+                <div className="flex-1 space-y-2">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Cari Data</label>
+                    <div className="relative group">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-indigo-600 transition-colors" />
+                        <input 
+                            type="text" 
+                            placeholder="Cari deskripsi, nominal, atau referensi..." 
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2 text-sm bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-600 transition-all font-bold"
+                        />
                     </div>
                 </div>
 
-                {/* Right Side: Account Card Info */}
-                <div className="space-y-6">
-                    <div className="bg-gradient-to-br from-indigo-700 to-indigo-900 p-8 rounded-[2rem] text-white shadow-2xl relative overflow-hidden group">
-                        <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform">
-                            <Wallet className="w-24 h-24" />
-                        </div>
-                        <div className="relative z-10 space-y-8">
-                            <div className="flex justify-between items-start">
-                                <div className="space-y-1">
-                                    <p className="text-[10px] font-black opacity-60 uppercase tracking-[0.2em]">Bank Santri Card</p>
-                                    <h4 className="text-xl font-black">{currentAccount?.customer_name || 'NAMA NASABAH'}</h4>
-                                </div>
-                                <ShieldCheck className="w-6 h-6 opacity-60" />
-                            </div>
-                            
-                            <div>
-                                <p className="text-[10px] font-black opacity-40 uppercase mb-1">Nomor Rekening</p>
-                                <p className="text-lg font-mono font-bold tracking-[0.2em]">{currentAccount?.account_number || '•••• •••• ••••'}</p>
-                            </div>
-
-                            <div className="pt-4 border-t border-white/10">
-                                <p className="text-[10px] font-black opacity-40 uppercase mb-1">Saldo Tersedia</p>
-                                <h2 className="text-2xl font-black">{formatIDR(currentAccount?.balance || 0)}</h2>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Alert for Status */}
-                    {currentAccount?.status !== 'AKTIF' && currentAccount && (
-                        <div className="bg-rose-50 border border-rose-100 p-4 rounded-2xl flex items-start gap-3">
-                            <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0" />
-                            <div>
-                                <p className="text-sm font-black text-rose-700 uppercase">Perhatian!</p>
-                                <p className="text-xs text-rose-600 font-medium">Rekening ini berstatus <span className="font-bold underline">{currentAccount.status}</span>. Beberapa transaksi mungkin tidak diizinkan.</p>
-                            </div>
-                        </div>
-                    )}
-                </div>
-            </div>
-
-            {/* Receipt Modal */}
-            {receipt && (
-                <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
-                    <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md" onClick={() => setReceipt(null)}></div>
-                    <div className="relative w-full max-w-sm bg-white p-8 rounded-[3rem] shadow-2xl space-y-6 text-center">
-                        <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <CheckCircle2 className="w-8 h-8" />
-                        </div>
-                        <h2 className="text-2xl font-black text-gray-900">Transaksi Berhasil</h2>
-                        <div className="space-y-4 py-6 border-y border-dashed border-gray-200">
-                            <div className="flex justify-between items-center text-xs">
-                                <span className="text-gray-400 font-bold uppercase">Referensi</span>
-                                <span className="text-gray-900 font-black font-mono uppercase">{receipt.data?.reference_number || 'REF' + Date.now()}</span>
-                            </div>
-                            <div className="flex justify-between items-center text-xs">
-                                <span className="text-gray-400 font-bold uppercase">Tanggal</span>
-                                <span className="text-gray-900 font-black">{new Date().toLocaleString('id-ID')}</span>
-                            </div>
-                            <div className="pt-2">
-                                <p className="text-[10px] text-gray-400 font-black uppercase mb-1">Jumlah</p>
-                                <p className="text-3xl font-black text-indigo-600">{formatIDR(receipt.data?.amount || amount)}</p>
-                            </div>
-                        </div>
-                        <button 
-                            onClick={() => { setReceipt(null); resetForm(); }}
-                            className="w-full py-4 bg-gray-900 text-white rounded-2xl font-black text-sm hover:bg-black transition-all active:scale-95"
+                <div className="w-full md:w-48 space-y-2">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Filter By Tipe</label>
+                    <div className="relative">
+                        <select 
+                            value={channel}
+                            onChange={(e) => setChannel(e.target.value)}
+                            className="w-full px-4 py-2 text-sm bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:border-indigo-600 appearance-none font-bold"
                         >
-                            SELESAI & TUTUP
-                        </button>
+                            <option value="">Semua Channel</option>
+                            <option value="teller">Teller</option>
+                            <option value="system">Sistem</option>
+                            <option value="api">API External</option>
+                        </select>
+                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                     </div>
                 </div>
-            )}
+
+                <div className="w-full md:w-48 space-y-2">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Filter By Status</label>
+                    <div className="relative">
+                        <select 
+                            value={status}
+                            onChange={(e) => setStatus(e.target.value)}
+                            className="w-full px-4 py-2 text-sm bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:border-indigo-600 appearance-none font-bold"
+                        >
+                            <option value="">Semua Status</option>
+                            <option value="success">Success</option>
+                            <option value="pending">Pending</option>
+                            <option value="failed">Failed</option>
+                        </select>
+                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                    </div>
+                </div>
+
+                <div className="flex gap-2 w-full md:w-auto">
+                    <button className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2 bg-white border border-gray-200 rounded-md text-sm font-black text-gray-600 hover:bg-gray-50 transition-all active:scale-95 shadow-sm">
+                        <FileSpreadsheet className="w-4 h-4" />
+                        Export Excel
+                    </button>
+                    <button 
+                        onClick={() => navigate('/topup')}
+                        className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2 bg-indigo-600 text-white rounded-md text-sm font-black shadow-lg shadow-indigo-600/20 hover:bg-indigo-700 transition-all active:scale-95"
+                    >
+                        <Plus className="w-4 h-4" />
+                        Tambah Data
+                    </button>
+                </div>
+            </div>
+
+            {/* Table Area */}
+            <DataTable 
+                columns={columns}
+                data={transRes?.data?.data || []}
+                isLoading={isLoading}
+                meta={transRes?.data}
+                onPageChange={setPage}
+                onRowClick={(row) => navigate(`/transaksi/${row.id}`)}
+                placeholder="Data transaksi tidak ditemukan..."
+            />
         </div>
     );
 };
-
-const ShieldCheck = ({ className }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-        <path d="m9 12 2 2 4-4"></path>
-    </svg>
-);
 
 export default TransaksiPage;

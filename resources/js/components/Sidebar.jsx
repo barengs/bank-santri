@@ -8,17 +8,30 @@ import {
     Settings, 
     ChevronLeft,
     Banknote,
-    PieChart
+    PieChart,
+    Package,
+    Receipt,
+    ShieldCheck,
+    ShoppingCart,
+    PlusCircle,
+    Send,
+    ArrowRightLeft
 } from 'lucide-react';
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
     const location = useLocation();
 
     const menuItems = [
-        { name: 'Dashboard', path: '/', icon: LayoutDashboard },
-        { name: 'Nasabah', path: '/nasabah', icon: Users },
-        { name: 'Transaksi', path: '/transaksi', icon: CreditCard },
-        { name: 'Mutasi', path: '/mutasi', icon: History },
+        { name: 'Dashboard Bank', path: '/', icon: LayoutDashboard },
+        { name: 'Transaksi Bank', path: '/transaksi', icon: CreditCard },
+        { name: 'Paket Pembayaran', path: '/paket-pembayaran', icon: Package },
+        { name: 'Proses Pembayaran', path: '/proses-pembayaran', icon: Receipt },
+        { name: 'Verifikasi Top-up', path: '/verifikasi-topup', icon: ShieldCheck },
+        { name: 'Rekening Bank', path: '/nasabah', icon: Users },
+        { name: 'Kasir Koperasi', path: '/koperasi', icon: ShoppingCart },
+        { name: 'Top-Up / Setor Tunai', path: '/topup', icon: PlusCircle },
+        { name: 'Transfer Bank', path: '/transfer', icon: Send },
+        { name: 'Mutasi Rekening', path: '/mutasi', icon: History },
         { name: 'Laporan', path: '/laporan', icon: PieChart },
         { name: 'Konfigurasi', path: '/konfigurasi', icon: Settings },
     ];

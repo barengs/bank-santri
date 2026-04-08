@@ -1,32 +1,29 @@
-import React, { useState } from 'react';
-import { 
-    Plus, 
-    Search, 
-    UserPlus, 
-    Loader2, 
-    ChevronRight, 
-    Filter,
-    ShieldCheck,
-    AlertCircle
-} from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Search, Plus, Filter, Download, MoreHorizontal, AlertCircle, Edit2, Trash2, Eye, User, ShieldCheck, UserPlus, Loader2 } from 'lucide-react';
 import { 
     useGetAccountsQuery, 
     useCreateAccountMutation, 
     useLazySearchSmptStudentsQuery 
 } from '../store/accountApi';
+import DataTable from '../components/DataTable';
 
 const NasabahPage = () => {
-    const [searchTerm, setSearchTerm] = useState('');
+    const [page, setPage] = useState(1);
+    const [search, setSearch] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     
     // Modal State
     const [studentSearch, setStudentSearch] = useState('');
     const [selectedStudent, setSelectedStudent] = useState(null);
-    const [selectedProduct, setSelectedProduct] = useState('1'); // Default to first product
+    const [selectedProduct, setSelectedProduct] = useState('1');
     const [selectedAkad, setSelectedAkad] = useState('wadiah');
 
     // API Hooks
-    const { data: accountsRes, isLoading: isLoadingAccounts } = useGetAccountsQuery({ search: searchTerm });
+    const { data: accountsRes, isLoading, isFetching } = useGetAccountsQuery({
+        page,
+        search,
+        per_page: 10
+    });
     const [triggerSearch, { data: studentResults, isFetching: isSearchingStudents }] = useLazySearchSmptStudentsQuery();
     const [createAccount, { isLoading: isCreating }] = useCreateAccountMutation();
 
@@ -37,6 +34,73 @@ const NasabahPage = () => {
             minimumFractionDigits: 0
         }).format(amount);
     };
+
+    const columns = useMemo(() => [
+        {
+            accessorKey: 'customer_name',
+            header: 'Nama Santri',
+            cell: ({ row }) => (
+                <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-md bg-indigo-50 text-indigo-600 flex items-center justify-center font-black text-xs">
+                        {row.original.customer_name[0]}
+                    </div>
+                    <div className="flex flex-col">
+                        <span className="font-black text-gray-900 leading-tight">{row.original.customer_name}</span>
+                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{row.original.account_number}</span>
+                    </div>
+                </div>
+            )
+        },
+        {
+            accessorKey: 'product.name',
+            header: 'Produk',
+            cell: ({ row }) => (
+                <div className="flex flex-col">
+                    <span className="text-xs font-bold text-gray-700">{row.original.product?.name || '-'}</span>
+                    <span className="text-[10px] font-bold text-gray-400 uppercase">{row.original.akad_type}</span>
+                </div>
+            )
+        },
+        {
+            accessorKey: 'balance',
+            header: 'Saldo',
+            cell: ({ row }) => (
+                <span className="font-black text-indigo-600">
+                    {formatIDR(row.original.balance)}
+                </span>
+            )
+        },
+        {
+            accessorKey: 'status',
+            header: 'Status',
+            cell: ({ row }) => (
+                <span className={`px-2 py-1 rounded text-[10px] font-black uppercase tracking-widest ${
+                    row.original.status === 'AKTIF' 
+                    ? 'bg-emerald-50 text-emerald-600' 
+                    : 'bg-rose-50 text-rose-600'
+                }`}>
+                    {row.original.status}
+                </span>
+            )
+        },
+        {
+            id: 'actions',
+            header: 'Aksi',
+            cell: ({ row }) => (
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-md">
+                        <Eye className="w-4 h-4" />
+                    </button>
+                    <button className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-md">
+                        <Edit2 className="w-4 h-4" />
+                    </button>
+                    <button className="p-2 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-md">
+                        <Trash2 className="w-4 h-4" />
+                    </button>
+                </div>
+            )
+        }
+    ], []);
 
     const handleStudentSearch = (e) => {
         const val = e.target.value;
@@ -77,124 +141,30 @@ const NasabahPage = () => {
                 </div>
                 <button 
                     onClick={() => setIsModalOpen(true)}
-                    className="flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 text-white rounded-xl font-bold text-sm shadow-lg shadow-indigo-600/20 hover:bg-indigo-700 transition-all active:scale-95"
+                    className="flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 text-white rounded-md font-bold text-sm shadow-lg shadow-indigo-600/20 hover:bg-indigo-700 transition-all active:scale-95"
                 >
                     <UserPlus className="w-4 h-4" />
                     Buka Rekening Baru
                 </button>
             </div>
 
-            {/* Filters & Search */}
-            <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-col md:flex-row gap-4">
-                <div className="relative flex-1 group">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-indigo-600 transition-colors" />
-                    <input 
-                        type="text" 
-                        placeholder="Cari nomor rekening atau nama nasabah..." 
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all"
-                    />
-                </div>
-                <button className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-bold text-gray-600 bg-gray-50 border border-gray-200 rounded-xl hover:bg-gray-100 transition-all">
-                    <Filter className="w-4 h-4" />
-                    Filter
-                </button>
-            </div>
-
-            {/* Account Table */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                        <thead>
-                            <tr className="bg-gray-50/50 border-b border-gray-100">
-                                <th className="px-6 py-4 text-[11px] font-black text-gray-400 uppercase tracking-wider">Nasabah</th>
-                                <th className="px-6 py-4 text-[11px] font-black text-gray-400 uppercase tracking-wider">No. Rekening</th>
-                                <th className="px-6 py-4 text-[11px] font-black text-gray-400 uppercase tracking-wider">Produk</th>
-                                <th className="px-6 py-4 text-[11px] font-black text-gray-400 uppercase tracking-wider">Saldo</th>
-                                <th className="px-6 py-4 text-[11px] font-black text-gray-400 uppercase tracking-wider">Status</th>
-                                <th className="px-6 py-4 text-[11px] font-black text-gray-400 uppercase tracking-wider">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-50">
-                            {isLoadingAccounts ? (
-                                <tr>
-                                    <td colSpan="6" className="px-6 py-12 text-center">
-                                        <Loader2 className="w-6 h-6 animate-spin mx-auto text-indigo-600 mb-2" />
-                                        <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Loading Data...</span>
-                                    </td>
-                                </tr>
-                            ) : accountsRes?.data?.data?.length > 0 ? (
-                                accountsRes.data.data.map((account) => (
-                                    <tr key={account.id} className="hover:bg-gray-50/50 transition-colors group">
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs">
-                                                    {account.customer_name[0]}
-                                                </div>
-                                                <div>
-                                                    <p className="text-sm font-bold text-gray-900">{account.customer_name}</p>
-                                                    <p className="text-[10px] text-gray-500 uppercase tracking-tighter">Santri</p>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className="text-sm font-mono font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md">
-                                                {account.account_number}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div className="flex flex-col">
-                                                <span className="text-xs font-bold text-gray-700">{account.product?.name || 'Tabungan'}</span>
-                                                <span className="text-[10px] text-gray-400 capitalize">{account.akad_type}</span>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className="text-sm font-black text-gray-900">{formatIDR(account.balance)}</span>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className={`inline-flex items-center px-2 py-1 rounded-md text-[10px] font-black uppercase ${
-                                                account.status === 'AKTIF' ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'
-                                            }`}>
-                                                {account.status}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-right">
-                                            <button className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all">
-                                                <ChevronRight className="w-4 h-4" />
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))
-                            ) : (
-                                <tr>
-                                    <td colSpan="6" className="px-6 py-12 text-center text-gray-400">
-                                        <Search className="w-8 h-8 mx-auto mb-2 opacity-20" />
-                                        <p className="text-sm font-bold">Data tidak ditemukan</p>
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-                {/* Pagination Placeholder */}
-                <div className="px-6 py-4 bg-gray-50/50 border-t border-gray-100 flex items-center justify-between">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                        Showing {accountsRes?.data?.data?.length || 0} of {accountsRes?.data?.total || 0} Nasabah
-                    </p>
-                    <div className="flex gap-2">
-                        <button disabled className="px-3 py-1 text-xs font-bold text-gray-400 bg-white border border-gray-200 rounded-lg opacity-50">Prev</button>
-                        <button disabled className="px-3 py-1 text-xs font-bold text-gray-400 bg-white border border-gray-200 rounded-lg opacity-50">Next</button>
-                    </div>
-                </div>
-            </div>
+            {/* Table Area */}
+            <DataTable 
+                columns={columns}
+                data={accountsRes?.data?.data || []}
+                isLoading={isLoading}
+                meta={accountsRes?.data}
+                onPageChange={setPage}
+                onSearchChange={setSearch}
+                placeholder="Cari nama santri atau nomor rekening..."
+            />
 
             {/* Buka Rekening Modal */}
             {isModalOpen && (
                 <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
                     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => !isCreating && setIsModalOpen(false)}></div>
                     
-                    <div className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+                    <div className="relative w-full max-w-lg bg-white rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
                         {/* Modal Header */}
                         <div className="px-8 py-6 bg-indigo-600 text-white relative">
                             <h2 className="text-xl font-bold">Buka Rekening Santri</h2>
@@ -215,7 +185,7 @@ const NasabahPage = () => {
                                         placeholder="Ketik minimal 3 karakter..."
                                         value={studentSearch}
                                         onChange={handleStudentSearch}
-                                        className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all text-sm"
+                                        className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-md focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all text-sm"
                                     />
                                     {isSearchingStudents && (
                                         <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-indigo-600" />
@@ -224,7 +194,7 @@ const NasabahPage = () => {
 
                                 {/* Results List */}
                                 {studentSearch.length > 2 && studentResults?.data?.data && !selectedStudent && (
-                                    <div className="max-h-48 overflow-y-auto border border-gray-100 rounded-xl divide-y divide-gray-50 shadow-inner bg-gray-50/50">
+                                    <div className="max-h-48 overflow-y-auto border border-gray-100 rounded-lg divide-y divide-gray-50 shadow-inner bg-gray-50/50">
                                         {studentResults.data.data.map((student) => (
                                             <button 
                                                 key={student.id}
@@ -246,7 +216,7 @@ const NasabahPage = () => {
 
                                 {/* Selected Student Card */}
                                 {selectedStudent && (
-                                    <div className="p-4 bg-indigo-50 border border-indigo-100 rounded-2xl flex items-center justify-between">
+                                    <div className="p-4 bg-indigo-50 border border-indigo-100 rounded-lg flex items-center justify-between">
                                         <div className="flex items-center gap-3">
                                             <div className="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center font-bold text-white shadow-md">
                                                 {selectedStudent.first_name[0]}
@@ -258,7 +228,7 @@ const NasabahPage = () => {
                                         </div>
                                         <button 
                                             onClick={() => { setSelectedStudent(null); setStudentSearch(''); }}
-                                            className="text-[10px] font-bold text-rose-600 hover:bg-rose-50 px-2 py-1 rounded-lg"
+                                            className="text-[10px] font-bold text-rose-600 hover:bg-rose-50 px-2 py-1 rounded-md"
                                         >
                                             Batal
                                         </button>
@@ -273,7 +243,7 @@ const NasabahPage = () => {
                                     <select 
                                         value={selectedProduct}
                                         onChange={(e) => setSelectedProduct(e.target.value)}
-                                        className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-indigo-600"
+                                        className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm focus:outline-none focus:border-indigo-600"
                                     >
                                         <option value="1">Simpanan Wajib</option>
                                         <option value="2">Simpanan Sukarela</option>
@@ -284,7 +254,7 @@ const NasabahPage = () => {
                                     <select 
                                         value={selectedAkad}
                                         onChange={(e) => setSelectedAkad(e.target.value)}
-                                        className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-indigo-600"
+                                        className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm focus:outline-none focus:border-indigo-600"
                                     >
                                         <option value="wadiah">Wadiah (Titipan)</option>
                                         <option value="mudharabah">Mudharabah (Bagi Hasil)</option>
@@ -295,14 +265,14 @@ const NasabahPage = () => {
                             <div className="pt-4 border-t border-gray-100 flex gap-3">
                                 <button 
                                     onClick={() => setIsModalOpen(false)}
-                                    className="flex-1 px-4 py-2.5 text-sm font-bold text-gray-500 hover:bg-gray-50 rounded-xl transition-all"
+                                    className="flex-1 px-4 py-2.5 text-sm font-bold text-gray-500 hover:bg-gray-50 rounded-md transition-all"
                                 >
                                     Tutup
                                 </button>
                                 <button 
                                     onClick={handleCreateAccount}
                                     disabled={!selectedStudent || isCreating}
-                                    className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm text-white shadow-lg transition-all ${
+                                    className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-md font-bold text-sm text-white shadow-lg transition-all ${
                                         selectedStudent && !isCreating 
                                             ? 'bg-indigo-600 shadow-indigo-600/20 hover:bg-indigo-700' 
                                             : 'bg-gray-300 shadow-none cursor-not-allowed'

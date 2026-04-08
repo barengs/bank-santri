@@ -1,182 +1,285 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { 
-    TrendingUp, 
-    TrendingDown, 
     Users, 
-    Wallet,
-    ArrowUpRight,
-    ArrowDownRight,
-    Loader2
+    Wallet, 
+    ArrowUpCircle, 
+    ArrowDownCircle, 
+    Package, 
+    Receipt, 
+    ShieldCheck, 
+    ShoppingCart, 
+    Settings, 
+    CreditCard,
+    TrendingUp,
+    TrendingDown,
+    Banknote,
+    Clock,
+    Plus,
+    BarChart3
 } from 'lucide-react';
-import { useGetSummaryQuery } from '../store/dashboardApi';
+import { 
+    LineChart, 
+    Line, 
+    XAxis, 
+    YAxis, 
+    CartesianGrid, 
+    Tooltip, 
+    ResponsiveContainer,
+    Legend,
+    AreaChart,
+    Area
+} from 'recharts';
+import { useGetDashboardSummaryQuery } from '../store/dashboardApi';
+import { useNavigate } from 'react-router-dom';
 
 const Dashboard = () => {
-    const { data: summaryRes, isLoading, error } = useGetSummaryQuery();
+    const navigate = useNavigate();
+    const { data: summaryRes, isLoading } = useGetDashboardSummaryQuery();
+    const stats = summaryRes?.data;
 
     const formatIDR = (amount) => {
         return new Intl.NumberFormat('id-ID', {
             style: 'currency',
             currency: 'IDR',
-            minimumFractionDigits: 0
-        }).format(amount);
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        }).format(amount || 0);
     };
+
+    const quickAccess = [
+        { name: 'PROSES PEMBAYARAN', path: '/proses-pembayaran', icon: Receipt, color: 'bg-blue-600', hover: 'hover:bg-blue-700' },
+        { name: 'KASIR KOPERASI', path: '/koperasi', icon: ShoppingCart, color: 'bg-indigo-600', hover: 'hover:bg-indigo-700' },
+        { name: 'PAKET PEMBAYARAN', path: '/paket-pembayaran', icon: Package, color: 'bg-emerald-600', hover: 'hover:bg-emerald-700' },
+        { name: 'VERIFIKASI TOP-UP', path: '/verifikasi-topup', icon: TrendingUp, color: 'bg-orange-500', hover: 'hover:bg-orange-600' },
+        { name: 'DAFTAR REKENING', path: '/nasabah', icon: Users, color: 'bg-slate-700', hover: 'hover:bg-slate-800' },
+        { name: 'PENGATURAN SISTEM', path: '/konfigurasi', icon: Settings, color: 'bg-rose-600', hover: 'hover:bg-rose-700' },
+    ];
+
+    const chartData = useMemo(() => {
+        if (!stats?.chart_7days) return [];
+        return stats.chart_7days.map(item => ({
+            date: new Date(item.date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short' }),
+            Masuk: Number(item.total_credit),
+            Keluar: Number(item.total_debit)
+        }));
+    }, [stats]);
 
     if (isLoading) {
         return (
-            <div className="flex items-center justify-center min-h-[400px]">
-                <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+            <div className="flex items-center justify-center h-[60vh]">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600"></div>
             </div>
         );
     }
 
-    const summary = summaryRes?.data;
-
-    const stats = [
-        { 
-            label: 'Nasabah Aktif', 
-            value: summary?.rekening?.total_aktif || 0, 
-            trend: 'Total Rekening', 
-            isUp: true, 
-            icon: Users, 
-            color: 'indigo' 
-        },
-        { 
-            label: 'Total Saldo Tabungan', 
-            value: formatIDR(summary?.rekening?.total_saldo || 0), 
-            trend: 'Dana Terkelola', 
-            isUp: true, 
-            icon: Wallet, 
-            color: 'emerald' 
-        },
-        { 
-            label: 'Top-up Hari Ini', 
-            value: formatIDR(summary?.topup?.today_amount || 0), 
-            trend: `${summary?.topup?.pending_count || 0} Pending`, 
-            isUp: summary?.topup?.pending_count === 0, 
-            icon: TrendingUp, 
-            color: 'sky' 
-        },
-        { 
-            label: 'Pembayaran Bulan Ini', 
-            value: formatIDR(summary?.payment?.month_amount || 0), 
-            trend: 'Laporan Bulanan', 
-            isUp: true, 
-            icon: TrendingDown, 
-            color: 'rose' 
-        },
-    ];
-
     return (
-        <div className="space-y-6">
-            {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Dashboard Perbankan</h1>
-                    <p className="text-sm text-gray-500">Ringkasan aktivitas bank santri secara real-time.</p>
-                </div>
-                <div className="flex items-center gap-2 text-xs font-bold text-gray-500 bg-white px-4 py-2 rounded-xl border border-gray-100 shadow-sm">
-                    <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-                    SISTEM ONLINE
-                </div>
+        <div className="space-y-8 animate-in fade-in duration-500">
+            {/* Top Stat Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+                <StatCard 
+                    title="Total Rekening Aktif"
+                    value={stats?.rekening?.total_aktif || 0}
+                    subtext="REKENING SANTRI TERDAFTAR"
+                    icon={Users}
+                    variant="indigo"
+                />
+                <StatCard 
+                    title="Total Saldo Mengendap"
+                    value={formatIDR(stats?.rekening?.total_saldo)}
+                    subtext={`${stats?.topup?.pending_count || 0} MENUNGGU VERIFIKASI`}
+                    icon={Wallet}
+                    variant="purple"
+                    isCurrency
+                />
+                <StatCard 
+                    title="Pembayaran Bulan Ini"
+                    value={formatIDR(stats?.payment?.month_amount)}
+                    subtext="TOTAL PENDAFTARAN & PAKET"
+                    icon={Receipt}
+                    variant="orange"
+                    isCurrency
+                />
+                <StatCard 
+                    title="Transaksi Koperasi"
+                    value={formatIDR(stats?.koperasi?.today_amount)}
+                    subtext={`${stats?.koperasi?.today_count || 0} TRANSAKSI HARI INI`}
+                    icon={ShoppingCart}
+                    variant="pink"
+                    isCurrency
+                />
             </div>
 
-            {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {stats.map((stat, idx) => (
-                    <div key={idx} className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-                        <div className="flex items-center justify-between mb-4">
-                            <div className={`p-3 rounded-xl bg-${stat.color}-50 text-${stat.color}-600`}>
-                                <stat.icon className="w-6 h-6" />
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Chart Section */}
+                <div className="lg:col-span-2 bg-white p-8 rounded-xl border border-gray-100 shadow-sm space-y-6">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h3 className="text-xl font-black text-gray-900 tracking-tight">Tren Transaksi (7 Hari Terakhir)</h3>
+                            <p className="text-sm text-gray-400 font-medium">Perbandingan aliran dana masuk (Top-up) dan keluar (Debit/Koperasi).</p>
+                        </div>
+                        <div className="flex items-center gap-4 text-[10px] font-black uppercase tracking-widest">
+                            <div className="flex items-center gap-2">
+                                <div className="w-3 h-3 rounded-full bg-indigo-600"></div>
+                                <span className="text-gray-900">Masuk</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <div className="w-3 h-3 rounded-full bg-rose-500"></div>
+                                <span className="text-gray-900">Keluar</span>
                             </div>
                         </div>
-                        <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">{stat.label}</p>
-                        <h3 className="text-xl font-black text-gray-900">{stat.value}</h3>
-                        <div className={`mt-4 flex items-center gap-1 text-[11px] font-bold ${stat.isUp ? 'text-emerald-600' : 'text-amber-600'}`}>
-                            {stat.trend}
-                        </div>
                     </div>
-                ))}
-            </div>
-
-            {/* Main Content Sections */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm p-6 overflow-hidden">
-                    <h3 className="text-lg font-bold text-gray-900 mb-4">Grafik Transaksi 7 Hari Terakhir</h3>
-                    <div className="h-72 flex items-center justify-center bg-gray-50 rounded-xl border border-dashed border-gray-200">
-                        {summary?.chart_7days?.length > 0 ? (
-                            <div className="w-full h-full p-4 flex items-end justify-between gap-2">
-                                {summary.chart_7days.map((day, i) => (
-                                    <div key={i} className="flex-1 flex flex-col items-center gap-2">
-                                        <div className="w-full flex flex-col-reverse gap-1">
-                                            <div 
-                                                className="w-full bg-indigo-500 rounded-t-md transition-all duration-500 hover:bg-indigo-600"
-                                                style={{ height: `${Math.min(day.total_credit / 10000, 150)}px` }}
-                                            ></div>
-                                            <div 
-                                                className="w-full bg-rose-400 rounded-t-md transition-all duration-500 hover:bg-rose-500"
-                                                style={{ height: `${Math.min(day.total_debit / 10000, 150)}px` }}
-                                            ></div>
-                                        </div>
-                                        <span className="text-[10px] text-gray-400 rotate-45 mt-2">{day.date.split('-').slice(1).reverse().join('/')}</span>
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <p className="text-sm text-gray-400">Belum ada data mutasi mingguan</p>
-                        )}
-                    </div>
-                    <div className="mt-6 flex justify-center gap-6">
-                        <div className="flex items-center gap-2 text-xs font-bold text-gray-500">
-                            <span className="w-3 h-3 bg-indigo-500 rounded-sm"></span> Kredit (Masuk)
-                        </div>
-                        <div className="flex items-center gap-2 text-xs font-bold text-gray-500">
-                            <span className="w-3 h-3 bg-rose-400 rounded-sm"></span> Debit (Keluar)
-                        </div>
+                    
+                    <div className="h-[350px] w-full pt-4">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={chartData}>
+                                <defs>
+                                    <linearGradient id="colorMasuk" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.1}/>
+                                        <stop offset="95%" stopColor="#4f46e5" stopOpacity={0}/>
+                                    </linearGradient>
+                                    <linearGradient id="colorKeluar" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.1}/>
+                                        <stop offset="95%" stopColor="#f43f5e" stopOpacity={0}/>
+                                    </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                <XAxis 
+                                    dataKey="date" 
+                                    axisLine={false} 
+                                    tickLine={false} 
+                                    tick={{fontSize: 10, fill: '#94a3b8', fontWeight: 700}}
+                                    dy={10}
+                                />
+                                <YAxis 
+                                    axisLine={false} 
+                                    tickLine={false} 
+                                    tick={{fontSize: 10, fill: '#94a3b8', fontWeight: 700}}
+                                    tickFormatter={(val) => `Rp ${val / 1000}k`}
+                                />
+                                <Tooltip 
+                                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', fontSize: '12px', fontWeight: 'bold' }}
+                                    formatter={(val) => formatIDR(val)}
+                                />
+                                <Area type="monotone" dataKey="Masuk" stroke="#4f46e5" strokeWidth={3} fillOpacity={1} fill="url(#colorMasuk)" />
+                                <Area type="monotone" dataKey="Keluar" stroke="#f43f5e" strokeWidth={3} fillOpacity={1} fill="url(#colorKeluar)" />
+                            </AreaChart>
+                        </ResponsiveContainer>
                     </div>
                 </div>
 
-                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-                    <div className="flex items-center justify-between mb-6">
-                        <h3 className="text-lg font-bold text-gray-900">Top-up Terbaru</h3>
-                        <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md uppercase">Live</span>
+                {/* Quick Access Grid */}
+                <div className="bg-white p-8 rounded-xl border border-gray-100 shadow-sm space-y-6">
+                    <div>
+                        <h3 className="text-xl font-black text-gray-900 tracking-tight">Akses Cepat</h3>
+                        <p className="text-sm text-gray-400 font-medium">Pintasan untuk manajemen harian.</p>
                     </div>
-                    <div className="space-y-4">
-                        {summary?.recent_topups?.length > 0 ? (
-                            summary.recent_topups.map((topup) => (
-                                <div key={topup.id} className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100 cursor-pointer group">
-                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-[10px] font-black ${
-                                        topup.status === 'success' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'
-                                    }`}>
-                                        {topup.payment_method === 'cash' ? 'CASH' : 'TRF'}
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-bold text-gray-900 truncate group-hover:text-indigo-600 transition-colors">
-                                            {topup.account?.customer_name || 'Nasabah'}
-                                        </p>
-                                        <p className="text-[10px] text-gray-400 font-medium">
-                                            {new Date(topup.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WIB
-                                        </p>
-                                    </div>
-                                    <div className="text-right">
-                                        <p className="text-sm font-black text-gray-900">{formatIDR(topup.amount)}</p>
-                                        <p className={`text-[9px] font-bold uppercase ${
-                                            topup.status === 'success' ? 'text-emerald-500' : 'text-amber-500'
-                                        }`}>
-                                            {topup.status.replace('_', ' ')}
-                                        </p>
-                                    </div>
+                    <div className="grid grid-cols-2 gap-4 h-full">
+                        {quickAccess.map((item) => (
+                            <button
+                                key={item.name}
+                                onClick={() => navigate(item.path)}
+                                className="group p-4 bg-gray-50/50 rounded-xl border border-gray-100 flex flex-col items-center justify-center text-center gap-3 transition-all hover:bg-white hover:shadow-xl hover:shadow-slate-100 hover:border-gray-200 active:scale-95"
+                            >
+                                <div className={`p-3 rounded-lg ${item.color} text-white shadow-lg group-hover:scale-110 transition-transform`}>
+                                    <item.icon className="w-5 h-5" />
                                 </div>
-                            ))
-                        ) : (
-                            <div className="text-center py-12">
-                                <p className="text-sm text-gray-400">Belum ada top-up terbaru</p>
-                            </div>
-                        )}
+                                <span className="text-[10px] font-black text-slate-800 tracking-widest uppercase leading-tight">
+                                    {item.name}
+                                </span>
+                            </button>
+                        ))}
                     </div>
+                </div>
+            </div>
+            
+            {/* Recent Activity Mini-Table */}
+            <div className="bg-white p-8 rounded-xl border border-gray-100 shadow-sm">
+                <div className="flex items-center justify-between mb-6">
+                    <div>
+                        <h3 className="text-xl font-black text-gray-900 tracking-tight">Top-up Terakhir</h3>
+                        <p className="text-sm text-gray-400 font-medium">Status pengajuan top-up saldo terbaru.</p>
+                    </div>
+                    <button onClick={() => navigate('/verifikasi-topup')} className="text-xs font-black text-indigo-600 hover:text-indigo-700 uppercase tracking-widest flex items-center gap-1">
+                        Lihat Semua
+                        <ArrowRightCircle className="w-4 h-4" />
+                    </button>
+                </div>
+                
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left">
+                        <thead>
+                            <tr className="text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-50">
+                                <th className="pb-4">Nasabah</th>
+                                <th className="pb-4">Nominal</th>
+                                <th className="pb-4">Channel</th>
+                                <th className="pb-4">Status</th>
+                                <th className="pb-4">No. Referensi</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-50">
+                            {stats?.recent_topups?.map((row) => (
+                                <tr key={row.id} className="group hover:bg-slate-50/50 transition-colors">
+                                    <td className="py-4">
+                                        <div className="font-bold text-gray-800 text-xs">{row.account?.customer_name}</div>
+                                        <div className="text-[10px] text-gray-400 font-mono">{row.account_number}</div>
+                                    </td>
+                                    <td className="py-4 font-black text-gray-900 text-xs">{formatIDR(row.amount)}</td>
+                                    <td className="py-4">
+                                        <span className="text-[10px] font-black uppercase text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
+                                            {row.channel}
+                                        </span>
+                                    </td>
+                                    <td className="py-4">
+                                        <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded ${
+                                            row.status === 'success' ? 'bg-emerald-50 text-emerald-600' : 
+                                            row.status === 'waiting_verification' ? 'bg-orange-50 text-orange-600' : 
+                                            'bg-rose-50 text-rose-600'
+                                        }`}>
+                                            {row.status.replace('_', ' ')}
+                                        </span>
+                                    </td>
+                                    <td className="py-4 text-[10px] font-bold text-gray-400 uppercase tracking-tight">{row.payment_ref}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
     );
 };
+
+const StatCard = ({ title, value, subtext, icon: Icon, variant, isCurrency }) => {
+    const variants = {
+        indigo: 'bg-indigo-50 text-indigo-600',
+        purple: 'bg-purple-50 text-purple-600',
+        orange: 'bg-orange-50 text-orange-600',
+        pink: 'bg-pink-50 text-pink-600',
+    };
+
+    return (
+        <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm space-y-4 hover:shadow-lg hover:shadow-slate-100 transition-all hover:translate-y-[-2px] group">
+            <div className="flex items-center justify-between">
+                <div className={`p-3 rounded-xl ${variants[variant]} transition-all group-hover:scale-110`}>
+                    <Icon className="w-6 h-6" />
+                </div>
+                <div className="text-[10px] font-black text-slate-300 uppercase tracking-tighter">Daily Report</div>
+            </div>
+            <div className="space-y-1">
+                <p className="text-xs font-bold text-gray-400 tracking-tight leading-tight">{title}</p>
+                <h2 className="text-2xl font-black text-gray-900 tracking-tight leading-none">
+                    {value}
+                </h2>
+                <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest">{subtext}</p>
+            </div>
+        </div>
+    );
+};
+
+const ArrowRightCircle = ({ className }) => (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="m12 8 4 4-4 4"/>
+    </svg>
+);
 
 export default Dashboard;
