@@ -21,6 +21,14 @@ class TransactionController extends Controller
         $transactions = Transaction::with(['sourceAccount', 'destinationAccount', 'transactionType'])
             ->when($request->status, fn($q, $s)  => $q->where('status', $s))
             ->when($request->channel, fn($q, $c) => $q->where('channel', $c))
+            ->when($request->reference_number, fn($q, $r) => $q->where('reference_number', $r))
+            ->when($request->search, function($q, $s) {
+                $q->where(function($query) use ($s) {
+                    $query->where('reference_number', 'like', "%{$s}%")
+                          ->orWhere('description', 'like', "%{$s}%")
+                          ->orWhere('amount', 'like', "%{$s}%");
+                });
+            })
             ->latest()
             ->paginate($request->get('per_page', 20));
 
