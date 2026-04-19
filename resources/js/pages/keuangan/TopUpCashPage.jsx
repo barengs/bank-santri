@@ -13,6 +13,7 @@ import {
 import { useLazyGetAccountDetailQuery } from '../../store/accountApi';
 import { useGetPaymentPackagesQuery } from '../../store/paymentApi';
 import { useCashTopUpMutation } from '../../store/topUpApi';
+import { toast } from 'react-toastify';
 
 const TopUpCashPage = () => {
     const [nis, setNis] = useState('');
@@ -52,13 +53,13 @@ const TopUpCashPage = () => {
                 notes: notes
             }).unwrap();
 
-            alert('Top-up Tunai Berhasil!');
+            toast.success('Top-up Tunai Berhasil!');
             setNis('');
             setAmount('');
             setPackageId('');
             setNotes('');
         } catch (err) {
-            alert('Gagal: ' + (err.data?.message || 'Terjadi kesalahan sistem'));
+            toast.error('Gagal: ' + (err.data?.message || 'Terjadi kesalahan sistem'));
         }
     };
 

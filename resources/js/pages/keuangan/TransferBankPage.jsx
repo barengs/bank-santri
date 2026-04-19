@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { useLazyGetAccountDetailQuery } from '../../store/accountApi';
 import { useFundTransferMutation } from '../../store/transactionApi';
+import { toast } from 'react-toastify';
 
 const TransferBankPage = () => {
     const [sourceNis, setSourceNis] = useState('');
@@ -43,13 +44,13 @@ const TransferBankPage = () => {
                 description: description
             }).unwrap();
 
-            alert('Transfer Berhasil!');
+            toast.success('Transfer Berhasil!');
             setSourceNis('');
             setDestNis('');
             setAmount('');
             setDescription('');
         } catch (err) {
-            alert('Gagal: ' + (err.data?.message || 'Terjadi kesalahan sistem'));
+            toast.error('Gagal: ' + (err.data?.message || 'Terjadi kesalahan sistem'));
         }
     };
 

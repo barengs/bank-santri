@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useGetTransactionsQuery, useActivateTransactionMutation } from '../../store/transactionApi';
-import { toast } from 'react-hot-toast';
+import { toast } from 'react-toastify';
 
 const ProsesPembayaranPage = () => {
     const [searchParams, setSearchParams] = useSearchParams();

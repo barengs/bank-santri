@@ -14,6 +14,7 @@ import {
     useRejectTopUpMutation 
 } from '../../store/topUpApi';
 import DataTable from '../../components/DataTable';
+import { toast } from 'react-toastify';
 
 const VerifikasiTopupPage = () => {
     const [page, setPage] = useState(1);
@@ -40,9 +41,9 @@ const VerifikasiTopupPage = () => {
         if (confirm('Verifikasi dan tambahkan saldo ke rekening santri ini?')) {
             try {
                 await verify({ id }).unwrap();
-                alert('Top-up berhasil diverifikasi!');
+                toast.success('Top-up berhasil diverifikasi!');
             } catch (err) {
-                alert('Gagal verifikasi: ' + (err.data?.message || 'Terjadi kesalahan'));
+                toast.error('Gagal verifikasi: ' + (err.data?.message || 'Terjadi kesalahan'));
             }
         }
     };
@@ -52,9 +53,9 @@ const VerifikasiTopupPage = () => {
         if (notes !== null) {
             try {
                 await reject({ id, notes }).unwrap();
-                alert('Top-up berhasil ditolak.');
+                toast.success('Top-up berhasil ditolak.');
             } catch (err) {
-                alert('Gagal menolak: ' + (err.data?.message || 'Terjadi kesalahan'));
+                toast.error('Gagal menolak: ' + (err.data?.message || 'Terjadi kesalahan'));
             }
         }
     };

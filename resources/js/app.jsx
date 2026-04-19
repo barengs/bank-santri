@@ -3,6 +3,8 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { store } from './store';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import MainLayout from './layouts/MainLayout';
 import AuthMonitor from './components/AuthMonitor';
 import Dashboard from './pages/Dashboard';
@@ -26,6 +28,7 @@ const App = () => {
         <Provider store={store}>
             <Router>
                 <AuthMonitor>
+                    <ToastContainer />
                     <Routes>
                         <Route path="/" element={<MainLayout />}>
                             <Route index element={<Dashboard />} />

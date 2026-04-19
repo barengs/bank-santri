@@ -17,6 +17,7 @@ import {
     useGetKoperasiTransactionsQuery
 } from '../../store/koperasiApi';
 import DataTable from '../../components/DataTable';
+import { toast } from 'react-toastify';
 
 const KasirKoperasiPage = () => {
     const [nis, setNis] = useState('');
@@ -55,13 +56,13 @@ const KasirKoperasiPage = () => {
                 item_description: description
             }).unwrap();
             
-            alert('Transaksi Berhasil!');
+            toast.success('Transaksi Berhasil!');
             setNis('');
             setAmount('');
             setDescription('');
             // Reset account state (implicitly handled by NIS reset if we use NIS as key for UI or manually clear)
         } catch (err) {
-            alert('Gagal: ' + (err.data?.message || 'Terjadi kesalahan'));
+            toast.error('Gagal: ' + (err.data?.message || 'Terjadi kesalahan'));
         }
     };
 
