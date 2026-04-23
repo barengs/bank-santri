@@ -58,7 +58,7 @@ const TransferBankPage = () => {
     const dest = destRes?.data;
 
     return (
-        <div className="max-w-5xl mx-auto space-y-6">
+        <div className="w-full space-y-6">
             <div className="text-center space-y-2 mb-8">
                 <h1 className="text-3xl font-black text-gray-900 tracking-tight">Transfer Antar Rekening</h1>
                 <p className="text-sm text-gray-400 font-bold uppercase tracking-widest">Internal Fund Transfer</p>

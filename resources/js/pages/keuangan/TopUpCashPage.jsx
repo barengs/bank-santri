@@ -67,7 +67,7 @@ const TopUpCashPage = () => {
     const packages = packagesRes?.data?.data || [];
 
     return (
-        <div className="max-w-4xl mx-auto space-y-6">
+        <div className="w-full space-y-6">
             {/* Header */}
             <div className="text-center space-y-2 mb-8">
                 <h1 className="text-3xl font-black text-gray-900 tracking-tight">Top-Up / Setor Tunai</h1>

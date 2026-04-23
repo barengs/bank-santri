@@ -73,7 +73,7 @@ const TransactionDetailPage = () => {
     }[data.status] || { bg: 'bg-gray-50 text-gray-600 border-gray-100', icon: AlertCircle };
 
     return (
-        <div className="max-w-5xl mx-auto space-y-6 animate-in fade-in zoom-in duration-300">
+        <div className="w-full space-y-6 animate-in fade-in zoom-in duration-300">
             {/* Header Actions */}
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
