@@ -68,7 +68,7 @@ class AccountController extends Controller
             ->firstOrFail();
 
         try {
-            $smptUrl = env('SMPT_URL', 'http://localhost:8000');
+            $smptUrl = config('services.smpt.url');
             $studentRes = Http::get("{$smptUrl}/api/main/student/{$account->customer_id}");
             if ($studentRes->successful()) {
                 $account->student = $studentRes->json('data');
@@ -121,7 +121,7 @@ class AccountController extends Controller
     {
         $search = $request->get('search');
         try {
-            $smptUrl = env('SMPT_URL', 'http://localhost:8000');
+            $smptUrl = config('services.smpt.url');
             $response = Http::get("{$smptUrl}/api/main/student", [
                 'search' => $search,
                 'per_page' => 10

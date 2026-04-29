@@ -39,7 +39,7 @@ class KoperasiController extends Controller
         // Ambil data santri dari SMPT
         $studentData = null;
         try {
-            $smptUrl = env('SMPT_URL', 'http://localhost:8000');
+            $smptUrl = config('services.smpt.url');
             $res = Http::timeout(5)->get("{$smptUrl}/api/main/student/{$account->customer_id}");
             if ($res->successful()) {
                 $studentData = $res->json('data');
