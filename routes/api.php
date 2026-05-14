@@ -86,6 +86,9 @@ Route::group(['prefix' => 'main', 'middleware' => ['autoprovision', 'auth:api']]
         Route::get('rekap-saldo',              [\App\Http\Controllers\Api\Main\ReportController::class, 'rekapSaldo']);
         Route::get('rekap-kasir',              [\App\Http\Controllers\Api\Main\ReportController::class, 'rekapKasir']);
     });
+
+    // Riwayat transaksi koperasi (akses admin via JWT)
+    Route::get('koperasi/transactions', [KoperasiController::class, 'transactions']);
 });
 
 // Koperasi — autentikasi via X-Koperasi-Key header (tidak butuh JWT)

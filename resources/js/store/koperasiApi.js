@@ -16,7 +16,7 @@ export const koperasiApi = baseApi.injectEndpoints({
         }),
         getKoperasiTransactions: builder.query({
             query: (params) => ({
-                url: '/koperasi/transactions',
+                url: '/main/koperasi/transactions',
                 params,
             }),
             providesTags: ['Transaksi'],
