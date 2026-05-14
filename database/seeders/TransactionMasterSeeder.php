@@ -47,12 +47,12 @@ class TransactionMasterSeeder extends Seeder
             ['code' => 'CASH-DEP',    'name' => 'Setoran Tunai Tabungan',   'category' => 'cash_operation'],
             ['code' => 'CASH-WDR',    'name' => 'Penarikan Tunai Tabungan', 'category' => 'cash_operation'],
             ['code' => 'FUND-TRF',    'name' => 'Transfer Antar Rekening',  'category' => 'transfer'],
-            ['code' => 'TOPUP-CASH',  'name' => 'Top-Up Tunai via Kasir',   'category' => 'top_up'],
-            ['code' => 'TOPUP-TRF',   'name' => 'Top-Up Transfer Bank',     'category' => 'top_up'],
+            ['code' => 'TOPUP-CASH',  'name' => 'Top-Up Tunai via Kasir',   'category' => 'topup'],
+            ['code' => 'TOPUP-TRF',   'name' => 'Top-Up Transfer Bank',     'category' => 'topup'],
             ['code' => 'PAYMENT-PKG', 'name' => 'Pembayaran Paket Santri',  'category' => 'payment'],
-            ['code' => 'COOP-BUY',    'name' => 'Pembelian di Koperasi',    'category' => 'koperasi'],
+            ['code' => 'COOP-BUY',    'name' => 'Pembelian di Koperasi',    'category' => 'payment'],
             // REG-NEW: catatan pendapatan bank, TIDAK menggerakkan saldo rekening santri
-            ['code' => 'REG-NEW',     'name' => 'Pendaftaran Santri Baru',  'category' => 'registration'],
+            ['code' => 'REG-NEW',     'name' => 'Pendaftaran Santri Baru',  'category' => 'fee'],
         ];
 
         foreach ($types as $t) {

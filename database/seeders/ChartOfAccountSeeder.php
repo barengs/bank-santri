@@ -37,6 +37,7 @@ class ChartOfAccountSeeder extends Seeder
         // Level 3 Accounts
         $level3 = [
             ['coa_code' => '1101', 'account_name' => 'Kas Utama', 'parent_coa_code' => '1100', 'account_type' => 'asset', 'level' => 3, 'is_postable' => true],
+            ['coa_code' => '1102', 'account_name' => 'Rekening Bank', 'parent_coa_code' => '1100', 'account_type' => 'asset', 'level' => 3, 'is_postable' => true],
         ];
 
         foreach ($level3 as $coa) {
