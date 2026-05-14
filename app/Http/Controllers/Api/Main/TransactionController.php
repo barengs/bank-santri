@@ -18,7 +18,7 @@ class TransactionController extends Controller
      */
     public function index(Request $request)
     {
-        $transactions = Transaction::with(['sourceAccount', 'destinationAccount', 'transactionType'])
+        $transactions = Transaction::with(['sourceAccount:account_number,customer_name', 'destinationAccount:account_number,customer_name', 'transactionType:id,name,code'])
             ->when($request->status, fn($q, $s)  => $q->where('status', $s))
             ->when($request->channel, fn($q, $c) => $q->where('channel', $c))
             ->when($request->reference_number, fn($q, $r) => $q->where('reference_number', $r))
@@ -31,6 +31,16 @@ class TransactionController extends Controller
             })
             ->latest()
             ->paginate($request->get('per_page', 20));
+
+        // Flatten: tambah field _name agar frontend tidak perlu render object Eloquent
+        $transactions->getCollection()->transform(function ($trx) {
+            $trx->source_account_name      = $trx->sourceAccount?->customer_name;
+            $trx->destination_account_name = $trx->destinationAccount?->customer_name;
+            $trx->transaction_type_name    = $trx->transactionType?->name;
+            // Buang relasi dari payload agar tidak ada object nested di response
+            unset($trx->sourceAccount, $trx->destinationAccount, $trx->transactionType);
+            return $trx;
+        });
 
         return response()->json(['status' => 'success', 'data' => $transactions]);
     }
