@@ -101,7 +101,7 @@ const TransactionDetailPage = () => {
                     </button>
                     {data.status === 'pending' && (
                         <button 
-                            onClick={() => navigate(`/pembayaran/proses?ref=${data.reference_number}`)}
+                            onClick={() => navigate(`/proses-pembayaran?ref=${data.reference_number}`)}
                             className="flex items-center gap-2 px-6 py-2.5 bg-emerald-600 text-white rounded-lg text-sm font-black shadow-lg shadow-emerald-600/20 hover:bg-emerald-700 transition-all active:scale-95"
                         >
                             <CreditCard className="w-4 h-4" />
