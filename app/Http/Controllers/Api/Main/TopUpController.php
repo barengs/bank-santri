@@ -73,38 +73,42 @@ class TopUpController extends Controller
                 'notes'              => $request->notes,
             ]);
 
-            // Catat transaksi perbankan & Jurnal COA
-            try {
-                $transaction = app(\App\Services\AccountingService::class)->recordTransaction(
-                    'TOPUP-CASH',
-                    $request->amount,
-                    null,
-                    $request->account_number,
-                    $request->notes ?? 'Top-up tunai via kasir',
-                    'cash',
-                    ['reference_number' => $topUp->payment_ref]
-                );
+            // Step 1: Catat transaksi perbankan & Jurnal COA (WAJIB SUKSES)
+            $transaction = app(\App\Services\AccountingService::class)->recordTransaction(
+                'TOPUP-CASH',
+                $request->amount,
+                null,
+                $request->account_number,
+                $request->notes ?? 'Top-up tunai via kasir',
+                'cash',
+                ['reference_number' => $topUp->payment_ref]
+            );
 
-                // Pemicu otomatis pembayaran paket
+            // Step 2: Pemicu otomatis pembayaran paket (OPSIONAL - tidak rollback top-up jika gagal)
+            $paymentWarning = null;
+            try {
                 app(\App\Services\PaymentService::class)->processPayment(
                     $request->account_number,
                     $request->payment_package_id,
                     $topUp->id,
                     "Pelunasan otomatis dari Top-Up Tunai [{$topUp->payment_ref}]"
                 );
-
-                return response()->json([
-                    'status'  => 'success',
-                    'message' => 'Top-up tunai dan pembayaran paket berhasil diproses.',
-                    'data'    => $topUp,
-                ], 201);
-
             } catch (\Exception $e) {
-                return response()->json([
-                    'status'  => 'error',
-                    'message' => 'Gagal memproses transaksi: ' . $e->getMessage(),
-                ], 422);
+                // Log warning saja — top-up tetap berhasil, paket belum terbayar
+                \Illuminate\Support\Facades\Log::warning('Top-up berhasil, tapi paket belum terbayar: ' . $e->getMessage(), [
+                    'account_number'     => $request->account_number,
+                    'payment_package_id' => $request->payment_package_id,
+                    'top_up_ref'         => $topUp->payment_ref,
+                ]);
+                $paymentWarning = $e->getMessage();
             }
+
+            return response()->json([
+                'status'          => 'success',
+                'message'         => 'Top-up tunai berhasil.' . ($paymentWarning ? ' Catatan: ' . $paymentWarning : ' Pembayaran paket diproses.'),
+                'data'            => $topUp,
+                'payment_warning' => $paymentWarning,
+            ], 201);
         });
     }
 

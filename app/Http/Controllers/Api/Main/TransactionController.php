@@ -289,7 +289,6 @@ class TransactionController extends Controller
 
         try {
             DB::transaction(function () use ($transaction, $request) {
-                // Update nominal jika kasir menginput nominal bayar yang berbeda (opsional)
                 if ($request->has('amount')) {
                     $transaction->amount = $request->amount;
                 }
@@ -297,8 +296,15 @@ class TransactionController extends Controller
                 $transaction->status = 'success';
                 $transaction->save();
 
-                // Terapkan mutasi saldo
-                app(\App\Services\AccountingService::class)->applyBalanceMovement($transaction);
+                // Hanya terapkan mutasi saldo jika ini bukan transaksi tagihan registrasi.
+                // Transaksi REG-* adalah catatan pendapatan bank (jurnal COA),
+                // bukan debit/kredit langsung ke rekening santri.
+                // Pelunasan biaya pendaftaran terjadi saat top-up + PaymentService.
+                $isRegistrationTrx = str_starts_with($transaction->reference_number ?? '', 'REG');
+
+                if (!$isRegistrationTrx) {
+                    app(\App\Services\AccountingService::class)->applyBalanceMovement($transaction);
+                }
             });
 
             return response()->json([
