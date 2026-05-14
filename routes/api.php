@@ -89,6 +89,13 @@ Route::group(['prefix' => 'main', 'middleware' => ['autoprovision', 'auth:api']]
 
     // Riwayat transaksi koperasi (akses admin via JWT)
     Route::get('koperasi/transactions', [KoperasiController::class, 'transactions']);
+
+    // Manajemen Merchant Koperasi
+    Route::get('koperasi/merchants',                [\App\Http\Controllers\Api\Main\KoperasiMerchantController::class, 'index']);
+    Route::post('koperasi/merchants',               [\App\Http\Controllers\Api\Main\KoperasiMerchantController::class, 'store']);
+    Route::put('koperasi/merchants/{id}',           [\App\Http\Controllers\Api\Main\KoperasiMerchantController::class, 'update']);
+    Route::delete('koperasi/merchants/{id}',        [\App\Http\Controllers\Api\Main\KoperasiMerchantController::class, 'destroy']);
+    Route::post('koperasi/merchants/{id}/rotate',   [\App\Http\Controllers\Api\Main\KoperasiMerchantController::class, 'rotateKey']);
 });
 
 // Koperasi — autentikasi via X-Koperasi-Key header (tidak butuh JWT)

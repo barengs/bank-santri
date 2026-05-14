@@ -21,6 +21,7 @@ import TopUpCashPage from './pages/keuangan/TopUpCashPage';
 import TransferBankPage from './pages/keuangan/TransferBankPage';
 import TransactionDetailPage from './pages/keuangan/TransactionDetailPage';
 import EntriTransaksiPage from './pages/keuangan/EntriTransaksiPage';
+import KoperasiMerchantPage from './pages/keuangan/KoperasiMerchantPage';
 
 // Master Pages
 import ProductPage from './pages/master/ProductPage';
@@ -59,6 +60,7 @@ const App = () => {
                                 <Route path="coa" element={<COAPage />} />
                                 <Route path="rincian-transaksi" element={<TransactionItemPage />} />
                                 <Route path="jenis-transaksi" element={<TransactionTypePage />} />
+                                <Route path="koperasi-merchant" element={<KoperasiMerchantPage />} />
                                 <Route path="pengaturan" element={<SettingPage />} />
                             </Route>
 

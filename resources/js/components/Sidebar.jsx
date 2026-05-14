@@ -17,7 +17,8 @@ import {
     Send,
     ArrowRightLeft,
     ChevronDown,
-    DollarSign
+    DollarSign,
+    Store
 } from 'lucide-react';
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
@@ -57,6 +58,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                 { name: 'COA Bank', path: '/master/coa', icon: ArrowRightLeft },
                 { name: 'Master Rincian Transaksi', path: '/master/rincian-transaksi', icon: DollarSign },
                 { name: 'Jenis Transaksi Bank', path: '/master/jenis-transaksi', icon: Settings },
+                { name: 'Merchant Koperasi', path: '/master/koperasi-merchant', icon: Store },
                 { name: 'Pengaturan Bank', path: '/master/pengaturan', icon: ShieldCheck },
             ]
         },
