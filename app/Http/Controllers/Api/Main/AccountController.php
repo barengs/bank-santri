@@ -37,6 +37,7 @@ class AccountController extends Controller
             'customer_name'  => 'required|string',
             'product_id'     => 'required|exists:products,id',
             'akad_type'      => 'nullable|in:wadiah,mudharabah',
+            'card_number'    => 'nullable|string|unique:accounts,card_number',
         ]);
 
         if ($validator->fails()) {
@@ -51,6 +52,7 @@ class AccountController extends Controller
             'balance'        => 0,
             'status'         => 'AKTIF',
             'akad_type'      => $request->akad_type ?? 'wadiah',
+            'card_number'    => $request->card_number,
             'open_date'      => now()->toDateString(),
         ]);
 
@@ -86,13 +88,14 @@ class AccountController extends Controller
         $validator = Validator::make($request->all(), [
             'product_id' => 'sometimes|exists:products,id',
             'status'     => 'sometimes|in:AKTIF,TIDAK AKTIF,TUTUP,TERBLOKIR,DIBEKUKAN',
+            'card_number' => 'sometimes|nullable|string|unique:accounts,card_number,' . $account->account_number . ',account_number',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['status' => 'error', 'errors' => $validator->errors()], 422);
         }
 
-        $account->update($request->only(['product_id', 'status']));
+        $account->update($request->only(['product_id', 'status', 'card_number']));
 
         if ($request->status === 'TUTUP') {
             $account->close_date = now()->toDateString();
@@ -135,5 +138,34 @@ class AccountController extends Controller
         } catch (\Exception $e) {
             return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
         }
+    }
+
+    /**
+     * Internal update for account details (e.g. card_number).
+     */
+    public function updateInternal(Request $request, string $accountNumber)
+    {
+        $account = Account::where('account_number', $accountNumber)->first();
+        
+        if (!$account) {
+            return response()->json(['status' => 'error', 'message' => 'Account not found'], 404);
+        }
+        
+        $validator = Validator::make($request->all(), [
+            'card_number' => 'sometimes|nullable|string|unique:accounts,card_number,' . $account->account_number . ',account_number',
+            'status'      => 'sometimes|in:AKTIF,TIDAK AKTIF,TUTUP,TERBLOKIR,DIBEKUKAN',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['status' => 'error', 'errors' => $validator->errors()], 422);
+        }
+
+        $account->update($request->only(['card_number', 'status']));
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Internal account update successful',
+            'data' => $account
+        ]);
     }
 }

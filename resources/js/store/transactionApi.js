@@ -49,6 +49,14 @@ export const transactionApi = baseApi.injectEndpoints({
             }),
             invalidatesTags: ['Transaction', 'Account', 'Dashboard'],
         }),
+        createTransaction: builder.mutation({
+            query: (data) => ({
+                url: '/main/transaction',
+                method: 'POST',
+                body: data,
+            }),
+            invalidatesTags: ['Transaction', 'Account', 'Dashboard'],
+        }),
     }),
 });
 
@@ -59,5 +67,6 @@ export const {
     useCashDepositMutation, 
     useCashWithdrawalMutation, 
     useFundTransferMutation,
-    useActivateTransactionMutation
+    useActivateTransactionMutation,
+    useCreateTransactionMutation
 } = transactionApi;

@@ -8,6 +8,7 @@ class TransactionRule extends Model
 {
     protected $fillable = [
         'transaction_type_id',
+        'transaction_item_id',
         'coa_code',
         'entry_type',
         'value_mode',
@@ -23,5 +24,10 @@ class TransactionRule extends Model
     public function coa()
     {
         return $this->belongsTo(ChartOfAccount::class, 'coa_code', 'coa_code');
+    }
+
+    public function transactionItem()
+    {
+        return $this->belongsTo(TransactionItem::class);
     }
 }

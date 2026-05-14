@@ -44,6 +44,42 @@ class TransactionController extends Controller
     }
 
     /**
+     * Store a generic transaction based on TransactionType rules.
+     */
+    public function store(Request $request)
+    {
+        $request->validate([
+            'transaction_type_id' => 'required|exists:transaction_types,id',
+            'amount'              => 'required|numeric|min:0',
+            'source_account'      => 'nullable|exists:accounts,account_number',
+            'destination_account' => 'nullable|exists:accounts,account_number',
+            'description'         => 'nullable|string',
+            'channel'             => 'nullable|string',
+        ]);
+
+        try {
+            $type = \App\Models\TransactionType::findOrFail($request->transaction_type_id);
+
+            $transaction = app(\App\Services\AccountingService::class)->recordTransaction(
+                $type->code,
+                $request->amount,
+                $request->source_account,
+                $request->destination_account,
+                $request->description,
+                $request->channel ?? 'teller'
+            );
+
+            return response()->json([
+                'status'  => 'success',
+                'message' => 'Transaksi berhasil diproses.',
+                'data'    => $transaction,
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json(['status' => 'error', 'message' => $e->getMessage()], 422);
+        }
+    }
+
+    /**
      * Setoran tunai (Deposit) — akad Wadiah
      */
     public function cashDeposit(Request $request)

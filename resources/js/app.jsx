@@ -20,6 +20,14 @@ import KasirKoperasiPage from './pages/keuangan/KasirKoperasiPage';
 import TopUpCashPage from './pages/keuangan/TopUpCashPage';
 import TransferBankPage from './pages/keuangan/TransferBankPage';
 import TransactionDetailPage from './pages/keuangan/TransactionDetailPage';
+import EntriTransaksiPage from './pages/keuangan/EntriTransaksiPage';
+
+// Master Pages
+import ProductPage from './pages/master/ProductPage';
+import COAPage from './pages/master/COAPage';
+import TransactionTypePage from './pages/master/TransactionTypePage';
+import TransactionItemPage from './pages/master/TransactionItemPage';
+import SettingPage from './pages/master/SettingPage';
 
 import '../css/app.css';
 
@@ -43,8 +51,18 @@ const App = () => {
                             <Route path="koperasi" element={<KasirKoperasiPage />} />
                             <Route path="topup" element={<TopUpCashPage />} />
                             <Route path="transfer" element={<TransferBankPage />} />
+                            <Route path="entri-transaksi" element={<EntriTransaksiPage />} />
 
-                            <Route path="konfigurasi" element={<div className="p-8">Konfigurasi Panel</div>} />
+                            {/* Master Data Routes */}
+                            <Route path="master">
+                                <Route path="produk" element={<ProductPage />} />
+                                <Route path="coa" element={<COAPage />} />
+                                <Route path="rincian-transaksi" element={<TransactionItemPage />} />
+                                <Route path="jenis-transaksi" element={<TransactionTypePage />} />
+                                <Route path="pengaturan" element={<SettingPage />} />
+                            </Route>
+
+                            <Route path="konfigurasi" element={<SettingPage />} />
                             <Route path="transaksi/:id" element={<TransactionDetailPage />} />
                             <Route path="laporan" element={<MutasiPage />} /> 
                         </Route>

@@ -31,6 +31,17 @@ export const accountApi = baseApi.injectEndpoints({
                 params: { search },
             }),
         }),
+        updateAccount: builder.mutation({
+            query: ({ accountNumber, ...data }) => ({
+                url: `/main/account/${accountNumber}`,
+                method: 'PUT',
+                body: data,
+            }),
+            invalidatesTags: (result, error, { accountNumber }) => [
+                { type: 'Account', id: accountNumber },
+                'Account'
+            ],
+        }),
     }),
 });
 
@@ -39,5 +50,6 @@ export const {
     useGetAccountDetailQuery,
     useLazyGetAccountDetailQuery,
     useCreateAccountMutation,
+    useUpdateAccountMutation,
     useLazySearchSmptStudentsQuery 
 } = accountApi;

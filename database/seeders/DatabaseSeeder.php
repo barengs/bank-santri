@@ -14,8 +14,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             UserSeeder::class,
             ChartOfAccountSeeder::class,
-            TransactionTypeSeeder::class,
-            TransactionRuleSeeder::class,
+            TransactionMasterSeeder::class,
             ProductSeeder::class,
         ]);
     }

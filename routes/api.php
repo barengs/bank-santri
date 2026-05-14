@@ -34,6 +34,7 @@ Route::group(['prefix' => 'master', 'middleware' => ['autoprovision', 'auth:api'
     Route::get('chart-of-account/header-accounts', [ChartOfAccountController::class, 'headerAccounts']);
     Route::get('chart-of-account/detail-accounts', [ChartOfAccountController::class, 'detailAccounts']);
     Route::apiResource('chart-of-account', ChartOfAccountController::class);
+    Route::apiResource('transaction-item', \App\Http\Controllers\Api\Master\TransactionItemController::class);
 
     // Paket Pembayaran
     Route::apiResource('payment-package', PaymentPackageController::class);
@@ -102,6 +103,7 @@ Route::post('midtrans/webhook', [TopUpController::class, 'midtransWebhook']);
 Route::group(['prefix' => 'internal', 'middleware' => ['internal.key']], function () {
     // Buat rekening santri saat pendaftaran (dipanggil oleh SMPT)
     Route::post('account', [AccountController::class, 'store']);
+    Route::put('account/{accountNumber}', [AccountController::class, 'updateInternal']);
     Route::get('product/{id}', [ProductController::class, 'show']);
     Route::post('transaction', [\App\Http\Controllers\Api\Main\TransactionController::class, 'storeInternal']);
     Route::put('transaction/{id}/activate', [TransactionController::class, 'activate']);
