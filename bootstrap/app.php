@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'internal.key' => \App\Http\Middleware\InternalApiKey::class,
             'autoprovision' => \App\Http\Middleware\AutoProvisionUser::class,
+            'koperasi.key'  => \App\Http\Middleware\KoperasiApiKey::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

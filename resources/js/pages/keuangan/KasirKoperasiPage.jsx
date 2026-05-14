@@ -77,9 +77,9 @@ const KasirKoperasiPage = () => {
             )
         },
         {
-            accessorKey: 'account.customer_name',
+            id: 'customer_name',
             header: 'Santri',
-            cell: ({ row }) => <span className="text-xs font-black text-gray-700">{row.original.account?.customer_name}</span>
+            cell: ({ row }) => <span className="text-xs font-black text-gray-700">{row.original.account?.customer_name ?? row.original.account_number}</span>
         },
         {
             accessorKey: 'item_description',
