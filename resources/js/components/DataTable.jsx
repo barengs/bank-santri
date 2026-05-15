@@ -62,7 +62,7 @@ const DataTable = ({
                             onSearchChange?.(e.target.value);
                         }}
                         placeholder={placeholder}
-                        className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all text-sm font-medium"
+                        className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all text-sm font-medium"
                     />
                 </div>
                 
@@ -72,7 +72,7 @@ const DataTable = ({
             </div>
 
             {/* Table Container */}
-            <div className="bg-white rounded-lg border border-gray-100 shadow-sm overflow-hidden">
+            <div className="bg-white border border-slate-100 rounded-lg overflow-hidden shadow-sm">
                 <div className="overflow-x-auto overflow-y-auto no-scrollbar max-h-[60vh]">
                     <table className="w-full text-left border-collapse">
                         <thead className="sticky top-0 z-10 bg-gray-50/90 backdrop-blur-sm border-b border-gray-100">
@@ -152,17 +152,17 @@ const DataTable = ({
                             type="button"
                             onClick={() => isInternalPagination ? table.previousPage() : onPageChange?.(meta.current_page - 1)}
                             disabled={isInternalPagination ? !table.getCanPreviousPage() : meta?.current_page === 1}
-                            className="p-1.5 rounded-md border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 hover:text-indigo-600 disabled:opacity-30 disabled:hover:bg-white disabled:hover:text-gray-500 transition-all font-bold"
+                            className="p-1.5 rounded-xl border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 hover:text-indigo-600 disabled:opacity-30 disabled:hover:bg-white disabled:hover:text-gray-500 transition-all font-bold"
                         >
                             <ChevronLeft className="w-5 h-5" />
                         </button>
                         
                         <div className="flex items-center gap-1 mx-2">
-                             <span className="text-sm font-black text-indigo-600 px-3 py-1 bg-indigo-50 rounded-md">
+                             <span className="text-sm font-black text-indigo-600 px-3 py-1 bg-indigo-50 rounded-xl">
                                 {isInternalPagination ? table.getState().pagination.pageIndex + 1 : meta?.current_page || 1}
                              </span>
-                             <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest">dari</span>
-                             <span className="text-sm font-bold text-gray-400">
+                             <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">dari</span>
+                             <span className="text-sm font-bold text-slate-400">
                                 {isInternalPagination ? table.getPageCount() : meta?.last_page || 1}
                              </span>
                         </div>
@@ -171,7 +171,7 @@ const DataTable = ({
                             type="button"
                             onClick={() => isInternalPagination ? table.nextPage() : onPageChange?.(meta.current_page + 1)}
                             disabled={isInternalPagination ? !table.getCanNextPage() : meta?.current_page === meta?.last_page}
-                            className="p-1.5 rounded-md border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 hover:text-indigo-600 disabled:opacity-30 disabled:hover:bg-white disabled:hover:text-gray-500 transition-all font-bold"
+                            className="p-1.5 rounded-xl border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 hover:text-indigo-600 disabled:opacity-30 disabled:hover:bg-white disabled:hover:text-gray-500 transition-all font-bold"
                         >
                             <ChevronRight className="w-5 h-5" />
                         </button>

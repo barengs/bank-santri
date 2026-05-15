@@ -2,6 +2,8 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\SecurityController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\Main\AccountController;
 use App\Http\Controllers\Api\Main\TopUpController;
@@ -21,7 +23,7 @@ use App\Http\Controllers\Api\Koperasi\KoperasiController;
 */
 
 // Auth routes
-Route::group(['middleware' => ['api', 'autoprovision'], 'prefix' => 'auth'], function () {
+Route::group(['middleware' => ['api'], 'prefix' => 'auth'], function () {
     Route::post('login',   [AuthController::class, 'login']);
     Route::post('logout',  [AuthController::class, 'logout']);
     Route::post('refresh', [AuthController::class, 'refresh']);
@@ -35,6 +37,7 @@ Route::group(['prefix' => 'master', 'middleware' => ['autoprovision', 'auth:api'
     Route::get('chart-of-account/detail-accounts', [ChartOfAccountController::class, 'detailAccounts']);
     Route::apiResource('chart-of-account', ChartOfAccountController::class);
     Route::apiResource('transaction-item', \App\Http\Controllers\Api\Master\TransactionItemController::class);
+    Route::apiResource('user', UserController::class);
 
     // Paket Pembayaran
     Route::apiResource('payment-package', PaymentPackageController::class);
@@ -117,4 +120,21 @@ Route::group(['prefix' => 'internal', 'middleware' => ['internal.key']], functio
     Route::get('product/{id}', [ProductController::class, 'show']);
     Route::post('transaction', [\App\Http\Controllers\Api\Main\TransactionController::class, 'storeInternal']);
     Route::put('transaction/{id}/activate', [TransactionController::class, 'activate']);
+});
+
+// Protected Security & Admin Routes
+Route::group(['middleware' => ['auth:api']], function () {
+    // Sidebar dynamic loading
+    Route::get('sidebar', [SecurityController::class, 'sidebar']);
+    
+    // Security Management (Admin only)
+    Route::group(['prefix' => 'security'], function() {
+        Route::get('menus', [SecurityController::class, 'getMenus']);
+        Route::get('roles', [SecurityController::class, 'getRoles']);
+        Route::post('roles', [SecurityController::class, 'storeRole']);
+        Route::put('roles/{id}', [SecurityController::class, 'updateRole']);
+        Route::delete('roles/{id}', [SecurityController::class, 'destroyRole']);
+        Route::post('roles/{id}/sync-menus', [SecurityController::class, 'syncRoleMenus']);
+        Route::get('permissions', [SecurityController::class, 'getPermissions']);
+    });
 });

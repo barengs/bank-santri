@@ -18,12 +18,24 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $credentials = $request->only('email', 'password');
+        
+        $user = \App\Models\User::where('email', $credentials['email'])->first();
+        if (!$user) {
+            \Illuminate\Support\Facades\Log::error('User not found in DB:', ['email' => $credentials['email']]);
+        } else {
+            $passCheck = \Illuminate\Support\Facades\Hash::check($credentials['password'], $user->password);
+            \Illuminate\Support\Facades\Log::info('User found, password check:', ['email' => $credentials['email'], 'match' => $passCheck]);
+        }
 
         try {
             if (!$token = auth('api')->attempt($credentials)) {
                 return response()->json([
                     'status'  => 'error',
                     'message' => 'Username atau password salah.',
+                    'debug'   => [
+                        'user_found' => (bool)$user,
+                        'pass_match' => isset($passCheck) ? $passCheck : false
+                    ]
                 ], 401);
             }
         } catch (JWTException $e) {

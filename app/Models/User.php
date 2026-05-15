@@ -8,12 +8,15 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 
+use Spatie\Permission\Traits\HasRoles;
+
 class User extends Authenticatable implements JWTSubject
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, HasRoles;
 
     protected $table = 'users';
+    protected $guard_name = 'api';
 
     protected $fillable = [
         'id',
@@ -21,6 +24,7 @@ class User extends Authenticatable implements JWTSubject
         'email',
         'password',
         'role',
+        'role_id',
     ];
 
     protected $hidden = [
@@ -45,7 +49,8 @@ class User extends Authenticatable implements JWTSubject
     public function getJWTCustomClaims()
     {
         return [
-            'role' => $this->role ?? 'staff',
+            'role'  => $this->roles->first()?->name ?? 'staff',
+            'roles' => $this->getRoleNames()->toArray(),
         ];
     }
 }

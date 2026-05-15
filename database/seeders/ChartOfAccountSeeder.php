@@ -27,7 +27,10 @@ class ChartOfAccountSeeder extends Seeder
         $level2 = [
             ['coa_code' => '1100', 'account_name' => 'Kas dan Setara Kas', 'parent_coa_code' => '1000', 'account_type' => 'asset',     'level' => 2, 'is_postable' => false],
             ['coa_code' => '2100', 'account_name' => 'Tabungan Santri',     'parent_coa_code' => '2000', 'account_type' => 'liability', 'level' => 2, 'is_postable' => true],
-            ['coa_code' => '4100', 'account_name' => 'Pendapatan Admin',    'parent_coa_code' => '4000', 'account_type' => 'revenue',   'level' => 2, 'is_postable' => true],
+            ['coa_code' => '4100', 'account_name' => 'Pendapatan Pendaftaran',     'parent_coa_code' => '4000', 'account_type' => 'revenue',   'level' => 2, 'is_postable' => true],
+            ['coa_code' => '4200', 'account_name' => 'Pendapatan Operasional',     'parent_coa_code' => '4000', 'account_type' => 'revenue',   'level' => 2, 'is_postable' => true],
+            ['coa_code' => '4300', 'account_name' => 'Pendapatan Bulanan/Paket',    'parent_coa_code' => '4000', 'account_type' => 'revenue',   'level' => 2, 'is_postable' => true],
+            ['coa_code' => '4400', 'account_name' => 'Pendapatan Admin & Lainnya',  'parent_coa_code' => '4000', 'account_type' => 'revenue',   'level' => 2, 'is_postable' => true],
         ];
 
         foreach ($level2 as $coa) {

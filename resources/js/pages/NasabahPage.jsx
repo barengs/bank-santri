@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Search, Plus, Filter, Download, MoreHorizontal, AlertCircle, Edit2, Trash2, Eye, User, ShieldCheck, UserPlus, Loader2, CreditCard, Check, X } from 'lucide-react';
 import { 
     useGetAccountsQuery, 
@@ -9,6 +10,7 @@ import {
 import DataTable from '../components/DataTable';
 
 const NasabahPage = () => {
+    const navigate = useNavigate();
     const [page, setPage] = useState(1);
     const [search, setSearch] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -49,7 +51,7 @@ const NasabahPage = () => {
             header: 'Nama Santri',
             cell: ({ row }) => (
                 <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-md bg-indigo-50 text-indigo-600 flex items-center justify-center font-black text-xs">
+                    <div className="w-8 h-8 rounded bg-indigo-50 text-indigo-600 flex items-center justify-center font-black text-xs">
                         {row.original.customer_name[0]}
                     </div>
                     <div className="flex flex-col">
@@ -108,7 +110,10 @@ const NasabahPage = () => {
             header: 'Aksi',
             cell: ({ row }) => (
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-md">
+                    <button 
+                        onClick={() => navigate(`/nasabah/${row.original.account_number}`)}
+                        className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded"
+                    >
                         <Eye className="w-4 h-4" />
                     </button>
                     <button 
@@ -117,12 +122,12 @@ const NasabahPage = () => {
                             setEditCardNumber(row.original.card_number || '');
                             setIsEditModalOpen(true);
                         }}
-                        className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-md"
+                        className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded"
                         title="Update Nomor Kartu"
                     >
                         <CreditCard className="w-4 h-4" />
                     </button>
-                    <button className="p-2 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-md">
+                    <button className="p-2 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded">
                         <Trash2 className="w-4 h-4" />
                     </button>
                 </div>
@@ -211,7 +216,7 @@ const NasabahPage = () => {
                 <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
                     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => !isCreating && setIsModalOpen(false)}></div>
                     
-                    <div className="relative w-full max-w-lg bg-white rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+                    <div className="relative w-full max-w-lg bg-white rounded-lg shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
                         {/* Modal Header */}
                         <div className="px-8 py-6 bg-indigo-600 text-white relative">
                             <h2 className="text-xl font-bold">Buka Rekening Santri</h2>
@@ -241,7 +246,7 @@ const NasabahPage = () => {
 
                                 {/* Results List */}
                                 {studentSearch.length > 2 && studentResults?.data?.data && !selectedStudent && (
-                                    <div className="max-h-48 overflow-y-auto border border-gray-100 rounded-lg divide-y divide-gray-50 shadow-inner bg-gray-50/50">
+                                    <div className="max-h-48 overflow-y-auto border border-gray-100 rounded divide-y divide-gray-50 shadow-inner bg-gray-50/50">
                                         {studentResults.data.data.map((student) => (
                                             <button 
                                                 key={student.id}
@@ -263,7 +268,7 @@ const NasabahPage = () => {
 
                                 {/* Selected Student Card */}
                                 {selectedStudent && (
-                                    <div className="p-4 bg-indigo-50 border border-indigo-100 rounded-lg flex items-center justify-between">
+                                    <div className="p-4 bg-indigo-50 border border-indigo-100 rounded flex items-center justify-between">
                                         <div className="flex items-center gap-3">
                                             <div className="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center font-bold text-white shadow-md">
                                                 {selectedStudent.first_name[0]}
@@ -290,7 +295,7 @@ const NasabahPage = () => {
                                     <select 
                                         value={selectedProduct}
                                         onChange={(e) => setSelectedProduct(e.target.value)}
-                                        className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm focus:outline-none focus:border-indigo-600"
+                                        className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded text-sm focus:outline-none focus:border-indigo-600"
                                     >
                                         <option value="1">Simpanan Wajib</option>
                                         <option value="2">Simpanan Sukarela</option>
@@ -301,7 +306,7 @@ const NasabahPage = () => {
                                     <select 
                                         value={selectedAkad}
                                         onChange={(e) => setSelectedAkad(e.target.value)}
-                                        className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm focus:outline-none focus:border-indigo-600"
+                                        className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded text-sm focus:outline-none focus:border-indigo-600"
                                     >
                                         <option value="wadiah">Wadiah (Titipan)</option>
                                         <option value="mudharabah">Mudharabah (Bagi Hasil)</option>
@@ -354,7 +359,7 @@ const NasabahPage = () => {
                 <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
                     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => !isUpdating && setIsEditModalOpen(false)}></div>
                     
-                    <div className="relative w-full max-w-sm bg-white rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+                    <div className="relative w-full max-w-sm bg-white rounded-lg shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
                         <div className="px-6 py-4 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
                             <h2 className="text-sm font-black text-gray-900 uppercase tracking-widest">Update Kartu Santri</h2>
                             <button onClick={() => setIsEditModalOpen(false)} className="text-gray-400 hover:text-gray-600">

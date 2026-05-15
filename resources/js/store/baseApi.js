@@ -36,9 +36,8 @@ const baseQueryWithReauth = async (args, api, extraOptions) => {
             localStorage.removeItem('token');
             localStorage.removeItem('user');
             
-            // Redirect to portal login
-            const portalUrl = window.config?.portal_url || 'http://localhost:5173';
-            window.location.href = `${portalUrl}/login?expired=true`;
+            // Redirect to local login
+            window.location.href = '/login';
         }
     }
     return result;
@@ -47,6 +46,6 @@ const baseQueryWithReauth = async (args, api, extraOptions) => {
 export const baseApi = createApi({
     reducerPath: 'baseApi',
     baseQuery: baseQueryWithReauth,
-    tagTypes: ['TransactionType', 'TransactionItem', 'Account', 'Transaction', 'Product', 'COA', 'Dashboard', 'PaymentPackage'],
+    tagTypes: ['TransactionType', 'TransactionItem', 'Account', 'Transaction', 'Product', 'COA', 'Dashboard', 'PaymentPackage', 'User'],
     endpoints: () => ({}),
 });

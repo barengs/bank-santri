@@ -1,8 +1,9 @@
 import React, { useEffect, useCallback } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 const AuthMonitor = ({ children }) => {
     const location = useLocation();
+    const navigate = useNavigate();
 
     // Utility to decode JWT token without a heavy library
     const decodeToken = (token) => {
@@ -21,9 +22,10 @@ const AuthMonitor = ({ children }) => {
     const handleLogout = useCallback(() => {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-        const portalUrl = window.config?.portal_url || 'http://localhost:5173';
-        window.location.href = `${portalUrl}/login?expired=true`;
-    }, []);
+        if (location.pathname !== '/login') {
+            navigate('/login');
+        }
+    }, [navigate, location.pathname]);
 
     const performRefresh = useCallback(async () => {
         const token = localStorage.getItem('token');
@@ -56,7 +58,12 @@ const AuthMonitor = ({ children }) => {
 
     const checkTokenExpiry = useCallback(() => {
         const token = localStorage.getItem('token');
-        if (!token) return;
+        if (!token) {
+            if (location.pathname !== '/login' && location.pathname !== '/auth/sso') {
+                handleLogout();
+            }
+            return;
+        }
 
         const decoded = decodeToken(token);
         if (!decoded || !decoded.exp) {

@@ -77,7 +77,7 @@ const TopUpCashPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Form Section */}
                 <div className="md:col-span-2">
-                    <div className="bg-white p-8 rounded-lg border border-gray-100 shadow-sm space-y-6">
+                    <div className="bg-white p-8 rounded-lg border border-slate-100 shadow-sm space-y-6">
                         <form onSubmit={handleSubmit} className="space-y-6">
                             {/* NIS Input */}
                             <div className="space-y-2">
@@ -155,7 +155,7 @@ const TopUpCashPage = () => {
                             <ArrowDownCircle className="w-24 h-24" />
                         </div>
                         <div className="relative z-10 flex items-center gap-4">
-                            <div className="w-12 h-12 bg-white/20 rounded-md flex items-center justify-center font-black">
+                            <div className="w-12 h-12 bg-white/20 rounded flex items-center justify-center font-black">
                                 {account?.customer_name?.[0] || <User className="w-6 h-6" />}
                             </div>
                             <div>
@@ -169,7 +169,7 @@ const TopUpCashPage = () => {
                         </div>
                     </div>
 
-                    <div className="bg-white p-6 rounded-lg border border-gray-100 shadow-sm space-y-4">
+                    <div className="bg-white p-6 rounded-lg border border-slate-100 shadow-sm space-y-4">
                         <div className="flex items-center gap-2 text-[11px] font-black text-gray-400 uppercase tracking-widest">
                             <Info className="w-4 h-4" />
                             Informasi Teller

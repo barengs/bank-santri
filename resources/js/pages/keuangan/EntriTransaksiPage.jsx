@@ -114,7 +114,7 @@ const EntriTransaksiPage = () => {
     if (isConfirmed && createdTransaction) {
         return (
             <div className="max-w-xl mx-auto py-12 animate-in fade-in zoom-in duration-500">
-                <div className="bg-white rounded-[2.5rem] border border-emerald-100 shadow-2xl shadow-emerald-500/10 overflow-hidden text-center p-12 space-y-8">
+                <div className="bg-white rounded-lg border border-emerald-100 shadow-2xl shadow-emerald-500/10 overflow-hidden text-center p-12 space-y-8">
                     <div className="w-24 h-24 bg-emerald-500 text-white rounded-full flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/40 animate-bounce">
                         <CheckCircle2 className="w-12 h-12" />
                     </div>
@@ -123,7 +123,7 @@ const EntriTransaksiPage = () => {
                         <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Referensi: {createdTransaction.reference_number}</p>
                     </div>
                     
-                    <div className="bg-slate-50 rounded-3xl p-8 text-left space-y-4 border border-slate-100">
+                    <div className="bg-slate-50 rounded-lg p-8 text-left space-y-4 border border-slate-100">
                         <div className="flex justify-between items-center">
                             <span className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Nasabah</span>
                             <span className="font-black text-slate-800">{createdTransaction.source_account || 'CASH'}</span>
@@ -141,7 +141,7 @@ const EntriTransaksiPage = () => {
                     <div className="flex flex-col gap-3 pt-4">
                         <button 
                             onClick={() => navigate(`/transaksi/${createdTransaction.id}`)}
-                            className="flex items-center justify-center gap-2 px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black shadow-xl shadow-indigo-600/30 hover:bg-indigo-700 transition-all active:scale-95"
+                            className="flex items-center justify-center gap-2 px-8 py-4 bg-indigo-600 text-white rounded-lg font-black shadow-xl shadow-indigo-600/30 hover:bg-indigo-700 transition-all active:scale-95"
                         >
                             <FileText className="w-5 h-5" />
                             Detail Transaksi
@@ -155,7 +155,7 @@ const EntriTransaksiPage = () => {
                                 setSelectedTypeId('');
                                 setAmount(0);
                             }}
-                            className="flex items-center justify-center gap-2 px-8 py-4 bg-white border border-slate-200 text-slate-600 rounded-2xl font-black hover:bg-slate-50 transition-all active:scale-95"
+                            className="flex items-center justify-center gap-2 px-8 py-4 bg-white border border-slate-200 text-slate-600 rounded-lg font-black hover:bg-slate-50 transition-all active:scale-95"
                         >
                             Input Transaksi Baru
                         </button>
@@ -181,7 +181,7 @@ const EntriTransaksiPage = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Form Section */}
                 <div className="lg:col-span-2 space-y-6">
-                    <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm space-y-8">
+                    <div className="bg-white p-8 rounded-lg border border-slate-100 shadow-sm space-y-8">
                         <form onSubmit={handleSubmit} className="space-y-8">
                             
                             {/* Account Selection */}
@@ -197,11 +197,11 @@ const EntriTransaksiPage = () => {
                                             setSearchAccount(e.target.value);
                                             if (selectedAccount) setSelectedAccount(null);
                                         }}
-                                        className="w-full pl-14 pr-10 py-5 text-lg bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 transition-all font-black placeholder:text-slate-300 placeholder:font-bold"
+                                        className="w-full pl-14 pr-10 py-5 text-lg bg-slate-50 border border-slate-100 rounded-lg focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 transition-all font-black placeholder:text-slate-300 placeholder:font-bold"
                                     />
                                     {isFetchingAccounts && <Loader2 className="absolute right-5 top-1/2 -translate-y-1/2 w-5 h-5 animate-spin text-indigo-500" />}
                                     {!isFetchingAccounts && searchAccount.length >= 3 && !selectedAccount && accountsRes?.data?.data?.length > 0 && (
-                                        <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-100 shadow-2xl rounded-2xl overflow-hidden z-50 max-h-60 overflow-y-auto no-scrollbar">
+                                        <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-100 shadow-2xl rounded-lg overflow-hidden z-50 max-h-60 overflow-y-auto no-scrollbar">
                                             {accountsRes.data.data.map(acc => (
                                                 <button 
                                                     key={acc.id}
@@ -220,7 +220,7 @@ const EntriTransaksiPage = () => {
                                     )}
                                 </div>
                                 {selectedAccount && (
-                                    <div className="flex items-center gap-4 p-5 bg-indigo-50 border border-indigo-100 rounded-2xl animate-in zoom-in duration-300">
+                                    <div className="flex items-center gap-4 p-5 bg-indigo-50 border border-indigo-100 rounded-lg animate-in zoom-in duration-300">
                                         <div className="w-12 h-12 bg-indigo-600 text-white rounded-xl flex items-center justify-center shadow-lg shadow-indigo-600/20">
                                             <ShieldCheck className="w-6 h-6" />
                                         </div>
@@ -228,7 +228,7 @@ const EntriTransaksiPage = () => {
                                             <p className="text-xs font-black text-indigo-900 uppercase tracking-widest">{selectedAccount.customer_name}</p>
                                             <p className="text-sm font-bold text-indigo-600">Saldo: {formatIDR(selectedAccount.balance)}</p>
                                         </div>
-                                        <button onClick={() => {setSelectedAccount(null); setSearchAccount('')}} className="p-2 hover:bg-indigo-100 rounded-lg text-indigo-400">
+                                        <button onClick={() => {setSelectedAccount(null); setSearchAccount('')}} className="p-2 hover:bg-indigo-100 rounded-xl text-indigo-400">
                                             <X className="w-4 h-4" />
                                         </button>
                                     </div>
@@ -244,14 +244,14 @@ const EntriTransaksiPage = () => {
                                             key={type.id}
                                             type="button"
                                             onClick={() => setSelectedTypeId(type.id.toString())}
-                                            className={`p-4 text-left rounded-2xl border-2 transition-all flex items-center justify-between group ${
+                                            className={`p-4 text-left rounded-lg border-2 transition-all flex items-center justify-between group ${
                                                 selectedTypeId === type.id.toString()
                                                 ? 'bg-indigo-600 border-indigo-600 text-white shadow-xl shadow-indigo-600/20'
                                                 : 'bg-white border-slate-100 hover:border-indigo-200 text-slate-600'
                                             }`}
                                         >
                                             <div className="flex items-center gap-3">
-                                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${selectedTypeId === type.id.toString() ? 'bg-white/20' : 'bg-slate-100'}`}>
+                                                <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${selectedTypeId === type.id.toString() ? 'bg-white/20' : 'bg-slate-100'}`}>
                                                     <Hash className={`w-4 h-4 ${selectedTypeId === type.id.toString() ? 'text-white' : 'text-slate-400'}`} />
                                                 </div>
                                                 <div>
@@ -278,7 +278,7 @@ const EntriTransaksiPage = () => {
                                             type="number" 
                                             value={amount}
                                             onChange={(e) => setAmount(parseFloat(e.target.value))}
-                                            className="w-full pl-14 pr-6 py-5 text-2xl bg-slate-50 border-2 border-slate-100 rounded-2xl focus:outline-none focus:border-emerald-500 transition-all font-black text-slate-800"
+                                            className="w-full pl-14 pr-6 py-5 text-2xl bg-slate-50 border-2 border-slate-100 rounded-lg focus:outline-none focus:border-emerald-500 transition-all font-black text-slate-800"
                                         />
                                     </div>
                                 </div>
@@ -292,7 +292,7 @@ const EntriTransaksiPage = () => {
                                         value={description}
                                         onChange={(e) => setDescription(e.target.value)}
                                         placeholder="Tambahkan catatan jika perlu..."
-                                        className="w-full px-6 py-5 text-sm bg-slate-50 border-2 border-slate-100 rounded-2xl focus:outline-none focus:border-indigo-600 transition-all font-bold text-slate-700"
+                                        className="w-full px-6 py-5 text-sm bg-slate-50 border-2 border-slate-100 rounded-lg focus:outline-none focus:border-indigo-600 transition-all font-bold text-slate-700"
                                     />
                                 </div>
                             </div>
@@ -300,7 +300,7 @@ const EntriTransaksiPage = () => {
                             <button 
                                 type="submit"
                                 disabled={isSubmitting || !selectedTypeId || amount <= 0}
-                                className="w-full py-5 bg-indigo-600 disabled:bg-slate-100 disabled:text-slate-300 text-white rounded-[1.5rem] text-lg font-black shadow-2xl shadow-indigo-600/20 hover:bg-indigo-700 transition-all active:scale-[0.98] flex items-center justify-center gap-3"
+                                className="w-full py-5 bg-indigo-600 disabled:bg-slate-100 disabled:text-slate-300 text-white rounded-lg text-lg font-black shadow-2xl shadow-indigo-600/20 hover:bg-indigo-700 transition-all active:scale-[0.98] flex items-center justify-center gap-3"
                             >
                                 {isSubmitting ? <Loader2 className="w-6 h-6 animate-spin" /> : (
                                     <>
@@ -315,7 +315,7 @@ const EntriTransaksiPage = () => {
 
                 {/* Info Section / Rules Summary */}
                 <div className="space-y-6">
-                    <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm space-y-6">
+                    <div className="bg-white p-8 rounded-lg border border-slate-100 shadow-sm space-y-6">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center">
                                 <Settings2 className="w-5 h-5" />
@@ -334,7 +334,7 @@ const EntriTransaksiPage = () => {
                             <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-500">
                                 <div className="space-y-3">
                                     {selectedType.rules?.map((rule, idx) => (
-                                        <div key={idx} className="flex flex-col p-4 bg-slate-50 rounded-2xl border border-slate-100 relative overflow-hidden group">
+                                        <div key={idx} className="flex flex-col p-4 bg-slate-50 rounded-lg border border-slate-100 relative overflow-hidden group">
                                             <div className={`absolute top-0 left-0 w-1 h-full ${rule.entry_type === 'debit' ? 'bg-blue-500' : 'bg-rose-500'}`}></div>
                                             <div className="flex justify-between items-start mb-1">
                                                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{rule.description || 'Komponen'}</span>
@@ -355,7 +355,7 @@ const EntriTransaksiPage = () => {
                                     )}
                                 </div>
 
-                                <div className="p-4 bg-indigo-600 rounded-2xl text-white shadow-lg shadow-indigo-600/20">
+                                <div className="p-4 bg-indigo-600 rounded-lg text-white shadow-lg shadow-indigo-600/20">
                                     <div className="flex justify-between items-center opacity-70 mb-1">
                                         <span className="text-[10px] font-bold uppercase tracking-widest">Estimasi Total</span>
                                         <Info className="w-3 h-3" />
@@ -366,7 +366,7 @@ const EntriTransaksiPage = () => {
                         )}
                     </div>
 
-                    <div className="p-6 bg-amber-50 border border-amber-100 rounded-2xl flex gap-3">
+                    <div className="p-6 bg-amber-50 border border-amber-100 rounded-lg flex gap-3">
                         <AlertCircle className="w-5 h-5 text-amber-500 shrink-0" />
                         <p className="text-[10px] font-bold text-amber-800 leading-relaxed uppercase tracking-wider">
                             PENTING: Pastikan saldo nasabah mencukupi jika transaksi bersifat debit (pengurangan saldo). Transaksi yang sudah diproses tidak dapat dibatalkan kecuali dengan fitur Reversal.

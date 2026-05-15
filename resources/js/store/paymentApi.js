@@ -17,6 +17,21 @@ export const paymentApi = baseApi.injectEndpoints({
             }),
             invalidatesTags: ['PaymentPackage'],
         }),
+        updatePaymentPackage: builder.mutation({
+            query: ({ id, ...data }) => ({
+                url: `/master/payment-package/${id}`,
+                method: 'PUT',
+                body: data,
+            }),
+            invalidatesTags: ['PaymentPackage'],
+        }),
+        deletePaymentPackage: builder.mutation({
+            query: (id) => ({
+                url: `/master/payment-package/${id}`,
+                method: 'DELETE',
+            }),
+            invalidatesTags: ['PaymentPackage'],
+        }),
         getPayments: builder.query({
             query: (params) => ({
                 url: '/main/payment',
@@ -38,6 +53,8 @@ export const paymentApi = baseApi.injectEndpoints({
 export const { 
     useGetPaymentPackagesQuery, 
     useCreatePaymentPackageMutation,
+    useUpdatePaymentPackageMutation,
+    useDeletePaymentPackageMutation,
     useGetPaymentsQuery,
     useProcessPaymentMutation
 } = paymentApi;

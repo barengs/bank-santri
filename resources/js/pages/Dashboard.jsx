@@ -111,7 +111,7 @@ const Dashboard = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Chart Section */}
-                <div className="lg:col-span-2 bg-white p-8 rounded-xl border border-gray-100 shadow-sm space-y-6">
+                <div className="lg:col-span-2 bg-white p-8 rounded-lg border border-slate-100 shadow-sm space-y-6">
                     <div className="flex items-center justify-between">
                         <div>
                             <h3 className="text-xl font-black text-gray-900 tracking-tight">Tren Transaksi (7 Hari Terakhir)</h3>
@@ -157,7 +157,7 @@ const Dashboard = () => {
                                     tickFormatter={(val) => `Rp ${val / 1000}k`}
                                 />
                                 <Tooltip 
-                                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', fontSize: '12px', fontWeight: 'bold' }}
+                                    contentStyle={{ borderRadius: '4px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', fontSize: '12px', fontWeight: 'bold' }}
                                     formatter={(val) => formatIDR(val)}
                                 />
                                 <Area type="monotone" dataKey="Masuk" stroke="#4f46e5" strokeWidth={3} fillOpacity={1} fill="url(#colorMasuk)" />
@@ -168,7 +168,7 @@ const Dashboard = () => {
                 </div>
 
                 {/* Quick Access Grid */}
-                <div className="bg-white p-8 rounded-xl border border-gray-100 shadow-sm space-y-6">
+                <div className="bg-white p-8 rounded-lg border border-slate-100 shadow-sm space-y-6">
                     <div>
                         <h3 className="text-xl font-black text-gray-900 tracking-tight">Akses Cepat</h3>
                         <p className="text-sm text-gray-400 font-medium">Pintasan untuk manajemen harian.</p>
@@ -180,7 +180,7 @@ const Dashboard = () => {
                                 onClick={() => navigate(item.path)}
                                 className="group p-4 bg-gray-50/50 rounded-xl border border-gray-100 flex flex-col items-center justify-center text-center gap-3 transition-all hover:bg-white hover:shadow-xl hover:shadow-slate-100 hover:border-gray-200 active:scale-95"
                             >
-                                <div className={`p-3 rounded-lg ${item.color} text-white shadow-lg group-hover:scale-110 transition-transform`}>
+                                <div className={`p-3 rounded-md ${item.color} text-white shadow-lg group-hover:scale-110 transition-transform`}>
                                     <item.icon className="w-5 h-5" />
                                 </div>
                                 <span className="text-[10px] font-black text-slate-800 tracking-widest uppercase leading-tight">
@@ -193,7 +193,7 @@ const Dashboard = () => {
             </div>
             
             {/* Recent Activity Mini-Table */}
-            <div className="bg-white p-8 rounded-xl border border-gray-100 shadow-sm">
+            <div className="bg-white p-8 rounded-lg border border-slate-100 shadow-sm">
                 <div className="flex items-center justify-between mb-6">
                     <div>
                         <h3 className="text-xl font-black text-gray-900 tracking-tight">Top-up Terakhir</h3>
@@ -258,9 +258,9 @@ const StatCard = ({ title, value, subtext, icon: Icon, variant, isCurrency }) =>
     };
 
     return (
-        <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm space-y-4 hover:shadow-lg hover:shadow-slate-100 transition-all hover:translate-y-[-2px] group">
+        <div className="bg-white p-6 rounded-lg border border-slate-100 shadow-sm space-y-4 hover:shadow-lg hover:shadow-slate-100 transition-all hover:translate-y-[-2px] group">
             <div className="flex items-center justify-between">
-                <div className={`p-3 rounded-xl ${variants[variant]} transition-all group-hover:scale-110`}>
+                <div className={`p-3 rounded-md ${variants[variant]} transition-all group-hover:scale-110`}>
                     <Icon className="w-6 h-6" />
                 </div>
                 <div className="text-[10px] font-black text-slate-300 uppercase tracking-tighter">Daily Report</div>

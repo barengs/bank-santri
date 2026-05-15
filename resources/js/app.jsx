@@ -9,8 +9,10 @@ import MainLayout from './layouts/MainLayout';
 import AuthMonitor from './components/AuthMonitor';
 import Dashboard from './pages/Dashboard';
 import NasabahPage from './pages/NasabahPage';
+import NasabahDetailPage from './pages/NasabahDetailPage';
 import TransaksiPage from './pages/TransaksiPage';
 import MutasiPage from './pages/MutasiPage';
+import LoginPage from './pages/LoginPage';
 
 // Keuangan Pages
 import PaketPembayaranPage from './pages/keuangan/PaketPembayaranPage';
@@ -29,6 +31,10 @@ import COAPage from './pages/master/COAPage';
 import TransactionTypePage from './pages/master/TransactionTypePage';
 import TransactionItemPage from './pages/master/TransactionItemPage';
 import SettingPage from './pages/master/SettingPage';
+import UserManagementPage from './pages/security/UserManagementPage';
+import MenuManagementPage from './pages/security/MenuManagementPage';
+import RoleManagementPage from './pages/security/RoleManagementPage';
+import PermissionManagementPage from './pages/security/PermissionManagementPage';
 
 import '../css/app.css';
 
@@ -39,9 +45,11 @@ const App = () => {
                 <AuthMonitor>
                     <ToastContainer />
                     <Routes>
+                        <Route path="/login" element={<LoginPage />} />
                         <Route path="/" element={<MainLayout />}>
                             <Route index element={<Dashboard />} />
                             <Route path="nasabah" element={<NasabahPage />} />
+                            <Route path="nasabah/:accountNumber" element={<NasabahDetailPage />} />
                             <Route path="transaksi" element={<TransaksiPage />} />
                             <Route path="mutasi" element={<MutasiPage />} />
                             
@@ -53,6 +61,7 @@ const App = () => {
                             <Route path="topup" element={<TopUpCashPage />} />
                             <Route path="transfer" element={<TransferBankPage />} />
                             <Route path="entri-transaksi" element={<EntriTransaksiPage />} />
+                            <Route path="transaksi-pendaftaran" element={<ProsesPembayaranPage />} /> {/* Shortcut */}
 
                             {/* Master Data Routes */}
                             <Route path="master">
@@ -60,8 +69,17 @@ const App = () => {
                                 <Route path="coa" element={<COAPage />} />
                                 <Route path="rincian-transaksi" element={<TransactionItemPage />} />
                                 <Route path="jenis-transaksi" element={<TransactionTypePage />} />
+                                <Route path="user" element={<UserManagementPage />} />
                                 <Route path="koperasi-merchant" element={<KoperasiMerchantPage />} />
                                 <Route path="pengaturan" element={<SettingPage />} />
+                            </Route>
+
+                            {/* Security & RBAC Routes */}
+                            <Route path="security">
+                                <Route path="user" element={<UserManagementPage />} />
+                                <Route path="menu" element={<MenuManagementPage />} />
+                                <Route path="role" element={<RoleManagementPage />} />
+                                <Route path="permission" element={<PermissionManagementPage />} />
                             </Route>
 
                             <Route path="konfigurasi" element={<SettingPage />} />

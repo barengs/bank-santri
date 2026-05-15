@@ -1,4 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { selectCurrentUser, logout } from '../store/slices/authSlice';
+import { useNavigate } from 'react-router-dom';
 import { 
     Bell, 
     Search, 
@@ -10,29 +13,15 @@ import {
 } from 'lucide-react';
 
 const Topbar = ({ isSidebarOpen }) => {
-    const [user, setUser] = useState(null);
+    const user = useSelector(selectCurrentUser);
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
     const [isProfileOpen, setIsProfileOpen] = useState(false);
 
-    useEffect(() => {
-        // Load user from localStorage
-        const storedUser = localStorage.getItem('user');
-        if (storedUser) {
-            try {
-                setUser(JSON.parse(storedUser));
-            } catch (e) {
-                console.error("Failed to parse user from localStorage", e);
-            }
-        }
-    }, []);
 
     const handleLogout = () => {
-        // Clear local session data
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        
-        // Redirect back to the SMPT Portal Login via dynamic config
-        const portalUrl = window.config?.portal_url || 'http://localhost:5173';
-        window.location.href = `${portalUrl}/login`;
+        dispatch(logout());
+        navigate('/login');
     };
 
     return (
@@ -48,17 +37,17 @@ const Topbar = ({ isSidebarOpen }) => {
                     <input 
                         type="text" 
                         placeholder="Cari transaksi..." 
-                        className="pl-10 pr-4 py-1.5 w-64 text-sm bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all"
+                        className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-100 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-sm"
                     />
                 </div>
             </div>
 
             {/* Right Section: Actions & Profile */}
             <div className="flex items-center gap-2 px-6">
-                <button className="p-2 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all">
+                <button className="p-2 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-all">
                     <Moon className="w-5 h-5" />
                 </button>
-                <button className="p-2 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all relative">
+                <button className="p-2 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-all relative">
                     <Bell className="w-5 h-5" />
                     <span className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full border-2 border-white"></span>
                 </button>
@@ -69,9 +58,9 @@ const Topbar = ({ isSidebarOpen }) => {
                 <div className="relative">
                     <button 
                         onClick={() => setIsProfileOpen(!isProfileOpen)}
-                        className="flex items-center gap-3 p-1.5 pr-3 rounded-md hover:bg-gray-50 transition-all group"
+                        className="flex items-center gap-3 p-1.5 pr-3 rounded-md hover:bg-slate-50 transition-all group"
                     >
-                        <div className="w-8 h-8 rounded-md bg-indigo-600 flex items-center justify-center font-bold text-sm text-white shadow-md shadow-indigo-600/20 uppercase">
+                        <div className="w-9 h-9 bg-indigo-600 text-white rounded-md flex items-center justify-center font-bold text-sm shadow-sm uppercase">
                             {user?.name?.[0] || 'A'}
                         </div>
                         <div className="text-left hidden lg:block">
@@ -83,7 +72,7 @@ const Topbar = ({ isSidebarOpen }) => {
 
                     {/* Dropdown Menu */}
                     {isProfileOpen && (
-                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-100 py-1.5 z-50 animate-in fade-in zoom-in-95 duration-100">
+                        <div className="absolute right-0 mt-2 w-48 bg-white border border-slate-100 rounded-lg shadow-xl py-1 z-50 animate-in fade-in slide-in-from-top-2">
                             <div className="px-4 py-2 border-b border-gray-50 mb-1 lg:hidden">
                                 <p className="text-sm font-semibold text-gray-900">{user?.name}</p>
                                 <p className="text-[10px] text-gray-500 uppercase font-bold">{user?.role}</p>

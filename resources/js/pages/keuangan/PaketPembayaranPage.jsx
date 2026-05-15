@@ -1,17 +1,50 @@
 import React, { useMemo, useState } from 'react';
-import { Plus, Edit2, Trash2, Package, CheckCircle2, XCircle, Info } from 'lucide-react';
-import { useGetPaymentPackagesQuery } from '../../store/paymentApi';
+import { 
+    Plus, 
+    Edit2, 
+    Trash2, 
+    Package, 
+    CheckCircle2, 
+    XCircle, 
+    Info, 
+    Trash,
+    PlusCircle,
+    Save
+} from 'lucide-react';
+import { 
+    useGetPaymentPackagesQuery, 
+    useCreatePaymentPackageMutation,
+    useUpdatePaymentPackageMutation,
+    useDeletePaymentPackageMutation
+} from '../../store/paymentApi';
 import DataTable from '../../components/DataTable';
+import Modal from '../../components/Modal';
+import { toast } from 'react-toastify';
 
 const PaketPembayaranPage = () => {
     const [page, setPage] = useState(1);
     const [search, setSearch] = useState('');
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedPackage, setSelectedPackage] = useState(null);
+    const [formData, setFormData] = useState({
+        package_code: '',
+        package_name: '',
+        description: '',
+        academic_year: '2024/2025',
+        semester: 'ganjil',
+        is_active: true,
+        items: [{ item_name: '', category: 'pendidikan', amount: 0, is_saku: false }]
+    });
 
-    const { data: packagesRes, isLoading } = useGetPaymentPackagesQuery({
+    const { data: packagesRes, isLoading, isFetching } = useGetPaymentPackagesQuery({
         page,
         search,
         per_page: 10
     });
+
+    const [createPackage, { isLoading: isCreating }] = useCreatePaymentPackageMutation();
+    const [updatePackage, { isLoading: isUpdating }] = useUpdatePaymentPackageMutation();
+    const [deletePackage] = useDeletePaymentPackageMutation();
 
     const formatIDR = (amount) => {
         return new Intl.NumberFormat('id-ID', {
@@ -21,20 +54,105 @@ const PaketPembayaranPage = () => {
         }).format(amount);
     };
 
+    const handleDelete = async (id) => {
+        if (window.confirm('Hapus paket ini? Tindakan ini tidak dapat dibatalkan jika belum ada transaksi.')) {
+            try {
+                await deletePackage(id).unwrap();
+                toast.success('Paket berhasil dihapus');
+            } catch (err) {
+                toast.error(err.data?.message || 'Gagal menghapus paket');
+            }
+        }
+    };
+
+    const handleOpenModal = (pkg = null) => {
+        if (pkg) {
+            setSelectedPackage(pkg);
+            setFormData({
+                package_code: pkg.package_code,
+                package_name: pkg.package_name,
+                description: pkg.description || '',
+                academic_year: pkg.academic_year || '',
+                semester: pkg.semester || 'ganjil',
+                is_active: pkg.is_active,
+                items: pkg.items?.map(item => ({
+                    item_name: item.item_name,
+                    category: item.category,
+                    amount: item.amount,
+                    is_saku: item.is_saku
+                })) || []
+            });
+        } else {
+            setSelectedPackage(null);
+            setFormData({
+                package_code: '',
+                package_name: '',
+                description: '',
+                academic_year: '2024/2025',
+                semester: 'ganjil',
+                is_active: true,
+                items: [{ item_name: '', category: 'pendidikan', amount: 0, is_saku: false }]
+            });
+        }
+        setIsModalOpen(true);
+    };
+
+    const handleAddItem = () => {
+        setFormData(prev => ({
+            ...prev,
+            items: [...prev.items, { item_name: '', category: 'lainnya', amount: 0, is_saku: false }]
+        }));
+    };
+
+    const handleRemoveItem = (index) => {
+        setFormData(prev => ({
+            ...prev,
+            items: prev.items.filter((_, i) => i !== index)
+        }));
+    };
+
+    const handleItemChange = (index, field, value) => {
+        const newItems = [...formData.items];
+        newItems[index][field] = value;
+        
+        // Auto set is_saku if category is saku
+        if (field === 'category' && value === 'saku') {
+            newItems[index].is_saku = true;
+        }
+
+        setFormData(prev => ({ ...prev, items: newItems }));
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            if (selectedPackage) {
+                await updatePackage({ id: selectedPackage.id, ...formData }).unwrap();
+                toast.success('Paket berhasil diperbarui');
+            } else {
+                await createPackage(formData).unwrap();
+                toast.success('Paket baru berhasil dibuat');
+            }
+            setIsModalOpen(false);
+        } catch (err) {
+            toast.error(err.data?.message || 'Gagal menyimpan paket');
+        }
+    };
+
     const columns = useMemo(() => [
         {
+            header: 'NAMA PAKET',
             accessorKey: 'package_name',
-            header: 'Nama Paket',
             cell: ({ row }) => (
                 <div className="flex flex-col">
-                    <span className="font-black text-gray-900">{row.original.package_name}</span>
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{row.original.package_code}</span>
+                    <span className="font-bold text-slate-800">{row.original.package_name}</span>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{row.original.package_code}</span>
                 </div>
             )
         },
         {
+            header: 'TOTAL TAGIHAN',
             accessorKey: 'total_amount',
-            header: 'Total Tagihan',
             cell: ({ row }) => (
                 <span className="font-bold text-indigo-600">
                     {formatIDR(row.original.total_amount)}
@@ -42,8 +160,8 @@ const PaketPembayaranPage = () => {
             )
         },
         {
+            header: 'JATAH SAKU',
             accessorKey: 'saku_amount',
-            header: 'Jatah Saku',
             cell: ({ row }) => (
                 <span className="font-bold text-emerald-600">
                     {formatIDR(row.original.saku_amount)}
@@ -51,23 +169,23 @@ const PaketPembayaranPage = () => {
             )
         },
         {
+            header: 'PERIODE',
             accessorKey: 'academic_year',
-            header: 'Periode',
             cell: ({ row }) => (
                 <div className="flex flex-col">
-                    <span className="text-xs font-bold text-gray-700">{row.original.academic_year || '-'}</span>
-                    <span className="text-[10px] font-bold text-gray-400 uppercase">{row.original.semester || ''}</span>
+                    <span className="text-xs font-bold text-slate-700">{row.original.academic_year || '-'}</span>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase">{row.original.semester || ''}</span>
                 </div>
             )
         },
         {
+            header: 'STATUS',
             accessorKey: 'is_active',
-            header: 'Status',
             cell: ({ row }) => (
-                <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-widest ${
+                <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
                     row.original.is_active 
-                    ? 'bg-emerald-50 text-emerald-600' 
-                    : 'bg-rose-50 text-rose-600'
+                    ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' 
+                    : 'bg-rose-50 text-rose-600 border border-rose-100'
                 }`}>
                     {row.original.is_active ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
                     {row.original.is_active ? 'Aktif' : 'Nonaktif'}
@@ -75,14 +193,20 @@ const PaketPembayaranPage = () => {
             )
         },
         {
+            header: 'AKSI',
             id: 'actions',
-            header: 'Aksi',
             cell: ({ row }) => (
                 <div className="flex items-center gap-2">
-                    <button className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-all">
+                    <button 
+                        onClick={() => handleOpenModal(row.original)}
+                        className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
+                    >
                         <Edit2 className="w-4 h-4" />
                     </button>
-                    <button className="p-2 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-all">
+                    <button 
+                        onClick={() => handleDelete(row.original.id)}
+                        className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all"
+                    >
                         <Trash2 className="w-4 h-4" />
                     </button>
                 </div>
@@ -91,26 +215,29 @@ const PaketPembayaranPage = () => {
     ], []);
 
     return (
-        <div className="space-y-6">
+        <div className="p-6 space-y-6">
             {/* Page Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="space-y-1">
-                    <h1 className="text-2xl font-black text-gray-900 tracking-tight">Paket Pembayaran</h1>
-                    <p className="text-sm text-gray-400 font-medium font-bold uppercase tracking-widest flex items-center gap-2">
+                    <h1 className="text-2xl font-black text-slate-800 tracking-tight">Paket Pembayaran</h1>
+                    <p className="text-xs text-slate-400 font-bold uppercase tracking-widest flex items-center gap-2">
                         <Package className="w-4 h-4 text-indigo-600" />
                         Billing & Package Management
                     </p>
                 </div>
-                <button className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-md text-sm font-black hover:bg-indigo-700 shadow-lg shadow-indigo-600/20 transition-all active:scale-95">
+                <button 
+                    onClick={() => handleOpenModal()}
+                    className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-md text-sm font-black hover:bg-indigo-700 shadow-lg shadow-indigo-600/20 transition-all active:scale-95"
+                >
                     <Plus className="w-4 h-4" />
                     TAMBAH PAKET BARU
                 </button>
             </div>
 
             {/* Info Card */}
-            <div className="bg-indigo-50 border border-indigo-100 p-4 rounded-lg flex items-start gap-3">
+            <div className="bg-indigo-50/50 border border-indigo-100 p-4 rounded-md flex items-start gap-3">
                 <Info className="w-5 h-5 text-indigo-600 shrink-0 mt-0.5" />
-                <p className="text-xs text-indigo-700 font-bold leading-relaxed">
+                <p className="text-xs text-indigo-700 font-medium leading-relaxed">
                     Definisikan paket rincian pembayaran (SPP, Asrama, Uang Saku) yang dapat dipilih oleh wali santri atau operator saat melakukan proses top-up saldo dan pelunasan tagihan.
                 </p>
             </div>
@@ -119,12 +246,179 @@ const PaketPembayaranPage = () => {
             <DataTable 
                 columns={columns}
                 data={packagesRes?.data?.data || []}
-                isLoading={isLoading}
+                isLoading={isLoading || isFetching}
                 meta={packagesRes?.data}
                 onPageChange={setPage}
                 onSearchChange={setSearch}
                 placeholder="Cari nama atau kode paket..."
             />
+
+            {/* Modal Form */}
+            <Modal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                title={selectedPackage ? 'Edit Paket Pembayaran' : 'Buat Paket Pembayaran Baru'}
+                size="lg"
+            >
+                <form onSubmit={handleSubmit} className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Kode Paket</label>
+                            <input
+                                type="text"
+                                required
+                                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-bold"
+                                placeholder="CONTOH: PKT-2024-SMA"
+                                value={formData.package_code}
+                                onChange={(e) => setFormData({...formData, package_code: e.target.value.toUpperCase()})}
+                            />
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Nama Paket</label>
+                            <input
+                                type="text"
+                                required
+                                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-bold"
+                                placeholder="Contoh: Paket Bulanan SMA Kelas 10"
+                                value={formData.package_name}
+                                onChange={(e) => setFormData({...formData, package_name: e.target.value})}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="space-y-1.5">
+                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Tahun Akademik</label>
+                            <input
+                                type="text"
+                                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-bold"
+                                placeholder="2024/2025"
+                                value={formData.academic_year}
+                                onChange={(e) => setFormData({...formData, academic_year: e.target.value})}
+                            />
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Semester</label>
+                            <select
+                                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-bold"
+                                value={formData.semester}
+                                onChange={(e) => setFormData({...formData, semester: e.target.value})}
+                            >
+                                <option value="ganjil">Ganjil</option>
+                                <option value="genap">Genap</option>
+                            </select>
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Status</label>
+                            <div className="flex items-center gap-4 py-2">
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        className="w-4 h-4 text-indigo-600 rounded"
+                                        checked={formData.is_active}
+                                        onChange={(e) => setFormData({...formData, is_active: e.target.checked})}
+                                    />
+                                    <span className="text-sm font-bold text-slate-700">Aktif</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Dynamic Items */}
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                            <h3 className="text-sm font-black text-slate-800 uppercase tracking-tighter">Rincian Item Pembayaran</h3>
+                            <button 
+                                type="button"
+                                onClick={handleAddItem}
+                                className="text-xs font-bold text-indigo-600 hover:text-indigo-700 flex items-center gap-1 bg-indigo-50 px-3 py-1.5 rounded-md transition-all"
+                            >
+                                <PlusCircle size={14} />
+                                TAMBAH ITEM
+                            </button>
+                        </div>
+
+                        <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                            {formData.items.map((item, index) => (
+                                <div key={index} className="grid grid-cols-12 gap-3 items-end bg-slate-50/50 p-3 rounded-md border border-slate-100">
+                                    <div className="col-span-4 space-y-1">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase">Nama Item</label>
+                                        <input
+                                            type="text"
+                                            required
+                                            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-md text-sm font-bold outline-none focus:border-indigo-400"
+                                            placeholder="Contoh: SPP Bulanan"
+                                            value={item.item_name}
+                                            onChange={(e) => handleItemChange(index, 'item_name', e.target.value)}
+                                        />
+                                    </div>
+                                    <div className="col-span-3 space-y-1">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase">Kategori</label>
+                                        <select
+                                            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-md text-sm font-bold outline-none focus:border-indigo-400"
+                                            value={item.category}
+                                            onChange={(e) => handleItemChange(index, 'category', e.target.value)}
+                                        >
+                                            <option value="pendidikan">Pendidikan</option>
+                                            <option value="asrama">Asrama</option>
+                                            <option value="konsumsi">Konsumsi</option>
+                                            <option value="kesehatan">Kesehatan</option>
+                                            <option value="saku">Uang Saku</option>
+                                            <option value="lainnya">Lainnya</option>
+                                        </select>
+                                    </div>
+                                    <div className="col-span-3 space-y-1">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase">Nominal</label>
+                                        <input
+                                            type="number"
+                                            required
+                                            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-md text-sm font-bold outline-none focus:border-indigo-400"
+                                            value={item.amount}
+                                            onChange={(e) => handleItemChange(index, 'amount', parseFloat(e.target.value))}
+                                        />
+                                    </div>
+                                    <div className="col-span-2 flex justify-center pb-1">
+                                        <button 
+                                            type="button"
+                                            onClick={() => handleRemoveItem(index)}
+                                            disabled={formData.items.length === 1}
+                                            className="p-2 text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-all disabled:opacity-30"
+                                        >
+                                            <Trash size={18} />
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="pt-6 border-t border-slate-100 flex items-center justify-between">
+                        <div className="flex flex-col">
+                            <span className="text-[10px] font-black text-slate-400 uppercase">Estimasi Total Paket</span>
+                            <span className="text-xl font-black text-indigo-600">
+                                {formatIDR(formData.items.reduce((acc, curr) => acc + (curr.amount || 0), 0))}
+                            </span>
+                        </div>
+                        <div className="flex gap-3">
+                            <button
+                                type="button"
+                                onClick={() => setIsModalOpen(false)}
+                                className="px-5 py-2.5 text-slate-500 font-bold hover:bg-slate-100 rounded-md transition-all"
+                            >
+                                Batal
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={isCreating || isUpdating}
+                                className="flex items-center gap-2 px-8 py-2.5 bg-indigo-600 text-white rounded-md font-black hover:bg-indigo-700 shadow-lg shadow-indigo-600/20 transition-all disabled:bg-slate-300"
+                            >
+                                <Save size={18} />
+                                {isCreating || isUpdating ? 'Menyimpan...' : (selectedPackage ? 'Update Paket' : 'Simpan Paket')}
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </Modal>
         </div>
     );
 };

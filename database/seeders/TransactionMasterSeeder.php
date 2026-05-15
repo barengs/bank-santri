@@ -19,40 +19,79 @@ class TransactionMasterSeeder extends Seeder
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
         // ============================================================
-        // 1. Transaction Items (Master COA mapping)
+        // 1. Transaction Items (MTI - Master Transaction Items)
         // ============================================================
-        $items = [
-            // COA 1101 — Kas Tunai Teller
-            ['item_name' => 'Kas Tunai Teller (Masuk)',     'default_amount' => 0, 'coa_code' => '1101', 'entry_type' => 'debit',  'value_mode' => 'total', 'description' => 'Penerimaan tunai di loket teller'],
-            ['item_name' => 'Kas Tunai Teller (Keluar)',    'default_amount' => 0, 'coa_code' => '1101', 'entry_type' => 'credit', 'value_mode' => 'total', 'description' => 'Pengeluaran tunai dari loket teller'],
-            // COA 2100 — Simpanan Wadiah (Kewajiban Bank kepada Santri)
-            ['item_name' => 'Simpanan Wadiah (Masuk)',      'default_amount' => 0, 'coa_code' => '2100', 'entry_type' => 'credit', 'value_mode' => 'total', 'description' => 'Setoran ke saldo tabungan santri'],
-            ['item_name' => 'Simpanan Wadiah (Keluar)',     'default_amount' => 0, 'coa_code' => '2100', 'entry_type' => 'debit',  'value_mode' => 'total', 'description' => 'Debet dari saldo tabungan santri'],
-            // COA 4100 — Pendapatan Bank
-            ['item_name' => 'Pendapatan Infaq Pendaftaran', 'default_amount' => 0, 'coa_code' => '4100', 'entry_type' => 'credit', 'value_mode' => 'total', 'description' => 'Pendapatan infaq/biaya pendaftaran santri baru'],
-            ['item_name' => 'Pendapatan Pembayaran Paket',  'default_amount' => 0, 'coa_code' => '4100', 'entry_type' => 'credit', 'value_mode' => 'total', 'description' => 'Pendapatan dari pembayaran paket santri'],
-            ['item_name' => 'Pendapatan Koperasi',          'default_amount' => 0, 'coa_code' => '4100', 'entry_type' => 'credit', 'value_mode' => 'total', 'description' => 'Pendapatan dari transaksi koperasi'],
-            // COA 1102 — Rekening Bank / Transfer
-            ['item_name' => 'Bank Transfer (Masuk)',        'default_amount' => 0, 'coa_code' => '1102', 'entry_type' => 'debit',  'value_mode' => 'total', 'description' => 'Penerimaan via transfer bank'],
+        
+        // --- Core Items (Source/Destination Accounts) ---
+        $coreItems = [
+            ['item_name' => 'Kas Tunai Teller',     'default_amount' => 0, 'coa_code' => '1101', 'entry_type' => 'debit',  'value_mode' => 'total', 'description' => 'Penerimaan tunai di loket teller'],
+            ['item_name' => 'Kas Tunai (Keluar)',    'default_amount' => 0, 'coa_code' => '1101', 'entry_type' => 'credit', 'value_mode' => 'total', 'description' => 'Pengeluaran tunai dari loket teller'],
+            ['item_name' => 'Saldo Tabungan Santri', 'default_amount' => 0, 'coa_code' => '2100', 'entry_type' => 'credit', 'value_mode' => 'total', 'description' => 'Saldo simpanan wadiah santri'],
+            ['item_name' => 'Bank Transfer (In)',    'default_amount' => 0, 'coa_code' => '1102', 'entry_type' => 'debit',  'value_mode' => 'total', 'description' => 'Penerimaan via transfer bank'],
         ];
 
-        foreach ($items as $item) {
+        foreach ($coreItems as $item) {
+            TransactionItem::create($item);
+        }
+
+        // --- BIAYA PENDAFTARAN (COA 4100) ---
+        $pendaftaranItems = [
+            ['item_name' => 'PENDAFTARAN',                      'default_amount' => 100000, 'coa_code' => '4100', 'entry_type' => 'credit', 'value_mode' => 'fixed', 'description' => 'Biaya pendaftaran santri baru'],
+            ['item_name' => 'UANG GEDUNG',                      'default_amount' => 500000, 'coa_code' => '4100', 'entry_type' => 'credit', 'value_mode' => 'fixed', 'description' => 'Biaya pembangunan/uang gedung'],
+            ['item_name' => 'AL QUR\'AN DAN AMALAN',            'default_amount' => 120000, 'coa_code' => '4100', 'entry_type' => 'credit', 'value_mode' => 'fixed', 'description' => 'Biaya pengadaan Al-Quran dan kitab amalan'],
+            ['item_name' => 'SERAGAM MADRASAH DINIYAH',         'default_amount' => 170000, 'coa_code' => '4100', 'entry_type' => 'credit', 'value_mode' => 'fixed', 'description' => 'Biaya seragam madrasah'],
+            ['item_name' => 'REGISTRASI MADRASAH DINIYAH',      'default_amount' => 100000, 'coa_code' => '4100', 'entry_type' => 'credit', 'value_mode' => 'fixed', 'description' => 'Biaya registrasi madrasah'],
+            ['item_name' => 'KITAB AL-MIFTAH LENGKAP',          'default_amount' => 150000, 'coa_code' => '4100', 'entry_type' => 'credit', 'value_mode' => 'fixed', 'description' => 'Biaya kitab Al-Miftah'],
+            ['item_name' => 'TES URINE DAN CEK GOLONGAN DARAH', 'default_amount' => 100000, 'coa_code' => '4100', 'entry_type' => 'credit', 'value_mode' => 'fixed', 'description' => 'Biaya kesehatan awal'],
+        ];
+
+        foreach ($pendaftaranItems as $item) {
+            TransactionItem::create($item);
+        }
+
+        // --- BIAYA OPERASIONAL/TAHUNAN (COA 4200) ---
+        $operasionalItems = [
+            ['item_name' => 'SYAHRIYAH',                    'default_amount' => 600000, 'coa_code' => '4200', 'entry_type' => 'credit', 'value_mode' => 'fixed', 'description' => 'Biaya syahriyah tahunan'],
+            ['item_name' => 'LEMARI',                       'default_amount' => 50000,  'coa_code' => '4200', 'entry_type' => 'credit', 'value_mode' => 'fixed', 'description' => 'Biaya sewa/pemeliharaan lemari'],
+            ['item_name' => 'LOMBA GEBYAR ADHA',            'default_amount' => 60000,  'coa_code' => '4200', 'entry_type' => 'credit', 'value_mode' => 'fixed', 'description' => 'Biaya kegiatan Idul Adha'],
+            ['item_name' => 'LEMBAGA PENGEMBANGAN MUTU',    'default_amount' => 150000, 'coa_code' => '4200', 'entry_type' => 'credit', 'value_mode' => 'fixed', 'description' => 'Biaya pengembangan mutu santri'],
+            ['item_name' => 'PENDIDIKAN',                   'default_amount' => 150000, 'coa_code' => '4200', 'entry_type' => 'credit', 'value_mode' => 'fixed', 'description' => 'Biaya operasional pendidikan'],
+            ['item_name' => 'INFAQ KESEHATAN',              'default_amount' => 50000,  'coa_code' => '4200', 'entry_type' => 'credit', 'value_mode' => 'fixed', 'description' => 'Biaya layanan kesehatan tahunan'],
+        ];
+
+        foreach ($operasionalItems as $item) {
+            TransactionItem::create($item);
+        }
+
+        // --- BIAYA BULANAN (COA 4300) ---
+        $bulananItems = [
+            ['item_name' => 'DPU (Dapur Umum)', 'default_amount' => 400000, 'coa_code' => '4300', 'entry_type' => 'credit', 'value_mode' => 'fixed', 'description' => 'Biaya makan bulanan'],
+            ['item_name' => 'LAUNDRY',          'default_amount' => 35000,  'coa_code' => '4300', 'entry_type' => 'credit', 'value_mode' => 'fixed', 'description' => 'Biaya cuci pakaian bulanan'],
+            ['item_name' => 'ADMIN',            'default_amount' => 15000,  'coa_code' => '4300', 'entry_type' => 'credit', 'value_mode' => 'fixed', 'description' => 'Biaya administrasi bulanan'],
+        ];
+
+        foreach ($bulananItems as $item) {
+            TransactionItem::create($item);
+        }
+
+        // --- TABUNGAN SANTRI (COA 2100) ---
+        $tabunganItems = [
+            ['item_name' => 'UANG SAKU', 'default_amount' => 0, 'coa_code' => '2100', 'entry_type' => 'credit', 'value_mode' => 'total', 'description' => 'Setoran uang saku santri'],
+        ];
+
+        foreach ($tabunganItems as $item) {
             TransactionItem::create($item);
         }
 
         // ============================================================
-        // 2. Transaction Types
+        // 2. Transaction Types (Event Categories)
         // ============================================================
         $types = [
-            ['code' => 'CASH-DEP',    'name' => 'Setoran Tunai Tabungan',   'category' => 'cash_operation'],
-            ['code' => 'CASH-WDR',    'name' => 'Penarikan Tunai Tabungan', 'category' => 'cash_operation'],
-            ['code' => 'FUND-TRF',    'name' => 'Transfer Antar Rekening',  'category' => 'transfer'],
-            ['code' => 'TOPUP-CASH',  'name' => 'Top-Up Tunai via Kasir',   'category' => 'topup'],
-            ['code' => 'TOPUP-TRF',   'name' => 'Top-Up Transfer Bank',     'category' => 'topup'],
-            ['code' => 'PAYMENT-PKG', 'name' => 'Pembayaran Paket Santri',  'category' => 'payment'],
-            ['code' => 'COOP-BUY',    'name' => 'Pembelian di Koperasi',    'category' => 'payment'],
-            // REG-NEW: catatan pendapatan bank, TIDAK menggerakkan saldo rekening santri
-            ['code' => 'REG-NEW',     'name' => 'Pendaftaran Santri Baru',  'category' => 'fee'],
+            ['code' => 'BIAYA-REG',     'name' => 'Pendaftaran Santri Baru', 'category' => 'fee',     'description' => 'Pembayaran biaya pendaftaran satu kali'],
+            ['code' => 'BIAYA-ANNUAL',  'name' => 'Biaya Tahunan Santri',    'category' => 'fee',     'description' => 'Pembayaran biaya operasional tahunan'],
+            ['code' => 'BIAYA-MONTHLY', 'name' => 'Biaya Bulanan Santri',    'category' => 'fee',     'description' => 'Pembayaran paket bulanan santri'],
+            ['code' => 'TOPUP-SANTRI',  'name' => 'Setoran Tunai Tabungan',  'category' => 'topup',   'description' => 'Pengisian saldo tabungan santri'],
+            ['code' => 'WDR-SANTRI',    'name' => 'Penarikan Tabungan',      'category' => 'cash_operation', 'description' => 'Penarikan tunai saldo santri'],
         ];
 
         foreach ($types as $t) {
@@ -60,58 +99,46 @@ class TransactionMasterSeeder extends Seeder
         }
 
         // ============================================================
-        // 3. Rules (COA Mapping per Jenis Transaksi)
+        // 3. Rules (Mapping Event to MTIs)
         // ============================================================
-        $kasIn   = TransactionItem::where('item_name', 'Kas Tunai Teller (Masuk)')->first();
-        $kasOut  = TransactionItem::where('item_name', 'Kas Tunai Teller (Keluar)')->first();
-        $wadIn   = TransactionItem::where('item_name', 'Simpanan Wadiah (Masuk)')->first();
-        $wadOut  = TransactionItem::where('item_name', 'Simpanan Wadiah (Keluar)')->first();
-        $regFee  = TransactionItem::where('item_name', 'Pendapatan Infaq Pendaftaran')->first();
-        $pkgFee  = TransactionItem::where('item_name', 'Pendapatan Pembayaran Paket')->first();
-        $coopFee = TransactionItem::where('item_name', 'Pendapatan Koperasi')->first();
-        $bankTrf = TransactionItem::where('item_name', 'Bank Transfer (Masuk)')->first();
+        
+        $kasIn  = TransactionItem::where('item_name', 'Kas Tunai Teller')->first();
+        $kasOut = TransactionItem::where('item_name', 'Kas Tunai (Keluar)')->first();
+        $wadIn  = TransactionItem::where('item_name', 'Saldo Tabungan Santri')->first();
 
-        // CASH-DEP: Setoran Tunai → Kas (D) / Simpanan Wadiah (C)
-        $t = TransactionType::where('code', 'CASH-DEP')->first();
-        $t->rules()->create(['transaction_item_id' => $kasIn->id,   'coa_code' => $kasIn->coa_code,   'entry_type' => 'debit',  'value_mode' => 'total']);
-        $t->rules()->create(['transaction_item_id' => $wadIn->id,   'coa_code' => $wadIn->coa_code,   'entry_type' => 'credit', 'value_mode' => 'total']);
+        // --- BIAYA-REG Rules ---
+        $tReg = TransactionType::where('code', 'BIAYA-REG')->first();
+        $tReg->rules()->create(['transaction_item_id' => $kasIn->id, 'coa_code' => $kasIn->coa_code, 'entry_type' => 'debit', 'value_mode' => 'total']);
+        foreach ($pendaftaranItems as $pi) {
+            $mti = TransactionItem::where('item_name', $pi['item_name'])->first();
+            $tReg->rules()->create(['transaction_item_id' => $mti->id, 'coa_code' => $mti->coa_code, 'entry_type' => 'credit', 'value_mode' => 'fixed']);
+        }
 
-        // CASH-WDR: Penarikan Tunai → Simpanan Wadiah (D) / Kas (C)
-        $t = TransactionType::where('code', 'CASH-WDR')->first();
-        $t->rules()->create(['transaction_item_id' => $wadOut->id,  'coa_code' => $wadOut->coa_code,  'entry_type' => 'debit',  'value_mode' => 'total']);
-        $t->rules()->create(['transaction_item_id' => $kasOut->id,  'coa_code' => $kasOut->coa_code,  'entry_type' => 'credit', 'value_mode' => 'total']);
+        // --- BIAYA-ANNUAL Rules ---
+        $tAnn = TransactionType::where('code', 'BIAYA-ANNUAL')->first();
+        $tAnn->rules()->create(['transaction_item_id' => $kasIn->id, 'coa_code' => $kasIn->coa_code, 'entry_type' => 'debit', 'value_mode' => 'total']);
+        foreach ($operasionalItems as $oi) {
+            $mti = TransactionItem::where('item_name', $oi['item_name'])->first();
+            $tAnn->rules()->create(['transaction_item_id' => $mti->id, 'coa_code' => $mti->coa_code, 'entry_type' => 'credit', 'value_mode' => 'fixed']);
+        }
 
-        // FUND-TRF: Transfer antar rekening → Simpanan Wadiah (D) / Simpanan Wadiah (C)
-        $t = TransactionType::where('code', 'FUND-TRF')->first();
-        $t->rules()->create(['transaction_item_id' => $wadOut->id,  'coa_code' => $wadOut->coa_code,  'entry_type' => 'debit',  'value_mode' => 'total']);
-        $t->rules()->create(['transaction_item_id' => $wadIn->id,   'coa_code' => $wadIn->coa_code,   'entry_type' => 'credit', 'value_mode' => 'total']);
+        // --- BIAYA-MONTHLY Rules ---
+        $tMon = TransactionType::where('code', 'BIAYA-MONTHLY')->first();
+        $tMon->rules()->create(['transaction_item_id' => $kasIn->id, 'coa_code' => $kasIn->coa_code, 'entry_type' => 'debit', 'value_mode' => 'total']);
+        foreach ($bulananItems as $bi) {
+            $mti = TransactionItem::where('item_name', $bi['item_name'])->first();
+            $tMon->rules()->create(['transaction_item_id' => $mti->id, 'coa_code' => $mti->coa_code, 'entry_type' => 'credit', 'value_mode' => 'fixed']);
+        }
 
-        // TOPUP-CASH: Top-Up Tunai → Kas (D) / Simpanan Wadiah (C)
-        $t = TransactionType::where('code', 'TOPUP-CASH')->first();
-        $t->rules()->create(['transaction_item_id' => $kasIn->id,   'coa_code' => $kasIn->coa_code,   'entry_type' => 'debit',  'value_mode' => 'total']);
-        $t->rules()->create(['transaction_item_id' => $wadIn->id,   'coa_code' => $wadIn->coa_code,   'entry_type' => 'credit', 'value_mode' => 'total']);
+        // --- TOPUP-SANTRI Rules ---
+        $tTop = TransactionType::where('code', 'TOPUP-SANTRI')->first();
+        $tTop->rules()->create(['transaction_item_id' => $kasIn->id, 'coa_code' => $kasIn->coa_code, 'entry_type' => 'debit', 'value_mode' => 'total']);
+        $tTop->rules()->create(['transaction_item_id' => $wadIn->id, 'coa_code' => $wadIn->coa_code, 'entry_type' => 'credit', 'value_mode' => 'total']);
 
-        // TOPUP-TRF: Top-Up Transfer Bank → Bank (D) / Simpanan Wadiah (C)
-        $t = TransactionType::where('code', 'TOPUP-TRF')->first();
-        $t->rules()->create(['transaction_item_id' => $bankTrf->id, 'coa_code' => $bankTrf->coa_code, 'entry_type' => 'debit',  'value_mode' => 'total']);
-        $t->rules()->create(['transaction_item_id' => $wadIn->id,   'coa_code' => $wadIn->coa_code,   'entry_type' => 'credit', 'value_mode' => 'total']);
-
-        // PAYMENT-PKG: Pembayaran Paket → Simpanan Wadiah (D) / Pendapatan (C)
-        $t = TransactionType::where('code', 'PAYMENT-PKG')->first();
-        $t->rules()->create(['transaction_item_id' => $wadOut->id,  'coa_code' => $wadOut->coa_code,  'entry_type' => 'debit',  'value_mode' => 'total']);
-        $t->rules()->create(['transaction_item_id' => $pkgFee->id,  'coa_code' => $pkgFee->coa_code,  'entry_type' => 'credit', 'value_mode' => 'total']);
-
-        // COOP-BUY: Pembelian Koperasi → Simpanan Wadiah (D) / Pendapatan Koperasi (C)
-        $t = TransactionType::where('code', 'COOP-BUY')->first();
-        $t->rules()->create(['transaction_item_id' => $wadOut->id,  'coa_code' => $wadOut->coa_code,  'entry_type' => 'debit',  'value_mode' => 'total']);
-        $t->rules()->create(['transaction_item_id' => $coopFee->id, 'coa_code' => $coopFee->coa_code, 'entry_type' => 'credit', 'value_mode' => 'total']);
-
-        // REG-NEW: Pendaftaran → Kas (D) / Pendapatan Infaq (C)
-        // CATATAN: Tidak ada rule saldo rekening santri.
-        // Ini hanya mencatat pendapatan bank secara jurnal COA.
-        // Saldo santri TIDAK bergerak saat aktivasi pendaftaran.
-        $t = TransactionType::where('code', 'REG-NEW')->first();
-        $t->rules()->create(['transaction_item_id' => $kasIn->id,   'coa_code' => $kasIn->coa_code,   'entry_type' => 'debit',  'value_mode' => 'total']);
-        $t->rules()->create(['transaction_item_id' => $regFee->id,  'coa_code' => $regFee->coa_code,  'entry_type' => 'credit', 'value_mode' => 'total']);
+        // --- WDR-SANTRI Rules ---
+        $tWdr = TransactionType::where('code', 'WDR-SANTRI')->first();
+        // Simpanan Wadiah (D) / Kas (C)
+        $tWdr->rules()->create(['transaction_item_id' => $wadIn->id,  'coa_code' => $wadIn->coa_code,  'entry_type' => 'debit',  'value_mode' => 'total']);
+        $tWdr->rules()->create(['transaction_item_id' => $kasOut->id, 'coa_code' => $kasOut->coa_code, 'entry_type' => 'credit', 'value_mode' => 'total']);
     }
 }
