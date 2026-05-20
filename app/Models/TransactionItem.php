@@ -15,6 +15,7 @@ class TransactionItem extends Model
         'coa_code',
         'entry_type',
         'value_mode',
+        'destination_account',
         'description',
         'is_active',
     ];
@@ -27,6 +28,11 @@ class TransactionItem extends Model
     public function coa()
     {
         return $this->belongsTo(ChartOfAccount::class, 'coa_code', 'coa_code');
+    }
+
+    public function destinationAccount()
+    {
+        return $this->belongsTo(Account::class, 'destination_account', 'account_number');
     }
 
     public function rules()

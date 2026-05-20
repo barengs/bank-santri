@@ -17,6 +17,7 @@ import {
     useUpdatePaymentPackageMutation,
     useDeletePaymentPackageMutation
 } from '../../store/paymentApi';
+import { useGetTransactionItemsQuery } from '../../store/transactionItemApi';
 import DataTable from '../../components/DataTable';
 import Modal from '../../components/Modal';
 import { toast } from 'react-toastify';
@@ -33,7 +34,7 @@ const PaketPembayaranPage = () => {
         academic_year: '2024/2025',
         semester: 'ganjil',
         is_active: true,
-        items: [{ item_name: '', category: 'pendidikan', amount: 0, is_saku: false }]
+        items: [{ transaction_item_id: '', item_name: '', category: 'pendidikan', amount: 0, is_saku: false }]
     });
 
     const { data: packagesRes, isLoading, isFetching } = useGetPaymentPackagesQuery({
@@ -45,6 +46,9 @@ const PaketPembayaranPage = () => {
     const [createPackage, { isLoading: isCreating }] = useCreatePaymentPackageMutation();
     const [updatePackage, { isLoading: isUpdating }] = useUpdatePaymentPackageMutation();
     const [deletePackage] = useDeletePaymentPackageMutation();
+    
+    const { data: trxItemsRes } = useGetTransactionItemsQuery({ per_page: 100 });
+    const trxItems = trxItemsRes?.data?.data || [];
 
     const formatIDR = (amount) => {
         return new Intl.NumberFormat('id-ID', {
@@ -76,6 +80,7 @@ const PaketPembayaranPage = () => {
                 semester: pkg.semester || 'ganjil',
                 is_active: pkg.is_active,
                 items: pkg.items?.map(item => ({
+                    transaction_item_id: item.transaction_item_id || '',
                     item_name: item.item_name,
                     category: item.category,
                     amount: item.amount,
@@ -91,7 +96,7 @@ const PaketPembayaranPage = () => {
                 academic_year: '2024/2025',
                 semester: 'ganjil',
                 is_active: true,
-                items: [{ item_name: '', category: 'pendidikan', amount: 0, is_saku: false }]
+                items: [{ transaction_item_id: '', item_name: '', category: 'pendidikan', amount: 0, is_saku: false }]
             });
         }
         setIsModalOpen(true);
@@ -100,7 +105,7 @@ const PaketPembayaranPage = () => {
     const handleAddItem = () => {
         setFormData(prev => ({
             ...prev,
-            items: [...prev.items, { item_name: '', category: 'lainnya', amount: 0, is_saku: false }]
+            items: [...prev.items, { transaction_item_id: '', item_name: '', category: 'lainnya', amount: 0, is_saku: false }]
         }));
     };
 
@@ -125,6 +130,14 @@ const PaketPembayaranPage = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        
+        // Validation: Every non-saku item MUST have a transaction_item_id
+        const unlinkedItem = formData.items.find(item => !item.is_saku && !item.transaction_item_id);
+        if (unlinkedItem) {
+            toast.error(`Item "${unlinkedItem.item_name || 'Tanpa Nama'}" belum terhubung ke Master Rincian Transaksi. Silakan pilih koneksi master agar pencatatan COA akurat.`);
+            return;
+        }
+
         try {
             if (selectedPackage) {
                 await updatePackage({ id: selectedPackage.id, ...formData }).unwrap();
@@ -338,54 +351,72 @@ const PaketPembayaranPage = () => {
                             </button>
                         </div>
 
-                        <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                        <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                             {formData.items.map((item, index) => (
-                                <div key={index} className="grid grid-cols-12 gap-3 items-end bg-slate-50/50 p-3 rounded-md border border-slate-100">
-                                    <div className="col-span-4 space-y-1">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase">Nama Item</label>
-                                        <input
-                                            type="text"
-                                            required
-                                            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-md text-sm font-bold outline-none focus:border-indigo-400"
-                                            placeholder="Contoh: SPP Bulanan"
-                                            value={item.item_name}
-                                            onChange={(e) => handleItemChange(index, 'item_name', e.target.value)}
-                                        />
-                                    </div>
-                                    <div className="col-span-3 space-y-1">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase">Kategori</label>
-                                        <select
-                                            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-md text-sm font-bold outline-none focus:border-indigo-400"
-                                            value={item.category}
-                                            onChange={(e) => handleItemChange(index, 'category', e.target.value)}
-                                        >
-                                            <option value="pendidikan">Pendidikan</option>
-                                            <option value="asrama">Asrama</option>
-                                            <option value="konsumsi">Konsumsi</option>
-                                            <option value="kesehatan">Kesehatan</option>
-                                            <option value="saku">Uang Saku</option>
-                                            <option value="lainnya">Lainnya</option>
-                                        </select>
-                                    </div>
-                                    <div className="col-span-3 space-y-1">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase">Nominal</label>
-                                        <input
-                                            type="number"
-                                            required
-                                            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-md text-sm font-bold outline-none focus:border-indigo-400"
-                                            value={item.amount}
-                                            onChange={(e) => handleItemChange(index, 'amount', parseFloat(e.target.value))}
-                                        />
-                                    </div>
-                                    <div className="col-span-2 flex justify-center pb-1">
+                                <div key={index} className="flex flex-col bg-white p-4 rounded-xl border border-slate-200 shadow-sm gap-4 group hover:border-indigo-300 transition-all">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 bg-indigo-50 rounded-lg flex items-center justify-center text-indigo-600 font-black text-xs">
+                                                {index + 1}
+                                            </div>
+                                            <h4 className="text-sm font-black text-slate-800 uppercase tracking-tight">
+                                                {item.transaction_item_id ? trxItems.find(t => t.id == item.transaction_item_id)?.item_name : 'Pilih Item Transaksi'}
+                                            </h4>
+                                        </div>
                                         <button 
                                             type="button"
                                             onClick={() => handleRemoveItem(index)}
                                             disabled={formData.items.length === 1}
-                                            className="p-2 text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-all disabled:opacity-30"
+                                            className="p-2 text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-all disabled:opacity-0"
                                         >
-                                            <Trash size={18} />
+                                            <Trash size={16} />
                                         </button>
+                                    </div>
+
+                                    <div className="grid grid-cols-12 gap-4 items-end">
+                                        <div className="col-span-12 md:col-span-7 space-y-1.5">
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Master Rincian Transaksi</label>
+                                            <select
+                                                required
+                                                className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold outline-none focus:border-indigo-400 focus:bg-white transition-all"
+                                                value={item.transaction_item_id}
+                                                onChange={(e) => {
+                                                    const selectedTrxItem = trxItems.find(t => t.id == e.target.value);
+                                                    handleItemChange(index, 'transaction_item_id', e.target.value);
+                                                    if (selectedTrxItem) {
+                                                        handleItemChange(index, 'item_name', selectedTrxItem.item_name);
+                                                        handleItemChange(index, 'amount', selectedTrxItem.default_amount);
+                                                        handleItemChange(index, 'category', selectedTrxItem.category || 'pendidikan');
+                                                        handleItemChange(index, 'is_saku', selectedTrxItem.category === 'saku');
+                                                    }
+                                                }}
+                                            >
+                                                <option value="">-- Pilih Rincian Master --</option>
+                                                {trxItems.map(t => (
+                                                    <option key={t.id} value={t.id}>{t.item_name} [{t.coa_code}] - {formatIDR(t.default_amount)}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <div className="col-span-8 md:col-span-3 space-y-1.5">
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Nominal (Override)</label>
+                                            <div className="relative">
+                                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-400">Rp</span>
+                                                <input
+                                                    type="number"
+                                                    required
+                                                    className="w-full pl-8 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-black outline-none focus:border-indigo-400 focus:bg-white"
+                                                    value={item.amount}
+                                                    onChange={(e) => handleItemChange(index, 'amount', parseFloat(e.target.value))}
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="col-span-4 md:col-span-2 flex items-center h-[42px]">
+                                            <div className={`px-3 py-2 rounded-lg text-[10px] font-black uppercase tracking-tighter w-full text-center ${
+                                                item.is_saku ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-slate-100 text-slate-500'
+                                            }`}>
+                                                {item.is_saku ? 'UANG SAKU' : 'TAGIHAN'}
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             ))}

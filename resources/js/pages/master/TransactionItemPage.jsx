@@ -16,10 +16,11 @@ import {
 import { 
     useGetTransactionItemsQuery, 
     useCreateTransactionItemMutation, 
-    useUpdateTransactionItemMutation, 
+    useUpdateTransactionItemMutation,
     useDeleteTransactionItemMutation 
 } from '../../store/transactionItemApi';
 import { useGetDetailAccountsQuery } from '../../store/coaApi';
+import { useGetAccountsQuery } from '../../store/accountApi';
 import DataTable from '../../components/DataTable';
 import { toast } from 'react-toastify';
 
@@ -30,6 +31,7 @@ const TransactionItemPage = () => {
         item_name: '',
         default_amount: 0,
         coa_code: '',
+        destination_account: '',
         entry_type: 'credit',
         value_mode: 'fixed',
         description: '',
@@ -38,6 +40,7 @@ const TransactionItemPage = () => {
 
     const { data: itemsRes, isLoading } = useGetTransactionItemsQuery();
     const { data: coaRes } = useGetDetailAccountsQuery();
+    const { data: instansiAccountsRes } = useGetAccountsQuery({ is_instansi: true, per_page: 100 });
     
     const [createItem, { isLoading: isCreating }] = useCreateTransactionItemMutation();
     const [updateItem, { isLoading: isUpdating }] = useUpdateTransactionItemMutation();
@@ -118,6 +121,7 @@ const TransactionItemPage = () => {
             item_name: item.item_name,
             default_amount: item.default_amount,
             coa_code: item.coa_code,
+            destination_account: item.destination_account || '',
             entry_type: item.entry_type || 'credit',
             value_mode: item.value_mode || 'fixed',
             description: item.description || '',
@@ -160,6 +164,7 @@ const TransactionItemPage = () => {
             item_name: '',
             default_amount: 0,
             coa_code: '',
+            destination_account: '',
             entry_type: 'credit',
             value_mode: 'fixed',
             description: '',
@@ -278,18 +283,37 @@ const TransactionItemPage = () => {
 
                             <div className="space-y-2">
                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">COA Tujuan</label>
-                                    <select 
-                                        required
-                                        value={formData.coa_code}
-                                        onChange={(e) => setFormData({...formData, coa_code: e.target.value})}
-                                        className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-lg text-sm font-bold"
-                                    >
-                                        <option value="">Pilih COA...</option>
-                                        {coaRes?.data?.map(acc => (
-                                            <option key={acc.coa_code} value={acc.coa_code}>{acc.coa_code} - {acc.account_name}</option>
-                                        ))}
-                                    </select>
-                                </div>
+                                <select 
+                                    required
+                                    value={formData.coa_code}
+                                    onChange={(e) => setFormData({...formData, coa_code: e.target.value})}
+                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-lg text-sm font-bold"
+                                >
+                                    <option value="">Pilih COA...</option>
+                                    {coaRes?.data?.map(acc => (
+                                        <option key={acc.coa_code} value={acc.coa_code}>{acc.coa_code} - {acc.account_name}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block flex items-center justify-between">
+                                    <span>Rekening Instansi Tujuan (Opsional)</span>
+                                    <span className="text-[9px] text-indigo-400 bg-indigo-50 px-2 py-0.5 rounded">Auto-Settlement</span>
+                                </label>
+                                <select 
+                                    value={formData.destination_account || ''}
+                                    onChange={(e) => setFormData({...formData, destination_account: e.target.value})}
+                                    className="w-full px-4 py-3 bg-indigo-50/30 border border-indigo-100 rounded-lg text-sm font-bold focus:border-indigo-600"
+                                >
+                                    <option value="">-- Tidak Menggunakan Rekening Instansi (Masuk ke COA Langsung) --</option>
+                                    {instansiAccountsRes?.data?.data?.map(acc => (
+                                        <option key={acc.account_number} value={acc.account_number}>
+                                            {acc.customer_name} ({acc.account_number})
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
 
                             <div className="space-y-2">
                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Keterangan Singkat</label>

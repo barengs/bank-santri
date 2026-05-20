@@ -8,11 +8,17 @@ class PaymentPackageItem extends Model
 {
     protected $fillable = [
         'package_id',
+        'transaction_item_id',
         'item_name',
         'category',
         'amount',
         'is_saku',
     ];
+
+    public function transactionItem()
+    {
+        return $this->belongsTo(TransactionItem::class);
+    }
 
     protected $casts = [
         'amount'  => 'decimal:2',

@@ -4,10 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
 
 class PaymentPackage extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
 
     protected $fillable = [
         'package_code',
@@ -45,5 +47,15 @@ class PaymentPackage extends Model
         $this->total_amount = $items->sum('amount');
         $this->saku_amount  = $items->where('is_saku', true)->sum('amount');
         $this->save();
+    }
+
+    // Activity Log
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['package_name', 'total_amount', 'is_active'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->useLogName('payment_package');
     }
 }

@@ -37,11 +37,12 @@ class PaymentPackageController extends Controller
             'academic_year'         => 'nullable|string|max:20',
             'semester'              => 'nullable|in:ganjil,genap',
             'is_active'             => 'boolean',
-            'items'                 => 'required|array|min:1',
-            'items.*.item_name'     => 'required|string|max:150',
-            'items.*.category'      => 'required|in:pendidikan,asrama,konsumsi,kesehatan,saku,lainnya',
-            'items.*.amount'        => 'required|numeric|min:0',
-            'items.*.is_saku'       => 'boolean',
+            'items'                     => 'required|array|min:1',
+            'items.*.transaction_item_id' => 'required_unless:items.*.category,saku|nullable|exists:transaction_items,id',
+            'items.*.item_name'         => 'required|string|max:150',
+            'items.*.category'          => 'required|in:pendidikan,asrama,konsumsi,kesehatan,saku,lainnya',
+            'items.*.amount'            => 'required|numeric|min:0',
+            'items.*.is_saku'           => 'boolean',
         ]);
 
         if ($validator->fails()) {
@@ -63,10 +64,11 @@ class PaymentPackageController extends Controller
             foreach ($request->items as $item) {
                 $isSaku = (bool) ($item['is_saku'] ?? ($item['category'] === 'saku'));
                 $package->items()->create([
-                    'item_name' => $item['item_name'],
-                    'category'  => $item['category'],
-                    'amount'    => $item['amount'],
-                    'is_saku'   => $isSaku,
+                    'transaction_item_id' => $item['transaction_item_id'] ?? null,
+                    'item_name'           => $item['item_name'],
+                    'category'            => $item['category'],
+                    'amount'              => $item['amount'],
+                    'is_saku'             => $isSaku,
                 ]);
             }
 
@@ -105,11 +107,12 @@ class PaymentPackageController extends Controller
             'academic_year'     => 'nullable|string|max:20',
             'semester'          => 'nullable|in:ganjil,genap',
             'is_active'         => 'sometimes|boolean',
-            'items'             => 'sometimes|array|min:1',
-            'items.*.item_name' => 'required_with:items|string|max:150',
-            'items.*.category'  => 'required_with:items|in:pendidikan,asrama,konsumsi,kesehatan,saku,lainnya',
-            'items.*.amount'    => 'required_with:items|numeric|min:0',
-            'items.*.is_saku'   => 'boolean',
+            'items'                       => 'sometimes|array|min:1',
+            'items.*.transaction_item_id' => 'required_unless:items.*.category,saku|nullable|exists:transaction_items,id',
+            'items.*.item_name'           => 'required_with:items|string|max:150',
+            'items.*.category'            => 'required_with:items|in:pendidikan,asrama,konsumsi,kesehatan,saku,lainnya',
+            'items.*.amount'              => 'required_with:items|numeric|min:0',
+            'items.*.is_saku'             => 'boolean',
         ]);
 
         if ($validator->fails()) {
@@ -127,10 +130,11 @@ class PaymentPackageController extends Controller
                 foreach ($request->items as $item) {
                     $isSaku = (bool) ($item['is_saku'] ?? ($item['category'] === 'saku'));
                     $package->items()->create([
-                        'item_name' => $item['item_name'],
-                        'category'  => $item['category'],
-                        'amount'    => $item['amount'],
-                        'is_saku'   => $isSaku,
+                        'transaction_item_id' => $item['transaction_item_id'] ?? null,
+                        'item_name'           => $item['item_name'],
+                        'category'            => $item['category'],
+                        'amount'              => $item['amount'],
+                        'is_saku'             => $isSaku,
                     ]);
                 }
                 $package->recalculateTotals();

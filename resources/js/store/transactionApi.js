@@ -44,7 +44,7 @@ export const transactionApi = baseApi.injectEndpoints({
         activateTransaction: builder.mutation({
             query: ({ id, ...data }) => ({
                 url: `/main/transaction/${id}/activate`,
-                method: 'POST',
+                method: 'PUT',
                 body: data,
             }),
             invalidatesTags: ['Transaction', 'Account', 'Dashboard'],

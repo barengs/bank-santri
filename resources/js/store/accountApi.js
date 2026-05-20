@@ -24,6 +24,14 @@ export const accountApi = baseApi.injectEndpoints({
             }),
             invalidatesTags: ['Account', 'Dashboard'],
         }),
+        createInstansiAccount: builder.mutation({
+            query: (data) => ({
+                url: '/main/account/instansi',
+                method: 'POST',
+                body: data,
+            }),
+            invalidatesTags: ['Account', 'Dashboard'],
+        }),
         // Special endpoint to search students from SMPT (Backend Proxy)
         searchSmptStudents: builder.query({
             query: (search) => ({
@@ -50,6 +58,7 @@ export const {
     useGetAccountDetailQuery,
     useLazyGetAccountDetailQuery,
     useCreateAccountMutation,
+    useCreateInstansiAccountMutation,
     useUpdateAccountMutation,
     useLazySearchSmptStudentsQuery 
 } = accountApi;

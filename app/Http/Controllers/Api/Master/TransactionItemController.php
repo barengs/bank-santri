@@ -26,6 +26,7 @@ class TransactionItemController extends Controller
             'coa_code'       => 'required|string|exists:chart_of_accounts,coa_code',
             'entry_type'     => 'required|in:debit,credit',
             'value_mode'     => 'required|in:total,fixed,remainder',
+            'destination_account' => 'nullable|string|exists:accounts,account_number',
             'description'    => 'nullable|string',
             'is_active'      => 'boolean',
         ]);
@@ -54,6 +55,7 @@ class TransactionItemController extends Controller
             'coa_code'       => 'sometimes|string|exists:chart_of_accounts,coa_code',
             'entry_type'     => 'sometimes|in:debit,credit',
             'value_mode'     => 'sometimes|in:total,fixed,remainder',
+            'destination_account' => 'nullable|string|exists:accounts,account_number',
             'description'    => 'nullable|string',
             'is_active'      => 'boolean',
         ]);

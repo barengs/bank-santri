@@ -4,9 +4,11 @@ import { Search, Plus, Filter, Download, MoreHorizontal, AlertCircle, Edit2, Tra
 import { 
     useGetAccountsQuery, 
     useCreateAccountMutation, 
+    useCreateInstansiAccountMutation,
     useUpdateAccountMutation,
     useLazySearchSmptStudentsQuery 
 } from '../store/accountApi';
+import { useGetProductsQuery } from '../store/productApi';
 import DataTable from '../components/DataTable';
 
 const NasabahPage = () => {
@@ -18,7 +20,7 @@ const NasabahPage = () => {
     // Modal State
     const [studentSearch, setStudentSearch] = useState('');
     const [selectedStudent, setSelectedStudent] = useState(null);
-    const [selectedProduct, setSelectedProduct] = useState('1');
+    const [selectedProduct, setSelectedProduct] = useState('');
     const [selectedAkad, setSelectedAkad] = useState('wadiah');
     const [cardNumber, setCardNumber] = useState('');
 
@@ -36,6 +38,16 @@ const NasabahPage = () => {
     const [triggerSearch, { data: studentResults, isFetching: isSearchingStudents }] = useLazySearchSmptStudentsQuery();
     const [createAccount, { isLoading: isCreating }] = useCreateAccountMutation();
     const [updateAccount, { isLoading: isUpdating }] = useUpdateAccountMutation();
+    const { data: productsRes } = useGetProductsQuery();
+
+    const products = productsRes?.data || [];
+
+    // Set default product when products are loaded
+    React.useEffect(() => {
+        if (products.length > 0 && !selectedProduct) {
+            setSelectedProduct(products[0].id.toString());
+        }
+    }, [products]);
 
     const formatIDR = (amount) => {
         return new Intl.NumberFormat('id-ID', {
@@ -183,21 +195,56 @@ const NasabahPage = () => {
         }
     };
 
+    // Modal Instansi State
+    const [isInstansiModalOpen, setIsInstansiModalOpen] = useState(false);
+    const [instansiData, setInstansiData] = useState({
+        account_number: '',
+        customer_name: '',
+        product_id: '',
+        akad_type: 'wadiah'
+    });
+
+    const [createInstansiAccount, { isLoading: isCreatingInstansi }] = useCreateInstansiAccountMutation();
+
+    const handleCreateInstansi = async () => {
+        try {
+            await createInstansiAccount({
+                ...instansiData,
+                product_id: instansiData.product_id || selectedProduct
+            }).unwrap();
+            
+            setIsInstansiModalOpen(false);
+            setInstansiData({ account_number: '', customer_name: '', product_id: '', akad_type: 'wadiah' });
+            alert('Rekening Instansi berhasil dibuka!');
+        } catch (err) {
+            alert('Gagal membuka rekening: ' + (err.data?.message || 'Terjadi kesalahan'));
+        }
+    };
+
     return (
         <div className="space-y-6">
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900">Manajemen Nasabah</h1>
-                    <p className="text-sm text-gray-500">Kelola dan buka rekening tabungan santri.</p>
+                    <p className="text-sm text-gray-500">Kelola dan buka rekening tabungan santri & instansi.</p>
                 </div>
-                <button 
-                    onClick={() => setIsModalOpen(true)}
-                    className="flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 text-white rounded-md font-bold text-sm shadow-lg shadow-indigo-600/20 hover:bg-indigo-700 transition-all active:scale-95"
-                >
-                    <UserPlus className="w-4 h-4" />
-                    Buka Rekening Baru
-                </button>
+                <div className="flex items-center gap-2">
+                    <button 
+                        onClick={() => setIsInstansiModalOpen(true)}
+                        className="flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-800 text-white rounded-md font-bold text-sm shadow-lg shadow-slate-800/20 hover:bg-slate-900 transition-all active:scale-95"
+                    >
+                        <ShieldCheck className="w-4 h-4" />
+                        Buka Rekening Instansi
+                    </button>
+                    <button 
+                        onClick={() => setIsModalOpen(true)}
+                        className="flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 text-white rounded-md font-bold text-sm shadow-lg shadow-indigo-600/20 hover:bg-indigo-700 transition-all active:scale-95"
+                    >
+                        <UserPlus className="w-4 h-4" />
+                        Buka Rekening Santri
+                    </button>
+                </div>
             </div>
 
             {/* Table Area */}
@@ -297,8 +344,10 @@ const NasabahPage = () => {
                                         onChange={(e) => setSelectedProduct(e.target.value)}
                                         className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded text-sm focus:outline-none focus:border-indigo-600"
                                     >
-                                        <option value="1">Simpanan Wajib</option>
-                                        <option value="2">Simpanan Sukarela</option>
+                                        <option value="" disabled>Pilih Produk</option>
+                                        {products.map(p => (
+                                            <option key={p.id} value={p.id}>{p.product_name}</option>
+                                        ))}
                                     </select>
                                 </div>
                                 <div className="space-y-2">
@@ -314,20 +363,6 @@ const NasabahPage = () => {
                                 </div>
                             </div>
 
-                            {/* Card Number Input (Optional) */}
-                            <div className="space-y-2">
-                                <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Nomor Kartu Santri (Opsional)</label>
-                                <div className="relative">
-                                    <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                    <input 
-                                        type="text"
-                                        placeholder="Contoh: 8890..."
-                                        value={cardNumber}
-                                        onChange={(e) => setCardNumber(e.target.value)}
-                                        className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-md focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all text-sm font-mono"
-                                    />
-                                </div>
-                            </div>
 
                             <div className="pt-4 border-t border-gray-100 flex gap-3">
                                 <button 
@@ -397,6 +432,84 @@ const NasabahPage = () => {
                                 {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                                 Simpan Perubahan
                             </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Buka Rekening Instansi Modal */}
+            {isInstansiModalOpen && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+                    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => !isCreatingInstansi && setIsInstansiModalOpen(false)}></div>
+                    
+                    <div className="relative w-full max-w-lg bg-white rounded-lg shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+                        <div className="px-8 py-6 bg-slate-800 text-white relative">
+                            <h2 className="text-xl font-bold">Buka Rekening Instansi</h2>
+                            <p className="text-slate-300 text-xs mt-1">Buat rekening penampungan untuk instansi (MI, MTs, SMA, dll).</p>
+                            <div className="absolute top-6 right-8 opacity-20">
+                                <ShieldCheck className="w-12 h-12" />
+                            </div>
+                        </div>
+
+                        <div className="p-8 space-y-6">
+                            <div className="space-y-3">
+                                <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Nama Instansi</label>
+                                <input 
+                                    type="text"
+                                    placeholder="Contoh: Instansi SMA Plus"
+                                    value={instansiData.customer_name}
+                                    onChange={(e) => setInstansiData({...instansiData, customer_name: e.target.value})}
+                                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-md focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all text-sm font-bold"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Produk Tabungan</label>
+                                    <select 
+                                        value={instansiData.product_id}
+                                        onChange={(e) => setInstansiData({...instansiData, product_id: e.target.value})}
+                                        className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded text-sm focus:outline-none focus:border-indigo-600"
+                                    >
+                                        <option value="" disabled>Pilih Produk</option>
+                                        {products.map(p => (
+                                            <option key={p.id} value={p.id}>{p.product_name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Jenis Akad</label>
+                                    <select 
+                                        value={instansiData.akad_type}
+                                        onChange={(e) => setInstansiData({...instansiData, akad_type: e.target.value})}
+                                        className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded text-sm focus:outline-none focus:border-indigo-600"
+                                    >
+                                        <option value="wadiah">Wadiah (Titipan)</option>
+                                        <option value="mudharabah">Mudharabah (Bagi Hasil)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="pt-4 border-t border-gray-100 flex gap-3">
+                                <button 
+                                    onClick={() => setIsInstansiModalOpen(false)}
+                                    className="flex-1 px-4 py-2.5 text-sm font-bold text-gray-500 hover:bg-gray-50 rounded-md transition-all"
+                                >
+                                    Batal
+                                </button>
+                                <button 
+                                    onClick={handleCreateInstansi}
+                                    disabled={!instansiData.customer_name || isCreatingInstansi}
+                                    className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-md font-bold text-sm text-white shadow-lg transition-all ${
+                                        instansiData.customer_name && !isCreatingInstansi 
+                                            ? 'bg-slate-800 shadow-slate-800/20 hover:bg-slate-900' 
+                                            : 'bg-gray-300 shadow-none cursor-not-allowed'
+                                    }`}
+                                >
+                                    {isCreatingInstansi ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
+                                    Konfirmasi & Buka
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

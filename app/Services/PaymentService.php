@@ -57,29 +57,33 @@ class PaymentService
                 'notes'             => $notes,
             ]);
 
-            // Catat detail item
+            // Catat detail item & Proses Transaksi Per Item
             foreach ($package->items as $item) {
                 PaymentRecordItem::create([
-                    'payment_record_id' => $record->id,
-                    'package_item_id'   => $item->id,
-                    'item_name'         => $item->item_name,
-                    'category'          => $item->category,
-                    'amount'            => $item->amount,
-                    'is_saku'           => $item->is_saku,
+                    'payment_record_id'   => $record->id,
+                    'package_item_id'     => $item->id,
+                    'transaction_item_id' => $item->transaction_item_id,
+                    'item_name'           => $item->item_name,
+                    'category'            => $item->category,
+                    'amount'              => $item->amount,
+                    'is_saku'             => $item->is_saku,
                 ]);
-            }
 
-            // 2. Catat Transaksi Perbankan & Jurnal COA (Hanya porsi Non-Saku yang jadi pendapatan)
-            if ($nonSakuTotal > 0) {
-                app(\App\Services\AccountingService::class)->recordTransaction(
-                    'PAYMENT-PKG',
-                    $nonSakuTotal,
-                    $account->account_number,
-                    null,
-                    "Pembayaran Paket: {$package->package_name} [{$ref}]",
-                    'system',
-                    ['reference_number' => $ref]
-                );
+                // Jika bukan saku, buat transaksi accounting terpisah per item
+                if (!$item->is_saku && $item->amount > 0) {
+                    // Wajib terkoneksi ke Master Rincian Transaksi (Enforced by Controller/UI)
+                    if ($item->transactionItem) {
+                        app(\App\Services\AccountingService::class)->recordPackageItemTransaction(
+                            $item->transactionItem,
+                            $item->amount,
+                            $account->account_number,
+                            $item->transactionItem->destination_account,
+                            "Pembayaran {$item->item_name} [{$ref}]",
+                            'system',
+                            ['reference_number' => $ref . '-' . $item->id]
+                        );
+                    }
+                }
             }
 
             // Catatan: Porsi Saku tidak perlu dijurnal COA karena dananya tetap di Bank (di Akun Santri), 

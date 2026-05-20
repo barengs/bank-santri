@@ -58,6 +58,7 @@ class RBACSeeder extends Seeder
                 ['name' => 'Manajemen Menu', 'icon' => 'LayoutDashboard', 'path' => '/security/menu'],
                 ['name' => 'Role & Hak Akses', 'icon' => 'ShieldCheck', 'path' => '/security/role'],
                 ['name' => 'Permission', 'icon' => 'Lock', 'path' => '/security/permission'],
+                ['name' => 'Audit Trail', 'icon' => 'History', 'path' => '/security/audit-trail'],
             ]],
         ];
 

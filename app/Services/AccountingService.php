@@ -7,6 +7,7 @@ use App\Models\AccountMovement;
 use App\Models\Transaction;
 use App\Models\TransactionLedger;
 use App\Models\TransactionType;
+use App\Models\TransactionItem;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -81,6 +82,53 @@ class AccountingService
                         'description'    => $rule->description ?? $transaction->description,
                     ]);
                 }
+            }
+
+            return $transaction;
+        });
+    }
+
+    /**
+     * Mencatat transaksi per rincian item paket menggunakan Master Transaction Item.
+     */
+    public function recordPackageItemTransaction(
+        TransactionItem $item,
+        float $amount,
+        ?string $sourceAccount = null,
+        ?string $destAccount = null,
+        ?string $description = null,
+        string $channel = 'system',
+        array $extraData = []
+    ) {
+        return DB::transaction(function () use ($item, $amount, $sourceAccount, $destAccount, $description, $channel, $extraData) {
+            $ref = $extraData['reference_number'] ?? ('PKG-' . date('YmdHis') . strtoupper(Str::random(4)));
+
+            // 1. Buat Header Transaksi
+            $transaction = Transaction::create([
+                'id'                  => Str::uuid(),
+                'transaction_type_id' => null, // No type needed if we have item
+                'source_account'      => $sourceAccount,
+                'destination_account' => $destAccount,
+                'reference_number'    => $ref,
+                'amount'              => $amount,
+                'description'         => $description ?? $item->item_name,
+                'status'              => 'success',
+                'channel'             => $channel,
+                'akad_type'           => $extraData['akad_type'] ?? 'wadiah',
+            ]);
+
+            // 2. Update Saldo & Mutasi
+            $this->applyBalanceMovement($transaction);
+
+            // 3. Jurnal COA berdasarkan Transaction Item
+            if ($item->coa_code) {
+                TransactionLedger::create([
+                    'transaction_id' => $transaction->id,
+                    'coa_code'       => $item->coa_code,
+                    'debit'          => $item->entry_type === 'debit' ? $amount : 0,
+                    'credit'         => $item->entry_type === 'credit' ? $amount : 0,
+                    'description'    => $transaction->description,
+                ]);
             }
 
             return $transaction;

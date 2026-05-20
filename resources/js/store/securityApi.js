@@ -49,6 +49,10 @@ export const securityApi = baseApi.injectEndpoints({
             }),
             invalidatesTags: ['Role', 'Sidebar'],
         }),
+        getActivityLogs: builder.query({
+            query: ({ page = 1 }) => `/security/activity-logs?page=${page}`,
+            providesTags: ['ActivityLog'],
+        }),
     }),
 });
 
@@ -61,4 +65,5 @@ export const {
     useCreateRoleMutation,
     useUpdateRoleMutation,
     useDestroyRoleMutation,
+    useGetActivityLogsQuery,
 } = securityApi;

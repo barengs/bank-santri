@@ -35,6 +35,15 @@ import UserManagementPage from './pages/security/UserManagementPage';
 import MenuManagementPage from './pages/security/MenuManagementPage';
 import RoleManagementPage from './pages/security/RoleManagementPage';
 import PermissionManagementPage from './pages/security/PermissionManagementPage';
+import AuditTrailPage from './pages/security/AuditTrailPage';
+
+// Report Pages
+import { 
+    JournalPage, 
+    TrialBalancePage, 
+    FinancialStatementPage, 
+    LaporanPage 
+} from './pages/reports';
 
 import '../css/app.css';
 
@@ -80,11 +89,17 @@ const App = () => {
                                 <Route path="menu" element={<MenuManagementPage />} />
                                 <Route path="role" element={<RoleManagementPage />} />
                                 <Route path="permission" element={<PermissionManagementPage />} />
+                                <Route path="audit-trail" element={<AuditTrailPage />} />
                             </Route>
 
                             <Route path="konfigurasi" element={<SettingPage />} />
                             <Route path="transaksi/:id" element={<TransactionDetailPage />} />
-                            <Route path="laporan" element={<MutasiPage />} /> 
+                            
+                            {/* Reports */}
+                            <Route path="laporan" element={<LaporanPage />} />
+                            <Route path="laporan/jurnal" element={<JournalPage />} />
+                            <Route path="laporan/neraca-saldo" element={<TrialBalancePage />} />
+                            <Route path="laporan/keuangan" element={<FinancialStatementPage />} />
                         </Route>
                     </Routes>
                 </AuthMonitor>

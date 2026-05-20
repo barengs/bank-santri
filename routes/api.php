@@ -53,8 +53,9 @@ Route::group(['prefix' => 'main', 'middleware' => ['autoprovision', 'auth:api']]
     // Dashboard
     Route::get('dashboard/summary', [DashboardController::class, 'summary']);
 
-    // Rekening santri
+    // Rekening santri & Instansi
     Route::get('account/smpt-search', [AccountController::class, 'smptSearch']);
+    Route::post('account/instansi', [AccountController::class, 'storeInstansi']);
     Route::apiResource('account', AccountController::class);
 
     // Transaksi
@@ -136,5 +137,14 @@ Route::group(['middleware' => ['auth:api']], function () {
         Route::delete('roles/{id}', [SecurityController::class, 'destroyRole']);
         Route::post('roles/{id}/sync-menus', [SecurityController::class, 'syncRoleMenus']);
         Route::get('permissions', [SecurityController::class, 'getPermissions']);
+        Route::get('activity-logs', [\App\Http\Controllers\Api\ActivityLogController::class, 'index']);
+    });
+
+    // Accounting Reports
+    Route::prefix('reports')->middleware(['auth:api'])->group(function () {
+        Route::get('journal', [\App\Http\Controllers\Api\Reports\AccountingReportController::class, 'journal']);
+        Route::get('trial-balance', [\App\Http\Controllers\Api\Reports\AccountingReportController::class, 'trialBalance']);
+        Route::get('profit-loss', [\App\Http\Controllers\Api\Reports\AccountingReportController::class, 'profitLoss']);
+        Route::get('balance-sheet', [\App\Http\Controllers\Api\Reports\AccountingReportController::class, 'balanceSheet']);
     });
 });
