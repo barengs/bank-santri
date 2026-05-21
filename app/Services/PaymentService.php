@@ -92,8 +92,6 @@ class PaymentService
             // AccountingService sudah menangani pergerakan saldo tersebut jika kita panggil recordTransaction.
             
             return $record;
-
-            return $record;
         });
     }
 }

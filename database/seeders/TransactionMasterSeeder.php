@@ -91,6 +91,8 @@ class TransactionMasterSeeder extends Seeder
             ['code' => 'BIAYA-ANNUAL',  'name' => 'Biaya Tahunan Santri',    'category' => 'fee',     'description' => 'Pembayaran biaya operasional tahunan'],
             ['code' => 'BIAYA-MONTHLY', 'name' => 'Biaya Bulanan Santri',    'category' => 'fee',     'description' => 'Pembayaran paket bulanan santri'],
             ['code' => 'TOPUP-SANTRI',  'name' => 'Setoran Tunai Tabungan',  'category' => 'topup',   'description' => 'Pengisian saldo tabungan santri'],
+            ['code' => 'TOPUP-CASH',    'name' => 'Top-Up Tunai',            'category' => 'topup',   'description' => 'Pengisian saldo tabungan via kasir'],
+            ['code' => 'TOPUP-TRF',     'name' => 'Top-Up Transfer Bank',    'category' => 'topup',   'description' => 'Pengisian saldo tabungan via transfer bank'],
             ['code' => 'WDR-SANTRI',    'name' => 'Penarikan Tabungan',      'category' => 'cash_operation', 'description' => 'Penarikan tunai saldo santri'],
         ];
 
@@ -105,6 +107,7 @@ class TransactionMasterSeeder extends Seeder
         $kasIn  = TransactionItem::where('item_name', 'Kas Tunai Teller')->first();
         $kasOut = TransactionItem::where('item_name', 'Kas Tunai (Keluar)')->first();
         $wadIn  = TransactionItem::where('item_name', 'Saldo Tabungan Santri')->first();
+        $bankIn = TransactionItem::where('item_name', 'Bank Transfer (In)')->first();
 
         // --- BIAYA-REG Rules ---
         $tReg = TransactionType::where('code', 'BIAYA-REG')->first();
@@ -134,6 +137,16 @@ class TransactionMasterSeeder extends Seeder
         $tTop = TransactionType::where('code', 'TOPUP-SANTRI')->first();
         $tTop->rules()->create(['transaction_item_id' => $kasIn->id, 'coa_code' => $kasIn->coa_code, 'entry_type' => 'debit', 'value_mode' => 'total']);
         $tTop->rules()->create(['transaction_item_id' => $wadIn->id, 'coa_code' => $wadIn->coa_code, 'entry_type' => 'credit', 'value_mode' => 'total']);
+
+        // --- TOPUP-CASH Rules ---
+        $tTopCash = TransactionType::where('code', 'TOPUP-CASH')->first();
+        $tTopCash->rules()->create(['transaction_item_id' => $kasIn->id, 'coa_code' => $kasIn->coa_code, 'entry_type' => 'debit', 'value_mode' => 'total']);
+        $tTopCash->rules()->create(['transaction_item_id' => $wadIn->id, 'coa_code' => $wadIn->coa_code, 'entry_type' => 'credit', 'value_mode' => 'total']);
+
+        // --- TOPUP-TRF Rules ---
+        $tTopTrf = TransactionType::where('code', 'TOPUP-TRF')->first();
+        $tTopTrf->rules()->create(['transaction_item_id' => $bankIn->id, 'coa_code' => $bankIn->coa_code, 'entry_type' => 'debit', 'value_mode' => 'total']);
+        $tTopTrf->rules()->create(['transaction_item_id' => $wadIn->id, 'coa_code' => $wadIn->coa_code, 'entry_type' => 'credit', 'value_mode' => 'total']);
 
         // --- WDR-SANTRI Rules ---
         $tWdr = TransactionType::where('code', 'WDR-SANTRI')->first();

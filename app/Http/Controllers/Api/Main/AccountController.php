@@ -130,9 +130,78 @@ class AccountController extends Controller
     {
         $account = Account::with(['product', 'topUpRequests' => fn($q) => $q->latest()->limit(5)])
             ->where('account_number', $accountNumber)
-            ->firstOrFail();
+            ->first();
 
-        if ($account->customer_id != 0) {
+        if (!$account) {
+            // Auto-provision from SMPT if it's a student NIS
+            try {
+                $smptUrl = config('services.smpt.url');
+                $studentRes = Http::get("{$smptUrl}/api/main/student", [
+                    'search' => $accountNumber,
+                    'per_page' => 10
+                ]);
+
+                if ($studentRes->successful()) {
+                    $students = $studentRes->json('data.data') ?? [];
+                    $matchedStudent = null;
+                    foreach ($students as $student) {
+                        if (isset($student['nis']) && $student['nis'] === $accountNumber) {
+                            $matchedStudent = $student;
+                            break;
+                        }
+                    }
+
+                    if ($matchedStudent) {
+                        // Find default product
+                        $product = Product::where('is_active', true)->first() ?? Product::first();
+                        $productId = $product ? $product->id : 1;
+
+                        // Fetch card number if exists
+                        $cardNumber = null;
+                        try {
+                            $cardRes = Http::get("{$smptUrl}/api/main/student/card/{$accountNumber}");
+                            if ($cardRes->successful()) {
+                                $cardData = $cardRes->json('data.card');
+                                if ($cardData && isset($cardData['card_number'])) {
+                                    $cardNumber = $cardData['card_number'];
+                                }
+                            }
+                        } catch (\Exception $cardEx) {
+                            \Illuminate\Support\Facades\Log::warning('Auto-provision: Failed to fetch card for NIS ' . $accountNumber . ': ' . $cardEx->getMessage());
+                        }
+
+                        // Create local account
+                        $account = Account::create([
+                            'account_number' => $accountNumber,
+                            'customer_id'    => $matchedStudent['id'],
+                            'customer_name'  => trim($matchedStudent['first_name'] . ' ' . ($matchedStudent['last_name'] ?? '')),
+                            'product_id'     => $productId,
+                            'balance'        => 0,
+                            'status'         => 'AKTIF',
+                            'akad_type'      => 'wadiah',
+                            'card_number'    => $cardNumber,
+                            'open_date'      => now()->toDateString(),
+                        ]);
+
+                        // Load relations
+                        $account->load(['product', 'topUpRequests' => fn($q) => $q->latest()->limit(5)]);
+                        
+                        // Attach the student data directly
+                        $account->student = $matchedStudent;
+
+                        \Illuminate\Support\Facades\Log::info("Auto-provisioned student account for NIS: {$accountNumber}");
+                    }
+                }
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error("Failed to auto-provision account for NIS {$accountNumber}: " . $e->getMessage());
+            }
+        }
+
+        if (!$account) {
+            abort(404, "Rekening atau NIS tidak ditemukan.");
+        }
+
+        if ($account->customer_id != 0 && !isset($account->student)) {
             try {
                 $smptUrl = config('services.smpt.url');
                 $studentRes = Http::get("{$smptUrl}/api/main/student/{$account->customer_id}");
