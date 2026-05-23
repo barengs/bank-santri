@@ -10,6 +10,7 @@ import {
 } from '../store/accountApi';
 import { useGetProductsQuery } from '../store/productApi';
 import DataTable from '../components/DataTable';
+import { toast } from 'react-toastify';
 
 const NasabahPage = () => {
     const navigate = useNavigate();
@@ -189,9 +190,9 @@ const NasabahPage = () => {
             setSelectedStudent(null);
             setStudentSearch('');
             setCardNumber('');
-            alert('Rekening berhasil dibuka!');
+            toast.success('Rekening berhasil dibuka!');
         } catch (err) {
-            alert('Gagal membuka rekening: ' + (err.data?.message || 'Terjadi kesalahan'));
+            toast.error('Gagal membuka rekening: ' + (err.data?.message || 'Terjadi kesalahan'));
         }
     };
 
@@ -206,9 +207,9 @@ const NasabahPage = () => {
             
             setIsEditModalOpen(false);
             setEditingAccount(null);
-            alert('Nomor kartu berhasil diperbarui!');
+            toast.success('Nomor kartu berhasil diperbarui!');
         } catch (err) {
-            alert('Gagal memperbarui kartu: ' + (err.data?.message || 'Terjadi kesalahan'));
+            toast.error('Gagal memperbarui kartu: ' + (err.data?.message || 'Terjadi kesalahan'));
         }
     };
 
@@ -223,9 +224,9 @@ const NasabahPage = () => {
             
             setIsCloseModalOpen(false);
             setClosingAccount(null);
-            alert('Rekening berhasil ditutup!');
+            toast.success('Rekening berhasil ditutup!');
         } catch (err) {
-            alert('Gagal menutup rekening: ' + (err.data?.message || 'Terjadi kesalahan'));
+            toast.error('Gagal menutup rekening: ' + (err.data?.message || 'Terjadi kesalahan'));
         }
     };
 
@@ -249,9 +250,9 @@ const NasabahPage = () => {
             
             setIsInstansiModalOpen(false);
             setInstansiData({ account_number: '', customer_name: '', product_id: '', akad_type: 'wadiah' });
-            alert('Rekening Instansi berhasil dibuka!');
+            toast.success('Rekening Instansi berhasil dibuka!');
         } catch (err) {
-            alert('Gagal membuka rekening: ' + (err.data?.message || 'Terjadi kesalahan'));
+            toast.error('Gagal membuka rekening: ' + (err.data?.message || 'Terjadi kesalahan'));
         }
     };
 
