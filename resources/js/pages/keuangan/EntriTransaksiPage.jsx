@@ -35,7 +35,7 @@ const EntriTransaksiPage = () => {
     const [searchAccount, setSearchAccount] = useState('');
     const [selectedAccount, setSelectedAccount] = useState(null);
     const [selectedTypeId, setSelectedTypeId] = useState('');
-    const [amount, setAmount] = useState(0);
+    const [amount, setAmount] = useState('');
     const [description, setDescription] = useState('');
     const [isConfirmed, setIsConfirmed] = useState(false);
     const [createdTransaction, setCreatedTransaction] = useState(null);
@@ -57,7 +57,9 @@ const EntriTransaksiPage = () => {
                 .reduce((acc, curr) => acc + parseFloat(curr.fixed_amount), 0);
             
             if (fixedTotal > 0) {
-                setAmount(fixedTotal);
+                setAmount(new Intl.NumberFormat('id-ID').format(fixedTotal));
+            } else {
+                setAmount('');
             }
             setDescription(selectedType.name);
         }
@@ -89,16 +91,21 @@ const EntriTransaksiPage = () => {
             return;
         }
 
-        if (amount <= 0) {
+        const rawAmount = Number(amount.toString().replace(/\./g, ''));
+
+        if (rawAmount <= 0) {
             toast.error("Nominal harus lebih dari 0");
             return;
         }
 
+        const isTopUp = selectedType?.category === 'topup' || selectedType?.code.startsWith('TOPUP');
+
         try {
             const res = await createTransaction({
                 transaction_type_id: selectedTypeId,
-                source_account: selectedAccount?.account_number,
-                amount: amount,
+                source_account: isTopUp ? null : selectedAccount?.account_number,
+                destination_account: isTopUp ? selectedAccount?.account_number : null,
+                amount: rawAmount,
                 description: description,
                 channel: 'teller'
             }).unwrap();
@@ -126,7 +133,7 @@ const EntriTransaksiPage = () => {
                     <div className="bg-slate-50 rounded-lg p-8 text-left space-y-4 border border-slate-100">
                         <div className="flex justify-between items-center">
                             <span className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Nasabah</span>
-                            <span className="font-black text-slate-800">{createdTransaction.source_account || 'CASH'}</span>
+                            <span className="font-black text-slate-800">{createdTransaction.source_account || createdTransaction.destination_account || 'CASH'}</span>
                         </div>
                         <div className="flex justify-between items-center">
                             <span className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Jenis</span>
@@ -275,9 +282,18 @@ const EntriTransaksiPage = () => {
                                     <div className="relative group">
                                         <span className="absolute left-5 top-1/2 -translate-y-1/2 text-xl font-black text-slate-400 group-focus-within:text-emerald-600">Rp</span>
                                         <input 
-                                            type="number" 
+                                            type="text" 
+                                            placeholder="0"
                                             value={amount}
-                                            onChange={(e) => setAmount(parseFloat(e.target.value))}
+                                            onChange={(e) => {
+                                                const rawValue = e.target.value.replace(/[^0-9]/g, '');
+                                                if (rawValue === '') {
+                                                    setAmount('');
+                                                    return;
+                                                }
+                                                const formattedValue = new Intl.NumberFormat('id-ID').format(Number(rawValue));
+                                                setAmount(formattedValue);
+                                            }}
                                             className="w-full pl-14 pr-6 py-5 text-2xl bg-slate-50 border-2 border-slate-100 rounded-lg focus:outline-none focus:border-emerald-500 transition-all font-black text-slate-800"
                                         />
                                     </div>
@@ -299,7 +315,7 @@ const EntriTransaksiPage = () => {
 
                             <button 
                                 type="submit"
-                                disabled={isSubmitting || !selectedTypeId || amount <= 0}
+                                disabled={isSubmitting || !selectedTypeId || !amount || Number(amount.toString().replace(/\./g, '')) <= 0}
                                 className="w-full py-5 bg-indigo-600 disabled:bg-slate-100 disabled:text-slate-300 text-white rounded-lg text-lg font-black shadow-2xl shadow-indigo-600/20 hover:bg-indigo-700 transition-all active:scale-[0.98] flex items-center justify-center gap-3"
                             >
                                 {isSubmitting ? <Loader2 className="w-6 h-6 animate-spin" /> : (
@@ -360,7 +376,7 @@ const EntriTransaksiPage = () => {
                                         <span className="text-[10px] font-bold uppercase tracking-widest">Estimasi Total</span>
                                         <Info className="w-3 h-3" />
                                     </div>
-                                    <p className="text-xl font-black tracking-tight">{formatIDR(amount)}</p>
+                                    <p className="text-xl font-black tracking-tight">{formatIDR(Number(amount.toString().replace(/\./g, '')))}</p>
                                 </div>
                             </div>
                         )}
