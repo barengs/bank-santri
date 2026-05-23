@@ -20,8 +20,64 @@ class AccountController extends Controller
         $query = Account::with('product');
 
         if ($search) {
-            $query->where('account_number', 'like', "%{$search}%")
+            $query->where(function ($q) use ($search) {
+                $q->where('account_number', 'like', "%{$search}%")
                   ->orWhere('customer_name', 'like', "%{$search}%");
+            });
+
+            // If no local results, try auto-provisioning from SMPT
+            $count = (clone $query)->count();
+            if ($count === 0 && strlen($search) >= 3) {
+                try {
+                    $smptUrl = config('services.smpt.url');
+                    $studentRes = Http::get("{$smptUrl}/api/main/student", [
+                        'search' => $search,
+                        'per_page' => 10
+                    ]);
+
+                    if ($studentRes->successful()) {
+                        $students = $studentRes->json('data.data') ?? [];
+                        if (count($students) > 0) {
+                            $product = Product::where('is_active', true)->first() ?? Product::first();
+                            $productId = $product ? $product->id : 1;
+
+                            foreach ($students as $student) {
+                                $nis = $student['nis'] ?? null;
+                                if ($nis && !Account::where('account_number', $nis)->exists()) {
+                                    // Fetch card number if exists
+                                    $cardNumber = null;
+                                    try {
+                                        $cardRes = Http::get("{$smptUrl}/api/main/student/card/{$nis}");
+                                        if ($cardRes->successful()) {
+                                            $cardData = $cardRes->json('data.card');
+                                            if ($cardData && isset($cardData['card_number'])) {
+                                                $cardNumber = $cardData['card_number'];
+                                            }
+                                        }
+                                    } catch (\Exception $cardEx) {
+                                        \Illuminate\Support\Facades\Log::warning('Auto-provision in index search: Failed to fetch card for NIS ' . $nis . ': ' . $cardEx->getMessage());
+                                    }
+
+                                    // Create local account
+                                    Account::create([
+                                        'account_number' => $nis,
+                                        'customer_id'    => $student['id'],
+                                        'customer_name'  => trim($student['first_name'] . ' ' . ($student['last_name'] ?? '')),
+                                        'product_id'     => $productId,
+                                        'balance'        => 0,
+                                        'status'         => 'AKTIF',
+                                        'akad_type'      => 'wadiah',
+                                        'card_number'    => $cardNumber,
+                                        'open_date'      => now()->toDateString(),
+                                    ]);
+                                }
+                            }
+                        }
+                    }
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error("Failed to auto-provision in index search: " . $e->getMessage());
+                }
+            }
         }
 
         if ($isInstansi) {
@@ -30,7 +86,7 @@ class AccountController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'data'   => $query->paginate($perPage),
+            'data'   => $query->paginate($perPage)->withQueryString(),
         ]);
     }
 
