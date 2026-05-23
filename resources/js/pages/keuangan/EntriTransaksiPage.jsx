@@ -41,7 +41,10 @@ const EntriTransaksiPage = () => {
     const [createdTransaction, setCreatedTransaction] = useState(null);
 
     // API Hooks
-    const { data: accountsRes, isFetching: isFetchingAccounts } = useGetAccountsQuery({ search: searchAccount }, { skip: searchAccount.length < 3 });
+    const { data: accountsRes, isFetching: isFetchingAccounts } = useGetAccountsQuery(
+        { search: searchAccount }, 
+        { skip: searchAccount.length < 3 || !!selectedAccount }
+    );
     const { data: typesRes, isLoading: isLoadingTypes } = useGetTransactionTypesQuery();
     const [createTransaction, { isLoading: isSubmitting }] = useCreateTransactionMutation();
 
