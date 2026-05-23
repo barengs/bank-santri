@@ -143,6 +143,9 @@ class AccountingService
         return DB::transaction(function () use ($transaction) {
             if ($transaction->source_account) {
                 $src = Account::where('account_number', $transaction->source_account)->lockForUpdate()->firstOrFail();
+                if ($src->status !== 'AKTIF') {
+                    throw new \Exception("Transaksi ditolak: Rekening pengirim ({$src->account_number}) tidak aktif (Status: {$src->status}).");
+                }
                 $before = $src->balance;
                 $src->balance -= $transaction->amount;
                 $src->save();
@@ -160,6 +163,9 @@ class AccountingService
 
             if ($transaction->destination_account) {
                 $dst = Account::where('account_number', $transaction->destination_account)->lockForUpdate()->firstOrFail();
+                if ($dst->status !== 'AKTIF') {
+                    throw new \Exception("Transaksi ditolak: Rekening penerima ({$dst->account_number}) tidak aktif (Status: {$dst->status}).");
+                }
                 $before = $dst->balance;
                 $dst->balance += $transaction->amount;
                 $dst->save();

@@ -229,6 +229,13 @@ class AccountController extends Controller
             return response()->json(['status' => 'error', 'errors' => $validator->errors()], 422);
         }
 
+        if ($request->status === 'TUTUP' && $account->balance > 0) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Tidak dapat menutup rekening dengan saldo aktif. Silakan lakukan penarikan saldo terlebih dahulu.'
+            ], 422);
+        }
+
         $account->update($request->only(['product_id', 'status', 'card_number']));
 
         if ($request->status === 'TUTUP') {
