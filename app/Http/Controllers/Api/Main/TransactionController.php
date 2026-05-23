@@ -19,6 +19,12 @@ class TransactionController extends Controller
     public function index(Request $request)
     {
         $transactions = Transaction::with(['sourceAccount:account_number,customer_name', 'destinationAccount:account_number,customer_name', 'transactionType:id,name,code'])
+            ->when($request->account_number, function ($q, $an) {
+                $q->where(function ($query) use ($an) {
+                    $query->where('source_account', $an)
+                          ->orWhere('destination_account', $an);
+                });
+            })
             ->when($request->status, fn($q, $s)  => $q->where('status', $s))
             ->when($request->channel, fn($q, $c) => $q->where('channel', $c))
             ->when($request->reference_number, fn($q, $r) => $q->where('reference_number', $r))
