@@ -8,7 +8,8 @@ import {
     Printer,
     ArrowDownCircle,
     Info,
-    User
+    User,
+    X
 } from 'lucide-react';
 import { useLazyGetAccountDetailQuery } from '../../store/accountApi';
 import { useGetPaymentPackagesQuery } from '../../store/paymentApi';
@@ -20,6 +21,10 @@ const TopUpCashPage = () => {
     const [amount, setAmount] = useState('');
     const [packageId, setPackageId] = useState('');
     const [notes, setNotes] = useState('');
+
+    // Receipt Modal State
+    const [showReceipt, setShowReceipt] = useState(false);
+    const [receiptData, setReceiptData] = useState(null);
 
     // API Hooks
     const [fetchAccount, { data: accountRes, isFetching: isChecking }] = useLazyGetAccountDetailQuery();
@@ -46,7 +51,7 @@ const TopUpCashPage = () => {
         if (!accountRes?.data || !amount || !packageId) return;
 
         try {
-            await processTopUp({
+            const res = await processTopUp({
                 account_number: accountRes.data.account_number,
                 payment_package_id: packageId,
                 amount: Number(amount),
@@ -54,7 +59,19 @@ const TopUpCashPage = () => {
             }).unwrap();
 
             toast.success('Top-up Tunai Berhasil!');
-            setNis('');
+
+            // Set receipt data and show modal
+            setReceiptData({
+                ...res.data,
+                customer_name: accountRes.data.customer_name,
+                package_name: packages.find(p => p.id === Number(packageId))?.package_name || 'Pembayaran Paket'
+            });
+            setShowReceipt(true);
+
+            // Refetch account detail in background to update the sidebar balance
+            fetchAccount(accountRes.data.account_number);
+
+            // Reset setoran input fields
             setAmount('');
             setPackageId('');
             setNotes('');
@@ -63,7 +80,19 @@ const TopUpCashPage = () => {
         }
     };
 
-    const account = accountRes?.data;
+    const handleCloseReceipt = () => {
+        setShowReceipt(false);
+        setReceiptData(null);
+    };
+
+    const handleResetForm = () => {
+        setNis('');
+        setAmount('');
+        setPackageId('');
+        setNotes('');
+    };
+
+    const account = nis ? accountRes?.data : null;
     const packages = packagesRes?.data?.data || [];
 
     return (
@@ -81,7 +110,18 @@ const TopUpCashPage = () => {
                         <form onSubmit={handleSubmit} className="space-y-6">
                             {/* NIS Input */}
                             <div className="space-y-2">
-                                <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Rekening Santri (NIS)</label>
+                                <div className="flex justify-between items-center">
+                                    <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Rekening Santri (NIS)</label>
+                                    {account && (
+                                        <button 
+                                            type="button" 
+                                            onClick={handleResetForm}
+                                            className="text-[10px] font-black text-rose-600 hover:text-rose-700 uppercase tracking-wider transition-colors"
+                                        >
+                                            Batal / Reset
+                                        </button>
+                                    )}
+                                </div>
                                 <div className="relative group">
                                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                                     <input 
@@ -180,6 +220,126 @@ const TopUpCashPage = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Receipt Modal */}
+            {showReceipt && receiptData && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm no-print-backdrop">
+                    <div className="bg-white rounded-xl shadow-2xl max-w-md w-full overflow-hidden flex flex-col max-h-[90vh] border border-slate-100">
+                        {/* Modal Header */}
+                        <div className="px-6 py-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between no-print">
+                            <div className="flex items-center gap-2">
+                                <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                                <span className="font-black text-slate-800 text-sm uppercase tracking-wider">Top-up Berhasil</span>
+                            </div>
+                            <button 
+                                onClick={handleCloseReceipt}
+                                className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        {/* Receipt Content Area */}
+                        <div className="p-6 overflow-y-auto flex-1 text-slate-800" id="receipt-print-area">
+                            <style dangerouslySetInnerHTML={{__html: `
+                                @media print {
+                                    body * {
+                                        visibility: hidden;
+                                    }
+                                    #receipt-print-area, #receipt-print-area * {
+                                        visibility: visible;
+                                    }
+                                    #receipt-print-area {
+                                        position: absolute;
+                                        left: 0;
+                                        top: 0;
+                                        width: 100%;
+                                        padding: 0;
+                                        margin: 0;
+                                        box-shadow: none;
+                                    }
+                                    .no-print {
+                                        display: none !important;
+                                    }
+                                }
+                            `}} />
+
+                            <div className="text-center space-y-2 mb-6">
+                                <h3 className="text-xl font-black text-slate-800 tracking-tight">BANK SANTRI</h3>
+                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Pesantren Digital Ecosystem</p>
+                                <p className="text-[9px] text-slate-400">BUKTI SETORAN TUNAI</p>
+                            </div>
+
+                            <div className="border-t border-dashed border-slate-200 my-4"></div>
+
+                            <div className="space-y-3 text-xs font-semibold text-slate-600">
+                                <div className="flex justify-between">
+                                    <span>No. Referensi:</span>
+                                    <span className="font-bold text-slate-850">{receiptData.payment_ref}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span>Tanggal:</span>
+                                    <span className="font-bold text-slate-850">
+                                        {new Date(receiptData.created_at).toLocaleString('id-ID', {
+                                            dateStyle: 'medium',
+                                            timeStyle: 'short'
+                                        })}
+                                    </span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span>NIS / Rekening:</span>
+                                    <span className="font-bold text-slate-850">{receiptData.account_number}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span>Nama Santri:</span>
+                                    <span className="font-bold text-slate-850 uppercase">{receiptData.customer_name}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span>Paket Pembayaran:</span>
+                                    <span className="font-bold text-slate-850">{receiptData.package_name}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span>Metode:</span>
+                                    <span className="font-bold text-slate-850 uppercase">{receiptData.channel === 'cash' ? 'Tunai (Teller)' : receiptData.channel}</span>
+                                </div>
+                            </div>
+
+                            <div className="border-t border-dashed border-slate-200 my-4"></div>
+
+                            <div className="py-3 flex flex-col items-center justify-center bg-emerald-50 rounded-lg">
+                                <span className="text-[10px] font-black text-emerald-800 uppercase tracking-widest">Jumlah Setoran</span>
+                                <span className="text-2xl font-black text-emerald-600 mt-1">{formatIDR(receiptData.amount)}</span>
+                            </div>
+
+                            <div className="border-t border-dashed border-slate-200 my-4"></div>
+
+                            <div className="text-center space-y-1">
+                                <p className="text-[10px] text-slate-450 font-bold uppercase tracking-wider">Terima Kasih</p>
+                                <p className="text-[9px] text-slate-450 leading-relaxed">
+                                    Simpan struk ini sebagai bukti setoran yang sah.
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Modal Footer (Actions) */}
+                        <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex gap-3 no-print">
+                            <button
+                                onClick={() => window.print()}
+                                className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-black text-sm rounded-lg shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2 transition-all"
+                            >
+                                <Printer className="w-4 h-4" />
+                                CETAK STRUK
+                            </button>
+                            <button
+                                onClick={handleCloseReceipt}
+                                className="px-5 py-3 bg-slate-200 hover:bg-slate-300 active:scale-95 text-slate-700 font-black text-sm rounded-lg transition-all"
+                            >
+                                TUTUP
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
