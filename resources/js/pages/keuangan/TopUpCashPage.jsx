@@ -46,15 +46,41 @@ const TopUpCashPage = () => {
         }
     };
 
+    const handleAmountChange = (e) => {
+        const rawValue = e.target.value.replace(/[^0-9]/g, '');
+        if (rawValue === '') {
+            setAmount('');
+            return;
+        }
+        const formattedValue = new Intl.NumberFormat('id-ID').format(Number(rawValue));
+        setAmount(formattedValue);
+    };
+
+    const handlePackageChange = (e) => {
+        const selectedId = e.target.value;
+        setPackageId(selectedId);
+        if (selectedId) {
+            const selectedPackage = packages.find(p => p.id === Number(selectedId));
+            if (selectedPackage) {
+                const formattedAmt = new Intl.NumberFormat('id-ID').format(selectedPackage.total_amount);
+                setAmount(formattedAmt);
+            }
+        } else {
+            setAmount('');
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!accountRes?.data || !amount || !packageId) return;
+
+        const rawAmount = Number(amount.replace(/\./g, ''));
 
         try {
             const res = await processTopUp({
                 account_number: accountRes.data.account_number,
                 payment_package_id: packageId,
-                amount: Number(amount),
+                amount: rawAmount,
                 notes: notes
             }).unwrap();
 
@@ -142,7 +168,7 @@ const TopUpCashPage = () => {
                                 <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Pilih Paket Pembayaran</label>
                                 <select 
                                     value={packageId}
-                                    onChange={(e) => setPackageId(e.target.value)}
+                                    onChange={handlePackageChange}
                                     className="w-full px-4 py-4 bg-gray-50 border-2 border-transparent rounded-lg focus:bg-white focus:border-indigo-600 focus:outline-none transition-all text-sm font-bold appearance-none cursor-pointer"
                                     required
                                 >
@@ -161,10 +187,10 @@ const TopUpCashPage = () => {
                                 <div className="relative">
                                     <div className="absolute left-4 top-1/2 -translate-y-1/2 font-black text-gray-400">Rp</div>
                                     <input 
-                                        type="number"
+                                        type="text"
                                         placeholder="0"
                                         value={amount}
-                                        onChange={(e) => setAmount(e.target.value)}
+                                        onChange={handleAmountChange}
                                         className="w-full pl-12 pr-4 py-4 bg-gray-50 border-2 border-transparent rounded-lg focus:bg-white focus:border-emerald-600 focus:outline-none transition-all text-2xl font-black text-emerald-600"
                                         required
                                     />
