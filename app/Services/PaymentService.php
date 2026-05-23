@@ -31,6 +31,15 @@ class PaymentService
                 throw new \Exception('Paket tidak aktif.');
             }
 
+            // Cegah pembayaran ganda untuk paket yang sama
+            $alreadyPaid = PaymentRecord::where('account_number', $accountNumber)
+                ->where('package_id', $packageId)
+                ->where('status', 'paid')
+                ->exists();
+            if ($alreadyPaid) {
+                throw new \Exception('Paket pembayaran ini sudah dilunasi.');
+            }
+
             $nonSakuItems = $package->items->where('is_saku', false);
             $sakuItems    = $package->items->where('is_saku', true);
             $nonSakuTotal = $nonSakuItems->sum('amount');

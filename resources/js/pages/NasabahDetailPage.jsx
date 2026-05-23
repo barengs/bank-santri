@@ -159,9 +159,9 @@ const NasabahDetailPage = () => {
                                         <div key={tx.id} className="p-4 hover:bg-slate-50/50 transition-colors flex items-center justify-between gap-4">
                                             <div className="flex items-center gap-4">
                                                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                                                    tx.entry_type === 'DEBIT' ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'
+                                                    tx.type?.toLowerCase() === 'credit' ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'
                                                 }`}>
-                                                    {tx.entry_type === 'DEBIT' ? <TrendingUp className="w-5 h-5" /> : <TrendingDown className="w-5 h-5" />}
+                                                    {tx.type?.toLowerCase() === 'credit' ? <TrendingUp className="w-5 h-5" /> : <TrendingDown className="w-5 h-5" />}
                                                 </div>
                                                 <div>
                                                     <p className="text-sm font-bold text-slate-800 leading-tight">{tx.description}</p>
@@ -174,9 +174,9 @@ const NasabahDetailPage = () => {
                                             </div>
                                             <div className="text-right">
                                                 <p className={`text-sm font-black ${
-                                                    tx.entry_type === 'DEBIT' ? 'text-emerald-600' : 'text-rose-600'
+                                                    tx.type?.toLowerCase() === 'credit' ? 'text-emerald-600' : 'text-rose-600'
                                                 }`}>
-                                                    {tx.entry_type === 'DEBIT' ? '+' : '-'}{formatIDR(tx.amount)}
+                                                    {tx.type?.toLowerCase() === 'credit' ? '+' : '-'}{formatIDR(tx.amount)}
                                                 </p>
                                                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">
                                                     Ref: {tx.reference_number || tx.id}

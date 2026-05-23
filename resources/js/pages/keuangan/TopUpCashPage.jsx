@@ -72,14 +72,14 @@ const TopUpCashPage = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!accountRes?.data || !amount || !packageId) return;
+        if (!accountRes?.data || !amount) return;
 
         const rawAmount = Number(amount.replace(/\./g, ''));
 
         try {
             const res = await processTopUp({
                 account_number: accountRes.data.account_number,
-                payment_package_id: packageId,
+                payment_package_id: packageId ? Number(packageId) : null,
                 amount: rawAmount,
                 notes: notes
             }).unwrap();
@@ -90,7 +90,7 @@ const TopUpCashPage = () => {
             setReceiptData({
                 ...res.data,
                 customer_name: accountRes.data.customer_name,
-                package_name: packages.find(p => p.id === Number(packageId))?.package_name || 'Pembayaran Paket'
+                package_name: packageId ? (packages.find(p => p.id === Number(packageId))?.package_name || 'Pembayaran Paket') : 'Top-Up Saldo'
             });
             setShowReceipt(true);
 
@@ -170,9 +170,8 @@ const TopUpCashPage = () => {
                                     value={packageId}
                                     onChange={handlePackageChange}
                                     className="w-full px-4 py-4 bg-gray-50 border-2 border-transparent rounded-lg focus:bg-white focus:border-indigo-600 focus:outline-none transition-all text-sm font-bold appearance-none cursor-pointer"
-                                    required
                                 >
-                                    <option value="">-- Pilih Paket Pelunasan --</option>
+                                    <option value="">-- Tanpa Paket (Hanya Top-Up Saldo) --</option>
                                     {packages.map(pkg => (
                                         <option key={pkg.id} value={pkg.id}>
                                             {pkg.package_name} ({formatIDR(pkg.total_amount)})

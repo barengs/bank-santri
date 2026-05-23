@@ -50,7 +50,7 @@ class TopUpController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'account_number'     => 'required|exists:accounts,account_number',
-            'payment_package_id' => 'required|exists:payment_packages,id',
+            'payment_package_id' => 'nullable|exists:payment_packages,id',
             'amount'             => 'required|numeric|min:1000',
             'notes'              => 'nullable|string',
         ]);
@@ -86,26 +86,28 @@ class TopUpController extends Controller
 
             // Step 2: Pemicu otomatis pembayaran paket (OPSIONAL - tidak rollback top-up jika gagal)
             $paymentWarning = null;
-            try {
-                app(\App\Services\PaymentService::class)->processPayment(
-                    $request->account_number,
-                    $request->payment_package_id,
-                    $topUp->id,
-                    "Pelunasan otomatis dari Top-Up Tunai [{$topUp->payment_ref}]"
-                );
-            } catch (\Exception $e) {
-                // Log warning saja — top-up tetap berhasil, paket belum terbayar
-                \Illuminate\Support\Facades\Log::warning('Top-up berhasil, tapi paket belum terbayar: ' . $e->getMessage(), [
-                    'account_number'     => $request->account_number,
-                    'payment_package_id' => $request->payment_package_id,
-                    'top_up_ref'         => $topUp->payment_ref,
-                ]);
-                $paymentWarning = $e->getMessage();
+            if ($request->payment_package_id) {
+                try {
+                    app(\App\Services\PaymentService::class)->processPayment(
+                        $request->account_number,
+                        $request->payment_package_id,
+                        $topUp->id,
+                        "Pelunasan otomatis dari Top-Up Tunai [{$topUp->payment_ref}]"
+                    );
+                } catch (\Exception $e) {
+                    // Log warning saja — top-up tetap berhasil, paket belum terbayar
+                    \Illuminate\Support\Facades\Log::warning('Top-up berhasil, tapi paket belum terbayar: ' . $e->getMessage(), [
+                        'account_number'     => $request->account_number,
+                        'payment_package_id' => $request->payment_package_id,
+                        'top_up_ref'         => $topUp->payment_ref,
+                    ]);
+                    $paymentWarning = $e->getMessage();
+                }
             }
 
             return response()->json([
                 'status'          => 'success',
-                'message'         => 'Top-up tunai berhasil.' . ($paymentWarning ? ' Catatan: ' . $paymentWarning : ' Pembayaran paket diproses.'),
+                'message'         => 'Top-up tunai berhasil.' . ($paymentWarning ? ' Catatan: ' . $paymentWarning : ($request->payment_package_id ? ' Pembayaran paket diproses.' : '')),
                 'data'            => $topUp,
                 'payment_warning' => $paymentWarning,
             ], 201);
