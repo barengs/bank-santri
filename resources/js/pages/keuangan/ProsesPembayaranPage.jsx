@@ -24,7 +24,7 @@ const ProsesPembayaranPage = () => {
     
     const [searchRef, setSearchRef] = useState(refFromUrl);
     const [nominalBayar, setNominalBayar] = useState('');
-    const [isConfirmed, setIsConfirmed] = useState(false);
+    const [confirmedTransaction, setConfirmedTransaction] = useState(null);
 
     // Fetch transaction by reference number using the index endpoint with filter
     const { data: transRes, isFetching, isError } = useGetTransactionsQuery(
@@ -65,13 +65,13 @@ const ProsesPembayaranPage = () => {
         try {
             await activateTransaction({ id: transaction.id }).unwrap();
             toast.success("Pembayaran berhasil dikonfirmasi!");
-            setIsConfirmed(true);
+            setConfirmedTransaction(transaction);
         } catch (err) {
             toast.error(err?.data?.message || "Gagal memproses pembayaran");
         }
     };
 
-    if (isConfirmed) {
+    if (confirmedTransaction) {
         return (
             <div className="max-w-xl mx-auto py-12 animate-in fade-in zoom-in duration-500">
                 <div className="bg-white rounded-lg border border-emerald-100 shadow-2xl shadow-emerald-500/10 overflow-hidden text-center p-12 space-y-6">
@@ -80,13 +80,13 @@ const ProsesPembayaranPage = () => {
                     </div>
                     <div className="space-y-2">
                         <h2 className="text-3xl font-black text-slate-800">Pembayaran Sukses!</h2>
-                        <p className="text-slate-400 font-medium">Tagihan {transaction.reference_number} telah berhasil dilunasi.</p>
+                        <p className="text-slate-400 font-medium">Tagihan {confirmedTransaction.reference_number} telah berhasil dilunasi.</p>
                     </div>
                     
                     <div className="bg-slate-50 rounded-lg p-6 text-left space-y-3 border border-slate-100">
                         <div className="flex justify-between items-center text-sm">
                             <span className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Total Tagihan</span>
-                            <span className="font-black text-slate-800">{formatIDR(transaction.amount)}</span>
+                            <span className="font-black text-slate-800">{formatIDR(confirmedTransaction.amount)}</span>
                         </div>
                         <div className="flex justify-between items-center text-sm border-t border-slate-200 pt-3">
                             <span className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Nominal Bayar</span>
@@ -94,13 +94,13 @@ const ProsesPembayaranPage = () => {
                         </div>
                         <div className="flex justify-between items-center text-lg border-t-2 border-dashed border-slate-200 pt-3">
                             <span className="text-emerald-600 font-black uppercase tracking-widest text-xs">Kembalian</span>
-                            <span className="font-black text-emerald-600">{formatIDR(kembalian)}</span>
+                            <span className="font-black text-emerald-600">{formatIDR(parseFloat(nominalBayar || 0) - parseFloat(confirmedTransaction.amount))}</span>
                         </div>
                     </div>
 
                     <div className="flex flex-col gap-3 pt-6">
                         <button 
-                            onClick={() => navigate(`/transaksi/${transaction.id}`)}
+                            onClick={() => navigate(`/transaksi/${confirmedTransaction.id}`)}
                             className="flex items-center justify-center gap-2 px-8 py-4 bg-indigo-600 text-white rounded-lg font-black shadow-xl shadow-indigo-600/30 hover:bg-indigo-700 transition-all active:scale-95"
                         >
                             <Info className="w-5 h-5" />
@@ -108,7 +108,7 @@ const ProsesPembayaranPage = () => {
                         </button>
                         <button 
                             onClick={() => {
-                                setIsConfirmed(false);
+                                setConfirmedTransaction(null);
                                 setNominalBayar('');
                                 setSearchRef('');
                                 setSearchParams({});

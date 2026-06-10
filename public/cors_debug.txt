@@ -48,3 +48,15 @@
 2026-04-08 13:40:19 - OPTIONS http://localhost:8080 /api/main/transaction?
 2026-04-08 13:40:25 - OPTIONS http://localhost:8080 /api/main/transaction/681b7eae-5115-43a0-aed3-49b7e5865b3c
 2026-04-08 14:26:30 - OPTIONS http://localhost:8080 /api/main/transaction/681b7eae-5115-43a0-aed3-49b7e5865b3c
+2026-06-10 09:16:33 - OPTIONS http://localhost:8080 /api/master/product?
+2026-06-10 09:16:33 - OPTIONS http://localhost:8080 /api/main/transaction-type?
+2026-06-10 09:17:17 - OPTIONS http://localhost:8080 /api/master/product?
+2026-06-10 09:17:17 - OPTIONS http://localhost:8080 /api/main/transaction-type?
+2026-06-10 09:18:06 - OPTIONS http://localhost:8080 /api/master/product?
+2026-06-10 09:18:06 - OPTIONS http://localhost:8080 /api/main/transaction-type?
+2026-06-10 09:21:01 - OPTIONS http://localhost:8080 /api/master/product?
+2026-06-10 09:21:01 - OPTIONS http://localhost:8080 /api/main/transaction-type?
+2026-06-10 09:45:33 - OPTIONS http://localhost:8080 /api/master/product?
+2026-06-10 09:45:33 - OPTIONS http://localhost:8080 /api/main/transaction-type?
+2026-06-10 09:49:11 - OPTIONS http://localhost:8080 /api/master/product?
+2026-06-10 09:49:11 - OPTIONS http://localhost:8080 /api/main/transaction-type?

@@ -108,18 +108,20 @@ class AccountController extends Controller
 
         $cardNumber = $request->card_number;
 
-        // Auto-fetch card number from SMPT if it exists
-        try {
-            $smptUrl = config('services.smpt.url');
-            $cardRes = Http::get("{$smptUrl}/api/main/student/card/{$request->account_number}");
-            if ($cardRes->successful()) {
-                $cardData = $cardRes->json('data.card');
-                if ($cardData && isset($cardData['card_number'])) {
-                    $cardNumber = $cardData['card_number'];
+        // Auto-fetch card number from SMPT if it exists (skip for internal requests to avoid deadlocks on single-threaded dev servers)
+        if (empty($cardNumber) && !$request->hasHeader('X-Internal-Key')) {
+            try {
+                $smptUrl = config('services.smpt.url');
+                $cardRes = Http::get("{$smptUrl}/api/main/student/card/{$request->account_number}");
+                if ($cardRes->successful()) {
+                    $cardData = $cardRes->json('data.card');
+                    if ($cardData && isset($cardData['card_number'])) {
+                        $cardNumber = $cardData['card_number'];
+                    }
                 }
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::warning('Failed to fetch student card from SMPT: ' . $e->getMessage());
             }
-        } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::warning('Failed to fetch student card from SMPT: ' . $e->getMessage());
         }
 
         $account = Account::create([

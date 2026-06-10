@@ -313,6 +313,25 @@ class TransactionController extends Controller
                 }
             });
 
+            // Pemicu callback ke SMPT jika ini transaksi registrasi
+            $isRegistrationTrx = str_starts_with($transaction->reference_number ?? '', 'REG');
+            if ($isRegistrationTrx) {
+                try {
+                    $smptUrl = config('services.smpt.url');
+                    $smptInternalKey = config('services.smpt.internal_key');
+                    
+                    \Illuminate\Support\Facades\Http::withHeaders([
+                        'X-Internal-Key' => $smptInternalKey,
+                        'Accept'         => 'application/json',
+                    ])->post("{$smptUrl}/api/internal/transaction/activate-callback", [
+                        'reference_number' => $transaction->reference_number,
+                        'amount'           => $transaction->amount,
+                    ]);
+                } catch (\Exception $callbackEx) {
+                    \Illuminate\Support\Facades\Log::error('Failed to notify SMPT on registration payment callback: ' . $callbackEx->getMessage());
+                }
+            }
+
             return response()->json([
                 'status'  => 'success',
                 'message' => 'Pembayaran berhasil dikonfirmasi.',
