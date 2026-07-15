@@ -60,3 +60,5 @@
 2026-06-10 09:45:33 - OPTIONS http://localhost:8080 /api/main/transaction-type?
 2026-06-10 09:49:11 - OPTIONS http://localhost:8080 /api/master/product?
 2026-06-10 09:49:11 - OPTIONS http://localhost:8080 /api/main/transaction-type?
+2026-07-15 09:55:13 - OPTIONS http://localhost:8080 /api/main/transaction?
+2026-07-15 09:56:41 - OPTIONS http://localhost:8080 /api/main/transaction/eb83ad44-45a8-4118-93af-1e7b1acb29c2
