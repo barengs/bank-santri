@@ -380,4 +380,19 @@ class TransactionController extends Controller
             return response()->json(['status' => 'error', 'message' => $e->getMessage()], 422);
         }
     }
+
+    /**
+     * Get transaction history for account via internal API.
+     */
+    public function getByAccountInternal(string $accountNumber, Request $request)
+    {
+        $movements = AccountMovement::where('account_number', $accountNumber)
+            ->latest()
+            ->paginate($request->get('per_page', 20));
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $movements
+        ]);
+    }
 }

@@ -367,4 +367,22 @@ class AccountController extends Controller
             'data' => $account
         ]);
     }
+
+    /**
+     * Show account details via internal API.
+     */
+    public function showInternal(string $accountNumber)
+    {
+        $account = Account::with(['product'])->where('account_number', $accountNumber)->first();
+        if (!$account) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Rekening atau NIS tidak ditemukan.'
+            ], 404);
+        }
+        return response()->json([
+            'status' => 'success',
+            'data' => $account
+        ]);
+    }
 }

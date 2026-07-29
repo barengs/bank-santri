@@ -121,6 +121,8 @@ Route::group(['prefix' => 'internal', 'middleware' => ['internal.key']], functio
     Route::get('product/{id}', [ProductController::class, 'show']);
     Route::post('transaction', [\App\Http\Controllers\Api\Main\TransactionController::class, 'storeInternal']);
     Route::put('transaction/{id}/activate', [TransactionController::class, 'activate']);
+    Route::get('account/{accountNumber}', [AccountController::class, 'showInternal']);
+    Route::get('account/{accountNumber}/transactions', [\App\Http\Controllers\Api\Main\TransactionController::class, 'getByAccountInternal']);
 });
 
 // Protected Security & Admin Routes
