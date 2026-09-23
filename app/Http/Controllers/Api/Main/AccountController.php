@@ -5,12 +5,65 @@ namespace App\Http\Controllers\Api\Main;
 use App\Http\Controllers\Controller;
 use App\Models\Account;
 use App\Models\Product;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AccountController extends Controller
 {
+    /**
+     * Helper to get sanitized SMPT base URL.
+     */
+    protected function smptBaseUrl(): string
+    {
+        $smptUrl = config('services.smpt.url') ?? env('SMPT_API_URL') ?? env('SMPT_URL', 'http://localhost:8000');
+        $smptUrl = rtrim($smptUrl, '/');
+        if (str_ends_with($smptUrl, '/api')) {
+            $smptUrl = substr($smptUrl, 0, -4);
+        }
+        return $smptUrl;
+    }
+
+    /**
+     * Helper to create a configured HTTP client for SMPT requests.
+     */
+    protected function smptHttp(?Request $request = null)
+    {
+        $http = Http::acceptJson()->timeout(10);
+
+        // Forward user bearer token if present
+        $token = $request?->bearerToken() ?? request()?->bearerToken();
+
+        // Fallback: generate system JWT token since bank-santri and SMPT share JWT_SECRET
+        if (!$token) {
+            try {
+                $user = Auth::user() ?? User::first();
+                if ($user) {
+                    $token = JWTAuth::fromUser($user);
+                }
+            } catch (\Throwable $e) {
+                Log::warning('Failed to generate system JWT for SMPT request: ' . $e->getMessage());
+            }
+        }
+
+        if ($token) {
+            $http = $http->withToken($token);
+        }
+
+        $internalKey = config('services.smpt.internal_key');
+        if ($internalKey) {
+            $http = $http->withHeaders([
+                'X-Internal-Key' => $internalKey,
+            ]);
+        }
+
+        return $http;
+    }
+
     public function index(Request $request)
     {
         $perPage = $request->get('per_page', 15);
@@ -29,8 +82,8 @@ class AccountController extends Controller
             $count = (clone $query)->count();
             if ($count === 0 && strlen($search) >= 3) {
                 try {
-                    $smptUrl = config('services.smpt.url');
-                    $studentRes = Http::get("{$smptUrl}/api/main/student", [
+                    $smptUrl = $this->smptBaseUrl();
+                    $studentRes = $this->smptHttp($request)->get("{$smptUrl}/api/main/student", [
                         'search' => $search,
                         'per_page' => 10
                     ]);
@@ -47,7 +100,7 @@ class AccountController extends Controller
                                     // Fetch card number if exists
                                     $cardNumber = null;
                                     try {
-                                        $cardRes = Http::get("{$smptUrl}/api/main/student/card/{$nis}");
+                                        $cardRes = $this->smptHttp($request)->get("{$smptUrl}/api/main/student/card/{$nis}");
                                         if ($cardRes->successful()) {
                                             $cardData = $cardRes->json('data.card');
                                             if ($cardData && isset($cardData['card_number'])) {
@@ -55,7 +108,7 @@ class AccountController extends Controller
                                             }
                                         }
                                     } catch (\Exception $cardEx) {
-                                        \Illuminate\Support\Facades\Log::warning('Auto-provision in index search: Failed to fetch card for NIS ' . $nis . ': ' . $cardEx->getMessage());
+                                        Log::warning('Auto-provision in index search: Failed to fetch card for NIS ' . $nis . ': ' . $cardEx->getMessage());
                                     }
 
                                     // Create local account
@@ -111,8 +164,8 @@ class AccountController extends Controller
         // Auto-fetch card number from SMPT if it exists (skip for internal requests to avoid deadlocks on single-threaded dev servers)
         if (empty($cardNumber) && !$request->hasHeader('X-Internal-Key')) {
             try {
-                $smptUrl = config('services.smpt.url');
-                $cardRes = Http::get("{$smptUrl}/api/main/student/card/{$request->account_number}");
+                $smptUrl = $this->smptBaseUrl();
+                $cardRes = $this->smptHttp($request)->get("{$smptUrl}/api/main/student/card/{$request->account_number}");
                 if ($cardRes->successful()) {
                     $cardData = $cardRes->json('data.card');
                     if ($cardData && isset($cardData['card_number'])) {
@@ -120,7 +173,7 @@ class AccountController extends Controller
                     }
                 }
             } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::warning('Failed to fetch student card from SMPT: ' . $e->getMessage());
+                Log::warning('Failed to fetch student card from SMPT: ' . $e->getMessage());
             }
         }
 
@@ -193,8 +246,8 @@ class AccountController extends Controller
         if (!$account) {
             // Auto-provision from SMPT if it's a student NIS
             try {
-                $smptUrl = config('services.smpt.url');
-                $studentRes = Http::get("{$smptUrl}/api/main/student", [
+                $smptUrl = $this->smptBaseUrl();
+                $studentRes = $this->smptHttp()->get("{$smptUrl}/api/main/student", [
                     'search' => $accountNumber,
                     'per_page' => 10
                 ]);
@@ -217,7 +270,7 @@ class AccountController extends Controller
                         // Fetch card number if exists
                         $cardNumber = null;
                         try {
-                            $cardRes = Http::get("{$smptUrl}/api/main/student/card/{$accountNumber}");
+                            $cardRes = $this->smptHttp()->get("{$smptUrl}/api/main/student/card/{$accountNumber}");
                             if ($cardRes->successful()) {
                                 $cardData = $cardRes->json('data.card');
                                 if ($cardData && isset($cardData['card_number'])) {
@@ -225,7 +278,7 @@ class AccountController extends Controller
                                 }
                             }
                         } catch (\Exception $cardEx) {
-                            \Illuminate\Support\Facades\Log::warning('Auto-provision: Failed to fetch card for NIS ' . $accountNumber . ': ' . $cardEx->getMessage());
+                            Log::warning('Auto-provision: Failed to fetch card for NIS ' . $accountNumber . ': ' . $cardEx->getMessage());
                         }
 
                         // Create local account
@@ -247,11 +300,11 @@ class AccountController extends Controller
                         // Attach the student data directly
                         $account->student = $matchedStudent;
 
-                        \Illuminate\Support\Facades\Log::info("Auto-provisioned student account for NIS: {$accountNumber}");
+                        Log::info("Auto-provisioned student account for NIS: {$accountNumber}");
                     }
                 }
             } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error("Failed to auto-provision account for NIS {$accountNumber}: " . $e->getMessage());
+                Log::error("Failed to auto-provision account for NIS {$accountNumber}: " . $e->getMessage());
             }
         }
 
@@ -261,13 +314,13 @@ class AccountController extends Controller
 
         if ($account->customer_id != 0 && !isset($account->student)) {
             try {
-                $smptUrl = config('services.smpt.url');
-                $studentRes = Http::get("{$smptUrl}/api/main/student/{$account->customer_id}");
+                $smptUrl = $this->smptBaseUrl();
+                $studentRes = $this->smptHttp()->get("{$smptUrl}/api/main/student/{$account->customer_id}");
                 if ($studentRes->successful()) {
                     $account->student = $studentRes->json('data');
                 }
             } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::warning('Failed to fetch student from SMPT: ' . $e->getMessage());
+                Log::warning('Failed to fetch student from SMPT: ' . $e->getMessage());
             }
         }
 
@@ -323,18 +376,30 @@ class AccountController extends Controller
     {
         $search = $request->get('search');
         try {
-            $smptUrl = config('services.smpt.url');
-            $response = Http::get("{$smptUrl}/api/main/student", [
+            $smptUrl = $this->smptBaseUrl();
+            $response = $this->smptHttp($request)->get("{$smptUrl}/api/main/student", [
                 'search' => $search,
-                'per_page' => 10
+                'per_page' => 15
             ]);
 
             if ($response->successful()) {
                 return response()->json($response->json());
             }
-            
-            return response()->json(['status' => 'error', 'message' => 'Failed to reach SMPT'], 502);
+
+            Log::error('SMPT search failed', [
+                'status' => $response->status(),
+                'body' => $response->body(),
+                'url' => "{$smptUrl}/api/main/student"
+            ]);
+
+            $errorMessage = $response->json('message') ?? 'Failed to reach SMPT (HTTP ' . $response->status() . ')';
+            return response()->json([
+                'status' => 'error',
+                'message' => $errorMessage,
+                'details' => $response->json()
+            ], $response->status() >= 400 && $response->status() < 600 ? $response->status() : 502);
         } catch (\Exception $e) {
+            Log::error('SMPT search exception: ' . $e->getMessage());
             return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
         }
     }

@@ -7,8 +7,12 @@ use App\Models\Account;
 use App\Models\AccountMovement;
 use App\Models\Transaction;
 use App\Models\TransactionLedger;
+use App\Models\TransactionType;
+use App\Services\AccountingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class TransactionController extends Controller
@@ -35,8 +39,11 @@ class TransactionController extends Controller
                           ->orWhere('amount', 'like', "%{$s}%");
                 });
             })
-            ->latest()
-            ->paginate($request->get('per_page', 20));
+            ->latest();
+
+        $perPage = (int) $request->get('per_page', 10);
+        $perPage = ($perPage <= 0) ? 10 : min($perPage, 500);
+        $transactions = $transactions->paginate($perPage);
 
         // Flatten: tambah field _name agar frontend tidak perlu render object Eloquent
         $transactions->getCollection()->transform(function ($trx) {
@@ -74,9 +81,9 @@ class TransactionController extends Controller
         ]);
 
         try {
-            $type = \App\Models\TransactionType::findOrFail($request->transaction_type_id);
+            $type = TransactionType::findOrFail($request->transaction_type_id);
 
-            $transaction = app(\App\Services\AccountingService::class)->recordTransaction(
+            $transaction = app(AccountingService::class)->recordTransaction(
                 $type->code,
                 $request->amount,
                 $request->source_account,
@@ -107,7 +114,7 @@ class TransactionController extends Controller
         ]);
 
         try {
-            $transaction = app(\App\Services\AccountingService::class)->recordTransaction(
+            $transaction = app(AccountingService::class)->recordTransaction(
                 'CASH-DEP',
                 $request->amount,
                 null,
@@ -138,7 +145,7 @@ class TransactionController extends Controller
         ]);
 
         try {
-            $transaction = app(\App\Services\AccountingService::class)->recordTransaction(
+            $transaction = app(AccountingService::class)->recordTransaction(
                 'CASH-WDR',
                 $request->amount,
                 $request->account_number,
@@ -170,7 +177,7 @@ class TransactionController extends Controller
         ]);
 
         try {
-            $transaction = app(\App\Services\AccountingService::class)->recordTransaction(
+            $transaction = app(AccountingService::class)->recordTransaction(
                 'FUND-TRF', // Make sure this exists
                 $request->amount,
                 $request->source_account,
@@ -309,7 +316,7 @@ class TransactionController extends Controller
                 $isRegistrationTrx = str_starts_with($transaction->reference_number ?? '', 'REG');
 
                 if (!$isRegistrationTrx) {
-                    app(\App\Services\AccountingService::class)->applyBalanceMovement($transaction);
+                    app(AccountingService::class)->applyBalanceMovement($transaction);
                 }
             });
 
@@ -320,7 +327,7 @@ class TransactionController extends Controller
                     $smptUrl = config('services.smpt.url');
                     $smptInternalKey = config('services.smpt.internal_key');
                     
-                    \Illuminate\Support\Facades\Http::withHeaders([
+                    Http::withHeaders([
                         'X-Internal-Key' => $smptInternalKey,
                         'Accept'         => 'application/json',
                     ])->post("{$smptUrl}/api/internal/transaction/activate-callback", [
@@ -328,7 +335,7 @@ class TransactionController extends Controller
                         'amount'           => $transaction->amount,
                     ]);
                 } catch (\Exception $callbackEx) {
-                    \Illuminate\Support\Facades\Log::error('Failed to notify SMPT on registration payment callback: ' . $callbackEx->getMessage());
+                    Log::error('Failed to notify SMPT on registration payment callback: ' . $callbackEx->getMessage());
                 }
             }
 
@@ -357,9 +364,9 @@ class TransactionController extends Controller
         ]);
 
         try {
-            $type = \App\Models\TransactionType::findOrFail($request->transaction_type_id);
+            $type = TransactionType::findOrFail($request->transaction_type_id);
 
-            $transaction = app(\App\Services\AccountingService::class)->recordTransaction(
+            $transaction = app(AccountingService::class)->recordTransaction(
                 $type->code,
                 $request->amount,
                 $request->source_account,

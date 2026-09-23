@@ -22,6 +22,7 @@ import DataTable from '../components/DataTable';
 const TransaksiPage = () => {
     const navigate = useNavigate();
     const [page, setPage] = useState(1);
+    const [perPage, setPerPage] = useState(10);
     const [search, setSearch] = useState('');
     const [status, setStatus] = useState('');
     const [channel, setChannel] = useState('');
@@ -31,7 +32,7 @@ const TransaksiPage = () => {
         search,
         status,
         channel,
-        per_page: 10
+        per_page: perPage
     });
 
     const formatIDR = (amount) => {
@@ -147,7 +148,10 @@ const TransaksiPage = () => {
                             type="text" 
                             placeholder="Cari deskripsi, nominal, atau referensi..." 
                             value={search}
-                            onChange={(e) => setSearch(e.target.value)}
+                            onChange={(e) => {
+                                setSearch(e.target.value);
+                                setPage(1);
+                            }}
                             className="w-full pl-10 pr-4 py-2 text-sm bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-600 transition-all font-bold"
                         />
                     </div>
@@ -158,8 +162,11 @@ const TransaksiPage = () => {
                     <div className="relative">
                         <select 
                             value={channel}
-                            onChange={(e) => setChannel(e.target.value)}
-                            className="w-full px-4 py-2 text-sm bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:border-indigo-600 appearance-none font-bold"
+                            onChange={(e) => {
+                                setChannel(e.target.value);
+                                setPage(1);
+                            }}
+                            className="w-full px-4 py-2 text-sm bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:border-indigo-600 appearance-none font-bold cursor-pointer"
                         >
                             <option value="">Semua Channel</option>
                             <option value="teller">Teller</option>
@@ -175,8 +182,11 @@ const TransaksiPage = () => {
                     <div className="relative">
                         <select 
                             value={status}
-                            onChange={(e) => setStatus(e.target.value)}
-                            className="w-full px-4 py-2 text-sm bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:border-indigo-600 appearance-none font-bold"
+                            onChange={(e) => {
+                                setStatus(e.target.value);
+                                setPage(1);
+                            }}
+                            className="w-full px-4 py-2 text-sm bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:border-indigo-600 appearance-none font-bold cursor-pointer"
                         >
                             <option value="">Semua Status</option>
                             <option value="success">Success</option>
@@ -210,7 +220,13 @@ const TransaksiPage = () => {
                 meta={transRes?.data}
                 onPageChange={setPage}
                 onRowClick={(row) => navigate(`/transaksi/${row.id}`)}
-                placeholder="Data transaksi tidak ditemukan..."
+                hideSearch={true}
+                perPage={perPage}
+                onPerPageChange={(newSize) => {
+                    setPerPage(newSize);
+                    setPage(1);
+                }}
+                pageSizeOptions={[10, 20, 50, 100]}
             />
         </div>
     );

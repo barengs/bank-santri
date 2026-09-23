@@ -26,54 +26,69 @@ const DataTable = ({
     placeholder = "Pencarian data...",
     meta = null, // Backend pagination meta
     onPageChange,
-    onRowClick
+    onRowClick,
+    hideSearch = false,
+    perPage = null,
+    onPerPageChange = null,
+    pageSizeOptions = [10, 20, 50, 100],
 }) => {
     const [sorting, setSorting] = useState([]);
     const [globalFilter, setGlobalFilter] = useState('');
+
+    const isInternalPagination = !meta;
 
     const table = useReactTable({
         data,
         columns,
         state: {
             sorting,
-            globalFilter,
+            globalFilter: isInternalPagination ? globalFilter : '',
+            ...(meta ? {
+                pagination: {
+                    pageIndex: (meta.current_page || 1) - 1,
+                    pageSize: meta.per_page || perPage || (data.length > 0 ? data.length : 10),
+                }
+            } : {})
         },
+        manualPagination: Boolean(meta),
+        manualFiltering: Boolean(meta),
+        pageCount: meta ? (meta.last_page || 1) : undefined,
         onSortingChange: setSorting,
         onGlobalFilterChange: setGlobalFilter,
         getCoreRowModel: getCoreRowModel(),
         getPaginationRowModel: getPaginationRowModel(),
         getSortedRowModel: getSortedRowModel(),
-        getFilteredRowModel: getFilteredRowModel(),
+        getFilteredRowModel: isInternalPagination ? getFilteredRowModel() : undefined,
     });
-
-    const isInternalPagination = !meta;
 
     return (
         <div className="space-y-4">
             {/* Table Search & Controls */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div className="relative group flex-1 max-w-sm">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-indigo-600 transition-colors" />
-                    <input 
-                        type="text"
-                        value={globalFilter ?? ''}
-                        onChange={(e) => {
-                            setGlobalFilter(e.target.value);
-                            onSearchChange?.(e.target.value);
-                        }}
-                        placeholder={placeholder}
-                        className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all text-sm font-medium"
-                    />
+            {!hideSearch && (
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="relative group flex-1 max-w-sm">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-indigo-600 transition-colors" />
+                        <input 
+                            type="text"
+                            value={globalFilter ?? ''}
+                            onChange={(e) => {
+                                setGlobalFilter(e.target.value);
+                                onSearchChange?.(e.target.value);
+                            }}
+                            placeholder={placeholder}
+                            className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all text-sm font-medium"
+                        />
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                        {/* Additional Filter Buttons could go here */}
+                    </div>
                 </div>
-                
-                <div className="flex items-center gap-2">
-                    {/* Additional Filter Buttons could go here */}
-                </div>
-            </div>
+            )}
 
             {/* Table Container */}
             <div className="bg-white border border-slate-100 rounded-lg overflow-hidden shadow-sm">
-                <div className="overflow-x-auto overflow-y-auto no-scrollbar max-h-[60vh]">
+                <div className="overflow-x-auto overflow-y-visible">
                     <table className="w-full text-left border-collapse">
                         <thead className="sticky top-0 z-10 bg-gray-50/90 backdrop-blur-sm border-b border-gray-100">
                             {table.getHeaderGroups().map(headerGroup => (
@@ -140,18 +155,35 @@ const DataTable = ({
 
                 {/* Pagination */}
                 <div className="px-6 py-4 bg-gray-50/50 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <div className="text-xs font-bold text-gray-400 uppercase tracking-widest">
-                        Menampilkan {isInternalPagination 
-                            ? `${table.getPaginationRowModel?.().rows.length || 0} dari ${data.length}`
-                            : `${meta?.from || 0} - ${meta?.to || 0} dari ${meta?.total || 0}`
-                        } entri
+                    <div className="flex flex-wrap items-center gap-4">
+                        <div className="text-xs font-bold text-gray-400 uppercase tracking-widest">
+                            Menampilkan {isInternalPagination 
+                                ? `${data.length > 0 ? table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1 : 0} - ${Math.min((table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize, data.length)} dari ${data.length}`
+                                : `${meta?.from || 0} - ${meta?.to || 0} dari ${meta?.total || 0}`
+                            } entri
+                        </div>
+
+                        {onPerPageChange && (
+                            <div className="flex items-center gap-2 text-xs font-bold text-gray-500">
+                                <span className="text-[10px] uppercase tracking-wider text-gray-400">Tampilkan:</span>
+                                <select 
+                                    value={perPage || meta?.per_page || 10}
+                                    onChange={(e) => onPerPageChange(Number(e.target.value))}
+                                    className="bg-white border border-gray-200 rounded-md px-2 py-1 text-xs font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all cursor-pointer"
+                                >
+                                    {pageSizeOptions.map((size) => (
+                                        <option key={size} value={size}>{size} / hal</option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
                     </div>
                     
                     <div className="flex items-center gap-1">
                         <button
                             type="button"
                             onClick={() => isInternalPagination ? table.previousPage() : onPageChange?.(meta.current_page - 1)}
-                            disabled={isInternalPagination ? !table.getCanPreviousPage() : meta?.current_page === 1}
+                            disabled={isInternalPagination ? !table.getCanPreviousPage() : (meta?.current_page || 1) <= 1}
                             className="p-1.5 rounded-xl border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 hover:text-indigo-600 disabled:opacity-30 disabled:hover:bg-white disabled:hover:text-gray-500 transition-all font-bold"
                         >
                             <ChevronLeft className="w-5 h-5" />
@@ -170,7 +202,7 @@ const DataTable = ({
                         <button
                             type="button"
                             onClick={() => isInternalPagination ? table.nextPage() : onPageChange?.(meta.current_page + 1)}
-                            disabled={isInternalPagination ? !table.getCanNextPage() : meta?.current_page === meta?.last_page}
+                            disabled={isInternalPagination ? !table.getCanNextPage() : (meta?.current_page || 1) >= (meta?.last_page || 1)}
                             className="p-1.5 rounded-xl border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 hover:text-indigo-600 disabled:opacity-30 disabled:hover:bg-white disabled:hover:text-gray-500 transition-all font-bold"
                         >
                             <ChevronRight className="w-5 h-5" />
