@@ -120,26 +120,17 @@ class TransactionMasterSeeder extends Seeder
         // --- BIAYA-REG Rules ---
         $tReg = TransactionType::where('code', 'BIAYA-REG')->first();
         $tReg->rules()->create(['transaction_item_id' => $kasIn->id, 'coa_code' => $kasIn->coa_code, 'entry_type' => 'debit', 'value_mode' => 'total']);
-        foreach ($pendaftaranItems as $pi) {
-            $mti = TransactionItem::where('item_name', $pi['item_name'])->first();
-            $tReg->rules()->create(['transaction_item_id' => $mti->id, 'coa_code' => $mti->coa_code, 'entry_type' => 'credit', 'value_mode' => 'fixed']);
-        }
+        $tReg->rules()->create(['transaction_item_id' => null, 'coa_code' => '4100', 'entry_type' => 'credit', 'value_mode' => 'total']);
 
         // --- BIAYA-ANNUAL Rules ---
         $tAnn = TransactionType::where('code', 'BIAYA-ANNUAL')->first();
         $tAnn->rules()->create(['transaction_item_id' => $kasIn->id, 'coa_code' => $kasIn->coa_code, 'entry_type' => 'debit', 'value_mode' => 'total']);
-        foreach ($operasionalItems as $oi) {
-            $mti = TransactionItem::where('item_name', $oi['item_name'])->first();
-            $tAnn->rules()->create(['transaction_item_id' => $mti->id, 'coa_code' => $mti->coa_code, 'entry_type' => 'credit', 'value_mode' => 'fixed']);
-        }
+        $tAnn->rules()->create(['transaction_item_id' => null, 'coa_code' => '4200', 'entry_type' => 'credit', 'value_mode' => 'total']);
 
         // --- BIAYA-MONTHLY Rules ---
         $tMon = TransactionType::where('code', 'BIAYA-MONTHLY')->first();
         $tMon->rules()->create(['transaction_item_id' => $kasIn->id, 'coa_code' => $kasIn->coa_code, 'entry_type' => 'debit', 'value_mode' => 'total']);
-        foreach ($bulananItems as $bi) {
-            $mti = TransactionItem::where('item_name', $bi['item_name'])->first();
-            $tMon->rules()->create(['transaction_item_id' => $mti->id, 'coa_code' => $mti->coa_code, 'entry_type' => 'credit', 'value_mode' => 'fixed']);
-        }
+        $tMon->rules()->create(['transaction_item_id' => null, 'coa_code' => '4300', 'entry_type' => 'credit', 'value_mode' => 'total']);
 
         // --- TOPUP-SANTRI Rules ---
         $tTop = TransactionType::where('code', 'TOPUP-SANTRI')->first();

@@ -8,7 +8,8 @@ import {
     TrendingUp,
     Briefcase,
     PieChart,
-    ChevronRight
+    CheckCircle,
+    AlertCircle
 } from 'lucide-react';
 
 const FinancialStatementPage = () => {
@@ -33,61 +34,58 @@ const FinancialStatementPage = () => {
     const bs = bsRes?.data;
 
     return (
-        <div className="p-6 space-y-6">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div className="space-y-1">
-                    <h1 className="text-2xl font-black text-slate-800 tracking-tight">Laporan Keuangan</h1>
-                    <p className="text-xs text-slate-400 font-bold uppercase tracking-widest flex items-center gap-2">
-                        <PieChart className="w-4 h-4 text-indigo-600" />
-                        Financial Statements & Performance
-                    </p>
+        <div className="bg-white border border-gray-200 rounded-md p-4 space-y-4 shadow-none">
+            {/* Header & Controls */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-gray-100 pb-3">
+                <div>
+                    <h2 className="text-base font-bold text-gray-800">Laporan Keuangan Pesantren</h2>
+                    <p className="text-xs text-gray-500">Laporan Laba Rugi dan Neraca Keuangan Konsolidasi</p>
                 </div>
                 <div className="flex items-center gap-2">
-                    <button className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white rounded-lg text-xs font-black hover:bg-indigo-700 shadow-lg shadow-indigo-600/20 transition-all">
+                    <button className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-md text-xs font-semibold hover:bg-blue-700 transition-colors">
                         <Download size={14} />
-                        DOWNLOAD PDF
+                        Unduh PDF
                     </button>
                 </div>
             </div>
 
-            {/* Date Filter */}
-            <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex flex-col md:flex-row items-end gap-4">
-                <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Periode Awal</label>
-                        <div className="relative">
-                            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                            <input 
-                                type="date" 
-                                className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-md text-xs font-bold outline-none focus:border-indigo-400"
-                                value={dateRange.start_date}
-                                onChange={(e) => setDateRange({...dateRange, start_date: e.target.value})}
-                            />
-                        </div>
+            {/* Filter Bar & Tabs */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gray-50 border border-gray-200 p-2.5 rounded-md text-xs">
+                <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex items-center gap-1.5">
+                        <span className="text-gray-500 font-medium">Dari:</span>
+                        <input 
+                            type="date" 
+                            className="bg-white border border-gray-300 rounded px-2 py-1 text-xs outline-none focus:border-blue-500"
+                            value={dateRange.start_date}
+                            onChange={(e) => setDateRange({...dateRange, start_date: e.target.value})}
+                        />
                     </div>
-                    <div className="space-y-1.5">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Periode Akhir</label>
-                        <div className="relative">
-                            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                            <input 
-                                type="date" 
-                                className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-md text-xs font-bold outline-none focus:border-indigo-400"
-                                value={dateRange.end_date}
-                                onChange={(e) => setDateRange({...dateRange, end_date: e.target.value})}
-                            />
-                        </div>
+                    <div className="flex items-center gap-1.5">
+                        <span className="text-gray-500 font-medium">Sampai:</span>
+                        <input 
+                            type="date" 
+                            className="bg-white border border-gray-300 rounded px-2 py-1 text-xs outline-none focus:border-blue-500"
+                            value={dateRange.end_date}
+                            onChange={(e) => setDateRange({...dateRange, end_date: e.target.value})}
+                        />
                     </div>
                 </div>
-                <div className="flex bg-slate-100 p-1 rounded-lg h-10">
+
+                <div className="inline-flex bg-gray-200 p-0.5 rounded-md">
                     <button 
                         onClick={() => setActiveTab('pl')}
-                        className={`px-4 py-1.5 rounded-md text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'pl' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                        className={`px-3 py-1 rounded text-xs font-semibold transition-all ${
+                            activeTab === 'pl' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+                        }`}
                     >
                         Laba Rugi
                     </button>
                     <button 
                         onClick={() => setActiveTab('bs')}
-                        className={`px-4 py-1.5 rounded-md text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'bs' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                        className={`px-3 py-1 rounded text-xs font-semibold transition-all ${
+                            activeTab === 'bs' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+                        }`}
                     >
                         Neraca
                     </button>
@@ -95,162 +93,156 @@ const FinancialStatementPage = () => {
             </div>
 
             {activeTab === 'pl' ? (
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                    <div className="lg:col-span-2 space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    <div className="lg:col-span-2 space-y-4">
                         {/* Revenue */}
-                        <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
-                            <div className="px-6 py-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
-                                <h3 className="text-xs font-black text-slate-800 uppercase tracking-widest flex items-center gap-2">
-                                    <TrendingUp className="w-4 h-4 text-emerald-500" />
+                        <div className="border border-gray-200 rounded-md overflow-hidden">
+                            <div className="px-3.5 py-2 bg-slate-50 border-b border-gray-200 flex items-center justify-between">
+                                <h3 className="text-xs font-bold text-gray-800 uppercase tracking-wider flex items-center gap-1.5">
+                                    <TrendingUp className="w-3.5 h-3.5 text-emerald-600" />
                                     Pendapatan / Revenue
                                 </h3>
                             </div>
-                            <div className="divide-y divide-slate-50">
+                            <div className="divide-y divide-gray-100">
                                 {pl?.revenue?.map((item) => (
-                                    <div key={item.coa_code} className="px-6 py-3 flex items-center justify-between hover:bg-slate-50/50 transition-colors">
+                                    <div key={item.coa_code} className="px-3.5 py-2 flex items-center justify-between hover:bg-slate-50 transition-colors text-xs">
                                         <div className="flex flex-col">
-                                            <span className="text-xs font-bold text-slate-700">{item.coa_name}</span>
-                                            <span className="text-[9px] font-mono text-slate-400">{item.coa_code}</span>
+                                            <span className="font-medium text-gray-800">{item.coa_name}</span>
+                                            <span className="text-[10px] font-mono text-gray-400">{item.coa_code}</span>
                                         </div>
-                                        <span className="text-xs font-black text-slate-800">{formatIDR(item.balance)}</span>
+                                        <span className="font-semibold text-gray-900">{formatIDR(item.balance)}</span>
                                     </div>
                                 ))}
-                                {pl?.revenue?.length === 0 && (
-                                    <div className="px-6 py-8 text-center text-[10px] font-black text-slate-300 uppercase tracking-widest">Tidak ada data pendapatan</div>
+                                {(!pl?.revenue || pl?.revenue?.length === 0) && (
+                                    <div className="px-3.5 py-6 text-center text-xs text-gray-400">Tidak ada data pendapatan</div>
                                 )}
                             </div>
-                            <div className="px-6 py-4 bg-emerald-50 border-t border-emerald-100 flex items-center justify-between">
-                                <span className="text-xs font-black text-emerald-800 uppercase tracking-widest">Total Pendapatan</span>
-                                <span className="text-sm font-black text-emerald-600">{formatIDR(pl?.total_revenue || 0)}</span>
+                            <div className="px-3.5 py-2 bg-emerald-50 border-t border-emerald-100 flex items-center justify-between text-xs">
+                                <span className="font-bold text-emerald-800 uppercase">Total Pendapatan</span>
+                                <span className="font-bold text-emerald-700">{formatIDR(pl?.total_revenue || 0)}</span>
                             </div>
                         </div>
 
                         {/* Expense */}
-                        <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
-                            <div className="px-6 py-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
-                                <h3 className="text-xs font-black text-slate-800 uppercase tracking-widest flex items-center gap-2">
-                                    <Briefcase className="w-4 h-4 text-rose-500" />
+                        <div className="border border-gray-200 rounded-md overflow-hidden">
+                            <div className="px-3.5 py-2 bg-slate-50 border-b border-gray-200 flex items-center justify-between">
+                                <h3 className="text-xs font-bold text-gray-800 uppercase tracking-wider flex items-center gap-1.5">
+                                    <Briefcase className="w-3.5 h-3.5 text-rose-600" />
                                     Beban / Expenses
                                 </h3>
                             </div>
-                            <div className="divide-y divide-slate-50">
+                            <div className="divide-y divide-gray-100">
                                 {pl?.expense?.map((item) => (
-                                    <div key={item.coa_code} className="px-6 py-3 flex items-center justify-between hover:bg-slate-50/50 transition-colors">
+                                    <div key={item.coa_code} className="px-3.5 py-2 flex items-center justify-between hover:bg-slate-50 transition-colors text-xs">
                                         <div className="flex flex-col">
-                                            <span className="text-xs font-bold text-slate-700">{item.coa_name}</span>
-                                            <span className="text-[9px] font-mono text-slate-400">{item.coa_code}</span>
+                                            <span className="font-medium text-gray-800">{item.coa_name}</span>
+                                            <span className="text-[10px] font-mono text-gray-400">{item.coa_code}</span>
                                         </div>
-                                        <span className="text-xs font-black text-slate-800">{formatIDR(Math.abs(item.balance))}</span>
+                                        <span className="font-semibold text-gray-900">{formatIDR(Math.abs(item.balance))}</span>
                                     </div>
                                 ))}
-                                {pl?.expense?.length === 0 && (
-                                    <div className="px-6 py-8 text-center text-[10px] font-black text-slate-300 uppercase tracking-widest">Tidak ada data beban</div>
+                                {(!pl?.expense || pl?.expense?.length === 0) && (
+                                    <div className="px-3.5 py-6 text-center text-xs text-gray-400">Tidak ada data beban</div>
                                 )}
                             </div>
-                            <div className="px-6 py-4 bg-rose-50 border-t border-rose-100 flex items-center justify-between">
-                                <span className="text-xs font-black text-rose-800 uppercase tracking-widest">Total Beban</span>
-                                <span className="text-sm font-black text-rose-600">({formatIDR(pl?.total_expense || 0)})</span>
+                            <div className="px-3.5 py-2 bg-rose-50 border-t border-rose-100 flex items-center justify-between text-xs">
+                                <span className="font-bold text-rose-800 uppercase">Total Beban</span>
+                                <span className="font-bold text-rose-700">({formatIDR(pl?.total_expense || 0)})</span>
                             </div>
                         </div>
                     </div>
 
-                    {/* P&L Summary Sidebar */}
-                    <div className="lg:col-span-1 space-y-6">
-                        <div className="bg-slate-900 rounded-2xl p-8 shadow-xl text-center space-y-6 relative overflow-hidden">
-                            <div className="absolute top-0 left-0 w-32 h-32 bg-indigo-500/10 rounded-full -ml-16 -mt-16 blur-2xl"></div>
-                            <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-white/10">
-                                <TrendingUp className="w-8 h-8 text-indigo-400" />
-                            </div>
-                            <div className="space-y-1">
-                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Laba / Rugi Bersih</p>
-                                <h2 className={`text-3xl font-black ${pl?.net_profit >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                                    {formatIDR(pl?.net_profit || 0)}
-                                </h2>
-                            </div>
-                            <div className="pt-6 border-t border-white/5 grid grid-cols-2 gap-4">
-                                <div className="space-y-1">
-                                    <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Margin Laba</p>
-                                    <p className="text-xs font-black text-white">
+                    {/* Summary Sidebar */}
+                    <div className="lg:col-span-1 space-y-3">
+                        <div className="bg-gray-50 border border-gray-200 rounded-md p-4 space-y-3 text-center">
+                            <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider block">Laba / Rugi Bersih</span>
+                            <h2 className={`text-2xl font-bold ${pl?.net_profit >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                {formatIDR(pl?.net_profit || 0)}
+                            </h2>
+                            <div className="border-t border-gray-200 pt-3 grid grid-cols-2 gap-2 text-xs">
+                                <div className="bg-white border border-gray-200 p-2 rounded">
+                                    <span className="text-[10px] text-gray-400 block uppercase">Margin Laba</span>
+                                    <span className="font-semibold text-gray-800">
                                         {pl?.total_revenue > 0 ? ((pl.net_profit / pl.total_revenue) * 100).toFixed(1) : 0}%
-                                    </p>
+                                    </span>
                                 </div>
-                                <div className="space-y-1">
-                                    <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Efisiensi</p>
-                                    <p className="text-xs font-black text-white">
+                                <div className="bg-white border border-gray-200 p-2 rounded">
+                                    <span className="text-[10px] text-gray-400 block uppercase">Efisiensi</span>
+                                    <span className="font-semibold text-gray-800">
                                         {pl?.total_revenue > 0 ? (100 - (pl.total_expense / pl.total_revenue) * 100).toFixed(1) : 0}%
-                                    </p>
+                                    </span>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     {/* Assets */}
-                    <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden flex flex-col">
-                        <div className="px-6 py-4 bg-slate-50 border-b border-slate-100">
-                            <h3 className="text-xs font-black text-slate-800 uppercase tracking-widest">Aktiva (Aset)</h3>
+                    <div className="border border-gray-200 rounded-md overflow-hidden flex flex-col">
+                        <div className="px-3.5 py-2 bg-slate-50 border-b border-gray-200">
+                            <h3 className="text-xs font-bold text-gray-800 uppercase tracking-wider">Aktiva (Aset)</h3>
                         </div>
-                        <div className="flex-1 divide-y divide-slate-50">
+                        <div className="flex-1 divide-y divide-gray-100">
                             {bs?.assets?.map((item) => (
-                                <div key={item.coa_code} className="px-6 py-3 flex items-center justify-between hover:bg-slate-50/50 transition-colors">
+                                <div key={item.coa_code} className="px-3.5 py-2 flex items-center justify-between hover:bg-slate-50 transition-colors text-xs">
                                     <div className="flex flex-col">
-                                        <span className="text-xs font-bold text-slate-700">{item.coa_name}</span>
-                                        <span className="text-[9px] font-mono text-slate-400">{item.coa_code}</span>
+                                        <span className="font-medium text-gray-800">{item.coa_name}</span>
+                                        <span className="text-[10px] font-mono text-gray-400">{item.coa_code}</span>
                                     </div>
-                                    <span className="text-xs font-black text-slate-800">{formatIDR(item.balance)}</span>
+                                    <span className="font-semibold text-gray-900">{formatIDR(item.balance)}</span>
                                 </div>
                             ))}
                         </div>
-                        <div className="px-6 py-4 bg-indigo-50 border-t border-indigo-100 flex items-center justify-between">
-                            <span className="text-xs font-black text-indigo-800 uppercase tracking-widest">Total Aktiva</span>
-                            <span className="text-sm font-black text-indigo-600">{formatIDR(bs?.total_assets || 0)}</span>
+                        <div className="px-3.5 py-2 bg-blue-50 border-t border-blue-100 flex items-center justify-between text-xs">
+                            <span className="font-bold text-blue-800 uppercase">Total Aktiva</span>
+                            <span className="font-bold text-blue-700">{formatIDR(bs?.total_assets || 0)}</span>
                         </div>
                     </div>
 
                     {/* Liabilities & Equity */}
-                    <div className="space-y-6">
-                        <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
-                            <div className="px-6 py-4 bg-slate-50 border-b border-slate-100">
-                                <h3 className="text-xs font-black text-slate-800 uppercase tracking-widest">Pasiva (Liabilitas & Ekuitas)</h3>
+                    <div className="space-y-4">
+                        <div className="border border-gray-200 rounded-md overflow-hidden">
+                            <div className="px-3.5 py-2 bg-slate-50 border-b border-gray-200">
+                                <h3 className="text-xs font-bold text-gray-800 uppercase tracking-wider">Pasiva (Liabilitas & Ekuitas)</h3>
                             </div>
-                            <div className="divide-y divide-slate-50">
-                                <div className="px-4 py-2 bg-slate-50/50 text-[10px] font-black text-slate-400 uppercase tracking-widest">Liabilitas</div>
+                            <div className="divide-y divide-gray-100">
+                                <div className="px-3 py-1 bg-gray-50 text-[10px] font-bold text-gray-500 uppercase tracking-wider">Liabilitas</div>
                                 {bs?.liabilities?.map((item) => (
-                                    <div key={item.coa_code} className="px-6 py-3 flex items-center justify-between hover:bg-slate-50/50 transition-colors">
+                                    <div key={item.coa_code} className="px-3.5 py-2 flex items-center justify-between hover:bg-slate-50 transition-colors text-xs">
                                         <div className="flex flex-col">
-                                            <span className="text-xs font-bold text-slate-700">{item.coa_name}</span>
-                                            <span className="text-[9px] font-mono text-slate-400">{item.coa_code}</span>
+                                            <span className="font-medium text-gray-800">{item.coa_name}</span>
+                                            <span className="text-[10px] font-mono text-gray-400">{item.coa_code}</span>
                                         </div>
-                                        <span className="text-xs font-black text-slate-800">{formatIDR(item.balance)}</span>
+                                        <span className="font-semibold text-gray-900">{formatIDR(item.balance)}</span>
                                     </div>
                                 ))}
-                                <div className="px-4 py-2 bg-slate-50/50 text-[10px] font-black text-slate-400 uppercase tracking-widest">Ekuitas</div>
+                                <div className="px-3 py-1 bg-gray-50 text-[10px] font-bold text-gray-500 uppercase tracking-wider">Ekuitas</div>
                                 {bs?.equity?.map((item) => (
-                                    <div key={item.coa_code} className="px-6 py-3 flex items-center justify-between hover:bg-slate-50/50 transition-colors">
+                                    <div key={item.coa_code} className="px-3.5 py-2 flex items-center justify-between hover:bg-slate-50 transition-colors text-xs">
                                         <div className="flex flex-col">
-                                            <span className="text-xs font-bold text-slate-700">{item.coa_name}</span>
-                                            <span className="text-[9px] font-mono text-slate-400">{item.coa_code}</span>
+                                            <span className="font-medium text-gray-800">{item.coa_name}</span>
+                                            <span className="text-[10px] font-mono text-gray-400">{item.coa_code}</span>
                                         </div>
-                                        <span className="text-xs font-black text-slate-800">{formatIDR(item.balance)}</span>
+                                        <span className="font-semibold text-gray-900">{formatIDR(item.balance)}</span>
                                     </div>
                                 ))}
                             </div>
-                            <div className="px-6 py-4 bg-indigo-900 border-t border-indigo-950 flex items-center justify-between text-white">
-                                <span className="text-xs font-black uppercase tracking-widest">Total Pasiva</span>
-                                <span className="text-sm font-black">{formatIDR((bs?.total_liabilities || 0) + (bs?.total_equity || 0))}</span>
+                            <div className="px-3.5 py-2 bg-slate-100 border-t border-slate-200 flex items-center justify-between text-xs">
+                                <span className="font-bold text-gray-800 uppercase">Total Pasiva</span>
+                                <span className="font-bold text-gray-900">{formatIDR((bs?.total_liabilities || 0) + (bs?.total_equity || 0))}</span>
                             </div>
                         </div>
 
                         {/* Balance Check */}
-                        <div className={`p-4 rounded-xl border flex items-center justify-between ${
+                        <div className={`p-3 rounded-md border flex items-center justify-between text-xs ${
                             Math.abs((bs?.total_assets || 0) - ((bs?.total_liabilities || 0) + (bs?.total_equity || 0))) < 1
-                            ? 'bg-emerald-50 border-emerald-100 text-emerald-800'
-                            : 'bg-rose-50 border-rose-100 text-rose-800'
+                            ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                            : 'bg-rose-50 border-rose-200 text-rose-800'
                         }`}>
-                            <span className="text-[10px] font-black uppercase tracking-widest">Status Keseimbangan Neraca</span>
-                            <span className="text-xs font-black">
-                                {Math.abs((bs?.total_assets || 0) - ((bs?.total_liabilities || 0) + (bs?.total_equity || 0))) < 1 ? 'BALANCE / SEIMBANG' : 'TIDAK SEIMBANG'}
+                            <span className="font-medium uppercase text-[11px]">Keseimbangan Neraca</span>
+                            <span className="font-bold">
+                                {Math.abs((bs?.total_assets || 0) - ((bs?.total_liabilities || 0) + (bs?.total_equity || 0))) < 1 ? 'BALANCE (SEIMBANG)' : 'TIDAK SEIMBANG'}
                             </span>
                         </div>
                     </div>

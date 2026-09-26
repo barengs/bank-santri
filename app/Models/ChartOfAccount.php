@@ -23,6 +23,31 @@ class ChartOfAccount extends Model
         'is_active',
     ];
 
+    protected $appends = ['coa_name', 'normal_balance', 'group'];
+
+    public function getCoaNameAttribute()
+    {
+        return $this->account_name;
+    }
+
+    public function getNormalBalanceAttribute()
+    {
+        return in_array(strtolower($this->account_type ?? ''), ['asset', 'expense']) ? 'debit' : 'credit';
+    }
+
+    public function getGroupAttribute()
+    {
+        return match (strtolower($this->account_type ?? '')) {
+            'asset'     => 'Aset',
+            'liability' => 'Liabilitas',
+            'equity'    => 'Ekuitas',
+            'revenue'   => 'Pendapatan',
+            'expense'   => 'Beban',
+            'zis'       => 'Dana ZIS',
+            default     => 'Lainnya',
+        };
+    }
+
     public function parent()
     {
         return $this->belongsTo(ChartOfAccount::class, 'parent_coa_code', 'coa_code');

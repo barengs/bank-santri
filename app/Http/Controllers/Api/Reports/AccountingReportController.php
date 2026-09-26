@@ -11,21 +11,26 @@ use Illuminate\Support\Facades\DB;
 class AccountingReportController extends Controller
 {
     /**
-     * Jurnal Umum - Semua entry buku besar
+     * Jurnal Umum - Semua entry buku besar (Double-Entry General Journal)
      */
     public function journal(Request $request)
     {
-        $perPage = $request->get('per_page', 20);
+        $perPage   = (int) $request->get('per_page', 20);
+        $perPage   = ($perPage <= 0) ? 20 : min($perPage, 500);
         $startDate = $request->get('start_date');
-        $endDate = $request->get('end_date');
+        $endDate   = $request->get('end_date');
 
         $query = TransactionLedger::with(['transaction', 'coa'])
             ->join('transactions', 'transaction_ledgers.transaction_id', '=', 'transactions.id')
             ->select('transaction_ledgers.*')
             ->orderBy('transactions.created_at', 'desc');
 
-        if ($startDate) $query->whereDate('transactions.created_at', '>=', $startDate);
-        if ($endDate) $query->whereDate('transactions.created_at', '<=', $endDate);
+        if (!empty($startDate)) {
+            $query->whereDate('transactions.created_at', '>=', $startDate);
+        }
+        if (!empty($endDate)) {
+            $query->whereDate('transactions.created_at', '<=', $endDate);
+        }
 
         return response()->json([
             'status' => 'success',
@@ -46,29 +51,28 @@ class AccountingReportController extends Controller
             ->whereDate('transactions.created_at', '<=', $endDate)
             ->select(
                 'chart_of_accounts.coa_code',
-                'chart_of_accounts.coa_name',
-                'chart_of_accounts.normal_balance',
-                DB::raw('SUM(debit) as total_debit'),
-                DB::raw('SUM(credit) as total_credit')
+                'chart_of_accounts.account_name as coa_name',
+                'chart_of_accounts.account_type',
+                DB::raw('SUM(transaction_ledgers.debit) as total_debit'),
+                DB::raw('SUM(transaction_ledgers.credit) as total_credit')
             )
-            ->groupBy('chart_of_accounts.coa_code', 'chart_of_accounts.coa_name', 'chart_of_accounts.normal_balance')
+            ->groupBy('chart_of_accounts.coa_code', 'chart_of_accounts.account_name', 'chart_of_accounts.account_type')
             ->orderBy('chart_of_accounts.coa_code')
             ->get();
 
         $data = $ledgers->map(function ($row) {
-            $balance = $row->total_debit - $row->total_credit;
-            
-            // Adjust based on normal balance
-            if ($row->normal_balance === 'credit') {
-                $balance = $row->total_credit - $row->total_debit;
-            }
+            $isDebitNormal = in_array(strtolower($row->account_type ?? ''), ['asset', 'expense']);
+            $balance = $isDebitNormal
+                ? ($row->total_debit - $row->total_credit)
+                : ($row->total_credit - $row->total_debit);
 
             return [
-                'coa_code' => $row->coa_code,
-                'coa_name' => $row->coa_name,
-                'debit'    => $row->total_debit,
-                'credit'   => $row->total_credit,
-                'balance'  => $balance
+                'coa_code'     => $row->coa_code,
+                'coa_name'     => $row->coa_name,
+                'account_type' => $row->account_type,
+                'debit'        => (float) $row->total_debit,
+                'credit'       => (float) $row->total_credit,
+                'balance'      => (float) $balance,
             ];
         });
 
@@ -76,8 +80,9 @@ class AccountingReportController extends Controller
             'status' => 'success',
             'data'   => $data,
             'meta'   => [
-                'total_debit'  => $data->sum('debit'),
-                'total_credit' => $data->sum('credit')
+                'total_debit'  => (float) $data->sum('debit'),
+                'total_credit' => (float) $data->sum('credit'),
+                'is_balanced'  => abs($data->sum('debit') - $data->sum('credit')) < 0.01,
             ]
         ]);
     }
@@ -88,33 +93,51 @@ class AccountingReportController extends Controller
     public function profitLoss(Request $request)
     {
         $startDate = $request->get('start_date', now()->startOfMonth()->format('Y-m-d'));
-        $endDate = $request->get('end_date', now()->format('Y-m-d'));
+        $endDate   = $request->get('end_date', now()->format('Y-m-d'));
 
         $ledgers = DB::table('transaction_ledgers')
             ->join('transactions', 'transaction_ledgers.transaction_id', '=', 'transactions.id')
             ->join('chart_of_accounts', 'transaction_ledgers.coa_code', '=', 'chart_of_accounts.coa_code')
-            ->whereBetween('transactions.created_at', [$startDate, $endDate])
-            ->whereIn('chart_of_accounts.group', ['Pendapatan', 'Beban'])
+            ->whereBetween('transactions.created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
+            ->whereIn('chart_of_accounts.account_type', ['revenue', 'expense'])
             ->select(
-                'chart_of_accounts.group',
+                'chart_of_accounts.account_type',
                 'chart_of_accounts.coa_code',
-                'chart_of_accounts.coa_name',
-                DB::raw('SUM(credit) - SUM(debit) as balance') // Usually Revenue - Expense
+                'chart_of_accounts.account_name as coa_name',
+                DB::raw('SUM(transaction_ledgers.credit) as total_credit'),
+                DB::raw('SUM(transaction_ledgers.debit) as total_debit')
             )
-            ->groupBy('chart_of_accounts.group', 'chart_of_accounts.coa_code', 'chart_of_accounts.coa_name')
+            ->groupBy('chart_of_accounts.account_type', 'chart_of_accounts.coa_code', 'chart_of_accounts.account_name')
+            ->orderBy('chart_of_accounts.coa_code')
             ->get();
 
-        $revenue = $ledgers->where('group', 'Pendapatan');
-        $expense = $ledgers->where('group', 'Beban');
+        $revenue = $ledgers->where('account_type', 'revenue')->map(function ($row) {
+            return [
+                'coa_code' => $row->coa_code,
+                'coa_name' => $row->coa_name,
+                'balance'  => (float) ($row->total_credit - $row->total_debit),
+            ];
+        })->values();
+
+        $expense = $ledgers->where('account_type', 'expense')->map(function ($row) {
+            return [
+                'coa_code' => $row->coa_code,
+                'coa_name' => $row->coa_name,
+                'balance'  => (float) ($row->total_debit - $row->total_credit),
+            ];
+        })->values();
+
+        $totalRevenue = (float) $revenue->sum('balance');
+        $totalExpense = (float) $expense->sum('balance');
 
         return response()->json([
             'status' => 'success',
             'data'   => [
-                'revenue'       => $revenue->values(),
-                'expense'       => $expense->values(),
-                'total_revenue' => $revenue->sum('balance'),
-                'total_expense' => abs($expense->sum('balance')), // Expenses are usually debit, so sum will be negative in (Credit - Debit) formula
-                'net_profit'    => $revenue->sum('balance') + $expense->sum('balance')
+                'revenue'       => $revenue,
+                'expense'       => $expense,
+                'total_revenue' => $totalRevenue,
+                'total_expense' => $totalExpense,
+                'net_profit'    => $totalRevenue - $totalExpense,
             ]
         ]);
     }
@@ -130,40 +153,86 @@ class AccountingReportController extends Controller
             ->join('transactions', 'transaction_ledgers.transaction_id', '=', 'transactions.id')
             ->join('chart_of_accounts', 'transaction_ledgers.coa_code', '=', 'chart_of_accounts.coa_code')
             ->whereDate('transactions.created_at', '<=', $endDate)
-            ->whereIn('chart_of_accounts.group', ['Aset', 'Liabilitas', 'Ekuitas'])
+            ->whereIn('chart_of_accounts.account_type', ['asset', 'liability', 'equity'])
             ->select(
-                'chart_of_accounts.group',
+                'chart_of_accounts.account_type',
                 'chart_of_accounts.coa_code',
-                'chart_of_accounts.coa_name',
-                'chart_of_accounts.normal_balance',
-                DB::raw('SUM(debit) as total_debit'),
-                DB::raw('SUM(credit) as total_credit')
+                'chart_of_accounts.account_name as coa_name',
+                DB::raw('SUM(transaction_ledgers.debit) as total_debit'),
+                DB::raw('SUM(transaction_ledgers.credit) as total_credit')
             )
-            ->groupBy('chart_of_accounts.group', 'chart_of_accounts.coa_code', 'chart_of_accounts.coa_name', 'chart_of_accounts.normal_balance')
+            ->groupBy('chart_of_accounts.account_type', 'chart_of_accounts.coa_code', 'chart_of_accounts.account_name')
+            ->orderBy('chart_of_accounts.coa_code')
             ->get();
 
-        $data = $ledgers->map(function($row) {
-            $balance = $row->normal_balance === 'debit' 
-                ? $row->total_debit - $row->total_credit 
-                : $row->total_credit - $row->total_debit;
-            
+        $assets = $ledgers->where('account_type', 'asset')->map(function ($row) {
             return [
-                'group'    => $row->group,
                 'coa_code' => $row->coa_code,
                 'coa_name' => $row->coa_name,
-                'balance'  => $balance
+                'balance'  => (float) ($row->total_debit - $row->total_credit),
             ];
-        });
+        })->values();
+
+        $liabilities = $ledgers->where('account_type', 'liability')->map(function ($row) {
+            return [
+                'coa_code' => $row->coa_code,
+                'coa_name' => $row->coa_name,
+                'balance'  => (float) ($row->total_credit - $row->total_debit),
+            ];
+        })->values();
+
+        $equity = $ledgers->where('account_type', 'equity')->map(function ($row) {
+            return [
+                'coa_code' => $row->coa_code,
+                'coa_name' => $row->coa_name,
+                'balance'  => (float) ($row->total_credit - $row->total_debit),
+            ];
+        })->values();
+
+        // Hitung Laba (Rugi) Periode Berjalan dari pendapatan dan beban sampai endDate
+        $plQuery = DB::table('transaction_ledgers')
+            ->join('transactions', 'transaction_ledgers.transaction_id', '=', 'transactions.id')
+            ->join('chart_of_accounts', 'transaction_ledgers.coa_code', '=', 'chart_of_accounts.coa_code')
+            ->whereDate('transactions.created_at', '<=', $endDate)
+            ->whereIn('chart_of_accounts.account_type', ['revenue', 'expense'])
+            ->select(
+                'chart_of_accounts.account_type',
+                DB::raw('SUM(transaction_ledgers.credit) as total_credit'),
+                DB::raw('SUM(transaction_ledgers.debit) as total_debit')
+            )
+            ->groupBy('chart_of_accounts.account_type')
+            ->get();
+
+        $revRow = $plQuery->where('account_type', 'revenue')->first();
+        $expRow = $plQuery->where('account_type', 'expense')->first();
+        $curRevenue = (float) (($revRow?->total_credit ?? 0) - ($revRow?->total_debit ?? 0));
+        $curExpense = (float) (($expRow?->total_debit ?? 0) - ($expRow?->total_credit ?? 0));
+        $currentEarnings = $curRevenue - $curExpense;
+
+        if (abs($currentEarnings) > 0.001) {
+            $equity->push([
+                'coa_code' => '3999',
+                'coa_name' => 'Laba (Rugi) Periode Berjalan',
+                'balance'  => (float) $currentEarnings,
+            ]);
+        }
+
+        $totalAssets = (float) $assets->sum('balance');
+        $totalLiabilities = (float) $liabilities->sum('balance');
+        $totalEquity = (float) $equity->sum('balance');
+        $totalLiabAndEquity = $totalLiabilities + $totalEquity;
 
         return response()->json([
             'status' => 'success',
             'data'   => [
-                'assets'      => $data->where('group', 'Aset')->values(),
-                'liabilities' => $data->where('group', 'Liabilitas')->values(),
-                'equity'      => $data->where('group', 'Ekuitas')->values(),
-                'total_assets'      => $data->where('group', 'Aset')->sum('balance'),
-                'total_liabilities' => $data->where('group', 'Liabilitas')->sum('balance'),
-                'total_equity'      => $data->where('group', 'Ekuitas')->sum('balance'),
+                'assets'                         => $assets,
+                'liabilities'                    => $liabilities,
+                'equity'                         => $equity,
+                'total_assets'                   => $totalAssets,
+                'total_liabilities'              => $totalLiabilities,
+                'total_equity'                   => $totalEquity,
+                'total_liabilities_and_equity'   => $totalLiabAndEquity,
+                'is_balanced'                    => abs($totalAssets - $totalLiabAndEquity) < 1,
             ]
         ]);
     }

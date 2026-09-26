@@ -51,38 +51,7 @@ class AccountingService
             }
 
             // 3. Catat Jurnal Umum (General Ledger / COA) via Rules
-            $rules = $type->rules;
-            
-            foreach ($rules as $rule) {
-                $ledgerAmount = 0;
-                
-                switch ($rule->value_mode) {
-                    case 'total':
-                        $ledgerAmount = $amount;
-                        break;
-                    case 'fixed':
-                        $ledgerAmount = $rule->fixed_amount;
-                        break;
-                    case 'remainder':
-                        // Hitung total dari rule lain di SISI yang sama
-                        $otherRulesSameSideSum = $rules->where('entry_type', $rule->entry_type)
-                            ->where('id', '!=', $rule->id)
-                            ->where('value_mode', 'fixed')
-                            ->sum('fixed_amount');
-                        $ledgerAmount = max(0, $amount - $otherRulesSameSideSum);
-                        break;
-                }
-
-                if ($ledgerAmount > 0) {
-                    TransactionLedger::create([
-                        'transaction_id' => $transaction->id,
-                        'coa_code'       => $rule->coa_code,
-                        'debit'          => $rule->entry_type === 'debit' ? $ledgerAmount : 0,
-                        'credit'         => $rule->entry_type === 'credit' ? $ledgerAmount : 0,
-                        'description'    => $rule->description ?? $transaction->description,
-                    ]);
-                }
-            }
+            $this->ensureLedgerEntries($transaction);
 
             return $transaction;
         });
@@ -120,8 +89,9 @@ class AccountingService
             // 2. Update Saldo & Mutasi
             $this->applyBalanceMovement($transaction);
 
-            // 3. Jurnal COA berdasarkan Transaction Item
+            // 3. Jurnal COA Seimbang (Double-Entry Balance) berdasarkan Transaction Item
             if ($item->coa_code) {
+                // Sisi 1: Akun Item (misal Pendapatan 4100/4200/4300)
                 TransactionLedger::create([
                     'transaction_id' => $transaction->id,
                     'coa_code'       => $item->coa_code,
@@ -129,10 +99,191 @@ class AccountingService
                     'credit'         => $item->entry_type === 'credit' ? $amount : 0,
                     'description'    => $transaction->description,
                 ]);
+
+                // Sisi 2: Lawan Akun
+                // Jika dari rekening santri: Tabungan Santri (2100)
+                // Jika pembayaran tunai: Kas Utama (1101)
+                $contraCoa = $sourceAccount ? '2100' : '1101';
+                $contraEntryType = ($item->entry_type === 'credit') ? 'debit' : 'credit';
+
+                TransactionLedger::create([
+                    'transaction_id' => $transaction->id,
+                    'coa_code'       => $contraCoa,
+                    'debit'          => $contraEntryType === 'debit' ? $amount : 0,
+                    'credit'         => $contraEntryType === 'credit' ? $amount : 0,
+                    'description'    => $transaction->description,
+                ]);
             }
 
             return $transaction;
         });
+    }
+
+    /**
+     * Memastikan transaksi memiliki jurnal ledger (double-entry) yang seimbang.
+     * Dapat dipanggil saat aktivasi transaksi atau saat rebuild/sync.
+     */
+    public function ensureLedgerEntries(Transaction $transaction): void
+    {
+        $amount = (float) $transaction->amount;
+        if ($amount <= 0) {
+            return;
+        }
+
+        // Cek apakah ledger yang ada sudah lengkap dan seimbang
+        $existing = $transaction->ledgerEntries()->get();
+        $sumDebit = (float) $existing->sum('debit');
+        $sumCredit = (float) $existing->sum('credit');
+
+        if ($existing->isNotEmpty() && abs($sumDebit - $amount) < 0.01 && abs($sumCredit - $amount) < 0.01) {
+            return; // Sudah seimbang dan sesuai nominal transaksi
+        }
+
+        // Hapus entri lama yang tidak seimbang/kadaluarsa
+        if ($existing->isNotEmpty()) {
+            $transaction->ledgerEntries()->delete();
+        }
+
+        // 1. Jika memiliki transaction_type_id dan ada rules
+        if ($transaction->transaction_type_id) {
+            $type = $transaction->transactionType ?: TransactionType::find($transaction->transaction_type_id);
+            if ($type && $type->rules()->count() > 0) {
+                $rules = $type->rules;
+                foreach ($rules as $rule) {
+                    $ledgerAmount = 0;
+                    switch ($rule->value_mode) {
+                        case 'total':
+                            $ledgerAmount = $amount;
+                            break;
+                        case 'fixed':
+                            $ledgerAmount = (float) ($rule->fixed_amount ?: $amount);
+                            break;
+                        case 'remainder':
+                            $otherSum = $rules->where('entry_type', $rule->entry_type)
+                                ->where('id', '!=', $rule->id)
+                                ->where('value_mode', 'fixed')
+                                ->sum('fixed_amount');
+                            $ledgerAmount = max(0, $amount - $otherSum);
+                            break;
+                    }
+
+                    if ($ledgerAmount > 0) {
+                        TransactionLedger::create([
+                            'transaction_id' => $transaction->id,
+                            'coa_code'       => $rule->coa_code,
+                            'debit'          => $rule->entry_type === 'debit' ? $ledgerAmount : 0,
+                            'credit'         => $rule->entry_type === 'credit' ? $ledgerAmount : 0,
+                            'description'    => $rule->description ?? $transaction->description,
+                        ]);
+                    }
+                }
+                return;
+            }
+        }
+
+        // 2. Fallback cerdas berdasarkan reference_number, tipe transaksi, atau deskripsi
+        $ref  = $transaction->reference_number ?? '';
+        $desc = $transaction->description ?? '';
+
+        if (str_starts_with($ref, 'REG') || stripos($desc, 'Pendaftaran') !== false) {
+            // Debit: Kas Utama (1101), Credit: Pendapatan Pendaftaran (4100)
+            TransactionLedger::create([
+                'transaction_id' => $transaction->id,
+                'coa_code'       => '1101',
+                'debit'          => $amount,
+                'credit'         => 0,
+                'description'    => $transaction->description,
+            ]);
+            TransactionLedger::create([
+                'transaction_id' => $transaction->id,
+                'coa_code'       => '4100',
+                'debit'          => 0,
+                'credit'         => $amount,
+                'description'    => $transaction->description,
+            ]);
+        } elseif (str_starts_with($ref, 'CASH') || str_starts_with($ref, 'TOPUP') || stripos($desc, 'Setoran') !== false || stripos($desc, 'Top-Up') !== false) {
+            // Debit: Kas Utama (1101) atau Rek Bank (1102), Credit: Tabungan Santri (2100)
+            $debitCoa = ($transaction->channel === 'bank_transfer' || str_contains($ref, 'TRF')) ? '1102' : '1101';
+            TransactionLedger::create([
+                'transaction_id' => $transaction->id,
+                'coa_code'       => $debitCoa,
+                'debit'          => $amount,
+                'credit'         => 0,
+                'description'    => $transaction->description,
+            ]);
+            TransactionLedger::create([
+                'transaction_id' => $transaction->id,
+                'coa_code'       => '2100',
+                'debit'          => 0,
+                'credit'         => $amount,
+                'description'    => $transaction->description,
+            ]);
+        } elseif (str_starts_with($ref, 'WDR') || stripos($desc, 'Penarikan') !== false) {
+            // Debit: Tabungan Santri (2100), Credit: Kas Utama (1101)
+            TransactionLedger::create([
+                'transaction_id' => $transaction->id,
+                'coa_code'       => '2100',
+                'debit'          => $amount,
+                'credit'         => 0,
+                'description'    => $transaction->description,
+            ]);
+            TransactionLedger::create([
+                'transaction_id' => $transaction->id,
+                'coa_code'       => '1101',
+                'debit'          => 0,
+                'credit'         => $amount,
+                'description'    => $transaction->description,
+            ]);
+        } elseif (str_starts_with($ref, 'KOP') || stripos($desc, 'Koperasi') !== false) {
+            // Debit: Tabungan Santri (2100), Credit: Kas/Outlet (1101)
+            TransactionLedger::create([
+                'transaction_id' => $transaction->id,
+                'coa_code'       => '2100',
+                'debit'          => $amount,
+                'credit'         => 0,
+                'description'    => $transaction->description,
+            ]);
+            TransactionLedger::create([
+                'transaction_id' => $transaction->id,
+                'coa_code'       => '1101',
+                'debit'          => 0,
+                'credit'         => $amount,
+                'description'    => $transaction->description,
+            ]);
+        } elseif (str_starts_with($ref, 'DAPUR') || stripos($desc, 'Dapur') !== false || stripos($desc, 'Makan') !== false) {
+            // Debit: Tabungan Santri (2100), Credit: Pendapatan Dapur/Bulanan (4300)
+            TransactionLedger::create([
+                'transaction_id' => $transaction->id,
+                'coa_code'       => '2100',
+                'debit'          => $amount,
+                'credit'         => 0,
+                'description'    => $transaction->description,
+            ]);
+            TransactionLedger::create([
+                'transaction_id' => $transaction->id,
+                'coa_code'       => '4300',
+                'debit'          => 0,
+                'credit'         => $amount,
+                'description'    => $transaction->description,
+            ]);
+        } elseif (str_starts_with($ref, 'PAY') || str_starts_with($ref, 'PKG')) {
+            // Debit: Tabungan Santri (2100) atau Kas, Credit: Pendapatan Operasional (4200)
+            $debitCoa = $transaction->source_account ? '2100' : '1101';
+            TransactionLedger::create([
+                'transaction_id' => $transaction->id,
+                'coa_code'       => $debitCoa,
+                'debit'          => $amount,
+                'credit'         => 0,
+                'description'    => $transaction->description,
+            ]);
+            TransactionLedger::create([
+                'transaction_id' => $transaction->id,
+                'coa_code'       => '4200',
+                'debit'          => 0,
+                'credit'         => $amount,
+                'description'    => $transaction->description,
+            ]);
+        }
     }
 
     /**

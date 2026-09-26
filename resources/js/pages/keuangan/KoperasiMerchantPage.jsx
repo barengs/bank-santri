@@ -83,95 +83,97 @@ const KoperasiMerchantPage = () => {
     };
 
     return (
-        <div className="space-y-6">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Merchant / Outlet Koperasi</h1>
-                    <p className="text-sm text-gray-500">Kelola akses API untuk kasir koperasi eksternal.</p>
+                    <h1 className="text-base font-bold text-gray-900">Merchant / Outlet Koperasi</h1>
+                    <p className="text-xs text-gray-500">Kelola akses API untuk kasir koperasi eksternal</p>
                 </div>
                 <button 
                     onClick={() => setIsAddOpen(true)}
-                    className="flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 text-white rounded-md font-bold text-sm shadow-lg shadow-indigo-600/20 hover:bg-indigo-700 transition-all active:scale-95"
+                    className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-md font-medium text-xs hover:bg-blue-700 transition-all shadow-sm"
                 >
-                    <Plus className="w-4 h-4" />
+                    <Plus className="w-3.5 h-3.5" />
                     Tambah Merchant
                 </button>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="bg-white rounded-md border border-gray-200 overflow-hidden shadow-none">
                 {isLoading ? (
                     <div className="text-center py-8">
-                        <Loader2 className="w-8 h-8 animate-spin text-indigo-600 mx-auto" />
-                        <p className="mt-2 text-sm text-gray-500">Memuat data...</p>
+                        <Loader2 className="w-6 h-6 animate-spin text-blue-600 mx-auto" />
+                        <p className="mt-2 text-xs text-gray-500">Memuat data...</p>
                     </div>
                 ) : (
                     <div className="overflow-x-auto">
-                        <table className="w-full text-sm text-left">
-                            <thead className="text-xs text-gray-500 uppercase bg-gray-50 border-b border-gray-100">
+                        <table className="w-full text-xs text-left">
+                            <thead className="bg-slate-50 border-b border-gray-200 text-gray-700 font-semibold uppercase text-[11px]">
                                 <tr>
-                                    <th className="px-6 py-4 font-bold tracking-wider">Nama Outlet</th>
-                                    <th className="px-6 py-4 font-bold tracking-wider">Status</th>
-                                    <th className="px-6 py-4 font-bold tracking-wider">Terakhir Digunakan</th>
-                                    <th className="px-6 py-4 font-bold tracking-wider">Dibuat Oleh</th>
-                                    <th className="px-6 py-4 font-bold tracking-wider text-right">Aksi</th>
+                                    <th className="px-3.5 py-2.5">Nama Outlet</th>
+                                    <th className="px-3.5 py-2.5">Status</th>
+                                    <th className="px-3.5 py-2.5">Terakhir Digunakan</th>
+                                    <th className="px-3.5 py-2.5">Dibuat Oleh</th>
+                                    <th className="px-3.5 py-2.5 text-right">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
                                 {merchants.length === 0 ? (
                                     <tr>
-                                        <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
-                                            <Store className="w-12 h-12 text-gray-200 mx-auto mb-3" />
-                                            <p className="text-sm">Belum ada merchant koperasi.</p>
+                                        <td colSpan={5} className="px-4 py-8 text-center text-gray-400">
+                                            <Store className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                                            <p className="text-xs">Belum ada merchant koperasi.</p>
                                         </td>
                                     </tr>
                                 ) : (
                                     merchants.map((merchant) => (
                                         <tr key={merchant.id} className="hover:bg-gray-50 transition-colors">
-                                            <td className="px-6 py-4">
-                                                <div className="font-bold text-gray-900">{merchant.name}</div>
-                                                {merchant.notes && <div className="text-xs text-gray-500 mt-1">{merchant.notes}</div>}
+                                            <td className="px-3.5 py-2">
+                                                <div className="font-semibold text-gray-900">{merchant.name}</div>
+                                                {merchant.notes && <div className="text-[10px] text-gray-400">{merchant.notes}</div>}
                                             </td>
-                                            <td className="px-6 py-4">
+                                            <td className="px-3.5 py-2">
                                                 <button
                                                     onClick={() => handleToggleActive(merchant.id, merchant.is_active)}
-                                                    className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest transition-colors ${
+                                                    className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase transition-colors ${
                                                         merchant.is_active 
-                                                            ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100' 
-                                                            : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                                                            ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200' 
+                                                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-200'
                                                     }`}
                                                 >
                                                     {merchant.is_active ? 'Aktif' : 'Nonaktif'}
                                                 </button>
                                             </td>
-                                            <td className="px-6 py-4 text-sm text-gray-600 font-mono">
+                                            <td className="px-3.5 py-2 text-gray-600 font-mono text-[11px]">
                                                 {merchant.last_used_at
                                                     ? new Date(merchant.last_used_at).toLocaleString('id-ID')
                                                     : '-'}
                                             </td>
-                                            <td className="px-6 py-4 text-sm text-gray-600">
+                                            <td className="px-3.5 py-2 text-gray-600">
                                                 {merchant.creator?.name || '-'}
                                             </td>
-                                            <td className="px-6 py-4 text-right">
-                                                <div className="flex justify-end gap-2">
+                                            <td className="px-3.5 py-2 text-right">
+                                                <div className="flex justify-end gap-1.5">
                                                     <button
                                                         onClick={() => {
                                                             setSelectedMerchant(merchant);
                                                             setIsRotateOpen(true);
                                                         }}
-                                                        className="p-2 text-orange-500 hover:bg-orange-50 rounded-lg transition-colors"
+                                                        className="inline-flex items-center gap-1 border border-orange-400 text-orange-600 rounded px-2 py-0.5 text-xs font-medium hover:bg-orange-50 transition-colors"
                                                         title="Rotate API Key"
                                                     >
-                                                        <KeyRound className="h-4 w-4" />
+                                                        <KeyRound className="h-3 w-3" />
+                                                        Rotate Key
                                                     </button>
                                                     <button
                                                         onClick={() => {
                                                             setSelectedMerchant(merchant);
                                                             setIsDeleteOpen(true);
                                                         }}
-                                                        className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
+                                                        className="inline-flex items-center gap-1 border border-rose-400 text-rose-600 rounded px-2 py-0.5 text-xs font-medium hover:bg-rose-50 transition-colors"
                                                         title="Hapus Merchant"
                                                     >
-                                                        <Trash2 className="h-4 w-4" />
+                                                        <Trash2 className="h-3 w-3" />
+                                                        Hapus
                                                     </button>
                                                 </div>
                                             </td>
@@ -188,42 +190,42 @@ const KoperasiMerchantPage = () => {
             {isAddOpen && (
                 <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
                     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => !isCreating && setIsAddOpen(false)}></div>
-                    <div className="relative w-full max-w-md bg-white rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
-                        <div className="px-6 py-4 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
-                            <h2 className="text-sm font-black text-gray-900 uppercase tracking-widest">Tambah Merchant Baru</h2>
+                    <div className="relative w-full max-w-md bg-white rounded-md shadow-xl overflow-hidden animate-in fade-in zoom-in duration-200 border border-gray-200">
+                        <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
+                            <h2 className="text-xs font-bold text-gray-900 uppercase tracking-wider">Tambah Merchant Baru</h2>
                             <button onClick={() => setIsAddOpen(false)} className="text-gray-400 hover:text-gray-600">
                                 <X className="w-4 h-4" />
                             </button>
                         </div>
-                        <div className="p-6 space-y-4">
-                            <p className="text-xs text-gray-500 mb-4">API Key akan digenerate otomatis setelah merchant dibuat.</p>
-                            <div className="space-y-2">
-                                <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Nama Outlet / Kasir</label>
+                        <div className="p-4 space-y-3">
+                            <p className="text-xs text-gray-500">API Key akan digenerate otomatis setelah merchant dibuat.</p>
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold text-gray-700">Nama Outlet / Kasir</label>
                                 <input 
                                     type="text"
                                     value={formData.name}
                                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                     placeholder="Contoh: Kantin Putra"
-                                    className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-md focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all text-sm"
+                                    className="w-full px-3 py-1.5 bg-white border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all text-xs"
                                 />
                             </div>
-                            <div className="space-y-2">
-                                <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Keterangan (Opsional)</label>
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold text-gray-700">Keterangan (Opsional)</label>
                                 <textarea 
                                     value={formData.notes}
                                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                                     placeholder="Keterangan tambahan..."
-                                    className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-md focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all text-sm h-24 resize-none"
+                                    className="w-full px-3 py-1.5 bg-white border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all text-xs h-20 resize-none"
                                 />
                             </div>
-                            <div className="pt-4 flex gap-3">
-                                <button onClick={() => setIsAddOpen(false)} className="flex-1 px-4 py-2.5 text-sm font-bold text-gray-500 hover:bg-gray-50 rounded-md transition-all">Batal</button>
+                            <div className="pt-2 flex justify-end gap-2">
+                                <button onClick={() => setIsAddOpen(false)} className="px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded-md transition-all">Batal</button>
                                 <button 
                                     onClick={handleCreate} 
                                     disabled={isCreating || !formData.name}
-                                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 text-white rounded-md font-bold text-sm shadow-lg shadow-indigo-600/20 hover:bg-indigo-700 transition-all active:scale-95 disabled:opacity-50"
+                                    className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-md font-medium text-xs hover:bg-blue-700 transition-all disabled:opacity-50"
                                 >
-                                    {isCreating && <Loader2 className="w-4 h-4 animate-spin" />}
+                                    {isCreating && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                                     Simpan
                                 </button>
                             </div>
@@ -236,31 +238,32 @@ const KoperasiMerchantPage = () => {
             {isKeyOpen && (
                 <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
                     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
-                    <div className="relative w-full max-w-lg bg-white rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
-                        <div className="px-6 py-4 bg-emerald-50 border-b border-emerald-100 flex items-center gap-2">
-                            <Key className="w-5 h-5 text-emerald-600" />
-                            <h2 className="text-sm font-black text-emerald-900 uppercase tracking-widest">API Key Baru</h2>
+                    <div className="relative w-full max-w-lg bg-white rounded-md shadow-xl overflow-hidden animate-in fade-in zoom-in duration-200 border border-gray-200">
+                        <div className="px-4 py-3 bg-emerald-50 border-b border-emerald-200 flex items-center gap-2">
+                            <Key className="w-4 h-4 text-emerald-600" />
+                            <h2 className="text-xs font-bold text-emerald-900 uppercase tracking-wider">API Key Baru</h2>
                         </div>
-                        <div className="p-6 text-center space-y-6">
-                            <p className="text-sm font-bold text-orange-600 bg-orange-50 p-3 rounded-lg border border-orange-200">
+                        <div className="p-4 text-center space-y-4">
+                            <p className="text-xs font-medium text-amber-800 bg-amber-50 p-2.5 rounded-md border border-amber-200 text-left">
                                 Simpan API Key ini sekarang. Anda tidak akan bisa melihatnya lagi setelah jendela ini ditutup!
                             </p>
                             
-                            <div className="flex items-center gap-2 bg-gray-900 p-4 rounded-xl shadow-inner">
-                                <code className="flex-1 font-mono text-sm text-emerald-400 break-all text-left">
+                            <div className="flex items-center gap-2 bg-slate-900 p-3 rounded-md shadow-inner">
+                                <code className="flex-1 font-mono text-xs text-emerald-400 break-all text-left">
                                     {newKey}
                                 </code>
                                 <button 
                                     onClick={handleCopy}
-                                    className="p-2 rounded-lg bg-gray-800 text-gray-300 hover:text-white hover:bg-gray-700 transition-all"
+                                    className="p-1.5 rounded bg-slate-800 text-gray-300 hover:text-white hover:bg-slate-700 transition-all"
+                                    title="Salin Key"
                                 >
-                                    {copied ? <Check className="w-5 h-5 text-emerald-400" /> : <Copy className="w-5 h-5" />}
+                                    {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
                                 </button>
                             </div>
 
                             <button 
                                 onClick={() => { setIsKeyOpen(false); setNewKey(''); }}
-                                className="w-full px-4 py-3 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-lg font-bold text-sm transition-all"
+                                className="w-full px-3 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-md font-medium text-xs transition-all"
                             >
                                 Saya sudah menyimpannya dengan aman
                             </button>
@@ -273,18 +276,18 @@ const KoperasiMerchantPage = () => {
             {isRotateOpen && (
                 <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
                     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setIsRotateOpen(false)}></div>
-                    <div className="relative w-full max-w-sm bg-white rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
-                        <div className="p-6 text-center space-y-4">
-                            <div className="w-12 h-12 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center mx-auto">
-                                <KeyRound className="w-6 h-6" />
+                    <div className="relative w-full max-w-sm bg-white rounded-md shadow-xl overflow-hidden animate-in fade-in zoom-in duration-200 border border-gray-200">
+                        <div className="p-5 text-center space-y-3">
+                            <div className="w-10 h-10 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center mx-auto">
+                                <KeyRound className="w-5 h-5" />
                             </div>
-                            <h2 className="text-lg font-bold text-gray-900">Rotate API Key?</h2>
-                            <p className="text-sm text-gray-500">
+                            <h2 className="text-sm font-bold text-gray-900">Rotate API Key?</h2>
+                            <p className="text-xs text-gray-500 leading-relaxed">
                                 API Key lama untuk <strong className="text-gray-900">{selectedMerchant?.name}</strong> akan langsung hangus. Pastikan kasir siap memperbarui key mereka.
                             </p>
-                            <div className="pt-4 flex gap-3">
-                                <button onClick={() => setIsRotateOpen(false)} className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md font-bold text-sm transition-all">Batal</button>
-                                <button onClick={handleRotate} className="flex-1 px-4 py-2.5 bg-orange-600 hover:bg-orange-700 text-white rounded-md font-bold text-sm transition-all">Ya, Rotate</button>
+                            <div className="pt-2 flex gap-2">
+                                <button onClick={() => setIsRotateOpen(false)} className="flex-1 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md font-medium text-xs transition-all">Batal</button>
+                                <button onClick={handleRotate} className="flex-1 px-3 py-1.5 bg-orange-600 hover:bg-orange-700 text-white rounded-md font-medium text-xs transition-all">Ya, Rotate</button>
                             </div>
                         </div>
                     </div>
@@ -295,18 +298,18 @@ const KoperasiMerchantPage = () => {
             {isDeleteOpen && (
                 <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
                     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setIsDeleteOpen(false)}></div>
-                    <div className="relative w-full max-w-sm bg-white rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
-                        <div className="p-6 text-center space-y-4">
-                            <div className="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto">
-                                <Trash2 className="w-6 h-6" />
+                    <div className="relative w-full max-w-sm bg-white rounded-md shadow-xl overflow-hidden animate-in fade-in zoom-in duration-200 border border-gray-200">
+                        <div className="p-5 text-center space-y-3">
+                            <div className="w-10 h-10 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto">
+                                <Trash2 className="w-5 h-5" />
                             </div>
-                            <h2 className="text-lg font-bold text-gray-900">Hapus Merchant?</h2>
-                            <p className="text-sm text-gray-500">
+                            <h2 className="text-sm font-bold text-gray-900">Hapus Merchant?</h2>
+                            <p className="text-xs text-gray-500 leading-relaxed">
                                 Apakah Anda yakin ingin menghapus akses <strong className="text-gray-900">{selectedMerchant?.name}</strong> secara permanen?
                             </p>
-                            <div className="pt-4 flex gap-3">
-                                <button onClick={() => setIsDeleteOpen(false)} className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md font-bold text-sm transition-all">Batal</button>
-                                <button onClick={handleDelete} className="flex-1 px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-md font-bold text-sm transition-all">Ya, Hapus</button>
+                            <div className="pt-2 flex gap-2">
+                                <button onClick={() => setIsDeleteOpen(false)} className="flex-1 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md font-medium text-xs transition-all">Batal</button>
+                                <button onClick={handleDelete} className="flex-1 px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-md font-medium text-xs transition-all">Ya, Hapus</button>
                             </div>
                         </div>
                     </div>

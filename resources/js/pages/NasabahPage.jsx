@@ -126,16 +126,17 @@ const NasabahPage = () => {
             id: 'actions',
             header: 'Aksi',
             cell: ({ row }) => (
-                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex items-center gap-1.5">
                     <button 
                         onClick={(e) => {
                             e.stopPropagation();
                             navigate(`/nasabah/${row.original.account_number}`);
                         }}
-                        className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded"
+                        className="px-2 py-0.5 border border-blue-400 text-blue-600 hover:bg-blue-50 rounded text-xs font-medium inline-flex items-center gap-1 transition-colors"
                         title="Lihat Detail"
                     >
-                        <Eye className="w-4 h-4" />
+                        <Eye className="w-3 h-3" />
+                        Detail
                     </button>
                     <button 
                         onClick={(e) => {
@@ -144,10 +145,11 @@ const NasabahPage = () => {
                             setEditCardNumber(row.original.card_number || '');
                             setIsEditModalOpen(true);
                         }}
-                        className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded"
+                        className="px-2 py-0.5 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded text-xs font-medium inline-flex items-center gap-1 transition-colors"
                         title="Update Nomor Kartu"
                     >
-                        <CreditCard className="w-4 h-4" />
+                        <CreditCard className="w-3 h-3 text-gray-500" />
+                        Kartu
                     </button>
                     <button 
                         onClick={(e) => {
@@ -155,10 +157,11 @@ const NasabahPage = () => {
                             setClosingAccount(row.original);
                             setIsCloseModalOpen(true);
                         }}
-                        className="p-2 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded"
+                        className="px-2 py-0.5 border border-rose-300 text-rose-600 hover:bg-rose-50 rounded text-xs font-medium inline-flex items-center gap-1 transition-colors"
                         title="Tutup Rekening"
                     >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-3 h-3" />
+                        Tutup
                     </button>
                 </div>
             )
@@ -257,26 +260,26 @@ const NasabahPage = () => {
     };
 
     return (
-        <div className="space-y-6">
-            {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="bg-white border border-gray-200 rounded-md p-4 space-y-4 shadow-none">
+            {/* Card Header & Actions */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-1 border-b border-gray-100">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Manajemen Nasabah</h1>
-                    <p className="text-sm text-gray-500">Kelola dan buka rekening tabungan santri & instansi.</p>
+                    <h1 className="text-lg font-bold text-gray-900 tracking-tight">Informasi Rekening Santri</h1>
+                    <p className="text-xs text-gray-500">Kelola rekening tabungan santri dan rekening instansi pesantren.</p>
                 </div>
                 <div className="flex items-center gap-2">
                     <button 
                         onClick={() => setIsInstansiModalOpen(true)}
-                        className="flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-800 text-white rounded-md font-bold text-sm shadow-lg shadow-slate-800/20 hover:bg-slate-900 transition-all active:scale-95"
+                        className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-md font-medium text-xs transition-colors"
                     >
-                        <ShieldCheck className="w-4 h-4" />
+                        <ShieldCheck className="w-3.5 h-3.5" />
                         Buka Rekening Instansi
                     </button>
                     <button 
                         onClick={() => setIsModalOpen(true)}
-                        className="flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 text-white rounded-md font-bold text-sm shadow-lg shadow-indigo-600/20 hover:bg-indigo-700 transition-all active:scale-95"
+                        className="flex items-center justify-center gap-1.5 px-3.5 py-1.5 bg-[#007bff] hover:bg-blue-700 text-white rounded-md font-semibold text-xs transition-colors shadow-none"
                     >
-                        <UserPlus className="w-4 h-4" />
+                        <UserPlus className="w-3.5 h-3.5" />
                         Buka Rekening Santri
                     </button>
                 </div>
@@ -299,37 +302,39 @@ const NasabahPage = () => {
                 <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
                     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => !isCreating && setIsModalOpen(false)}></div>
                     
-                    <div className="relative w-full max-w-lg bg-white rounded-lg shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+                    <div className="relative w-full max-w-lg bg-white rounded-md shadow-xl overflow-hidden animate-in fade-in zoom-in duration-200 border border-gray-200">
                         {/* Modal Header */}
-                        <div className="px-8 py-6 bg-indigo-600 text-white relative">
-                            <h2 className="text-xl font-bold">Buka Rekening Santri</h2>
-                            <p className="text-indigo-100 text-xs mt-1">Cari santri dari portal SMPT untuk membuat rekening baru.</p>
-                            <div className="absolute top-6 right-8 opacity-20">
-                                <ShieldCheck className="w-12 h-12" />
+                        <div className="px-4 py-3 bg-blue-600 text-white flex items-center justify-between">
+                            <div>
+                                <h2 className="text-sm font-bold">Buka Rekening Santri</h2>
+                                <p className="text-blue-100 text-[11px]">Cari santri dari portal SMPT untuk membuat rekening baru</p>
                             </div>
+                            <button onClick={() => setIsModalOpen(false)} className="text-blue-100 hover:text-white">
+                                <X className="w-4 h-4" />
+                            </button>
                         </div>
 
-                        <div className="p-8 space-y-6">
+                        <div className="p-4 space-y-3">
                             {/* Step 1: Search Student */}
-                            <div className="space-y-3">
-                                <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Cari Santri (NIS / Nama)</label>
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-semibold text-gray-700">Cari Santri (NIS / Nama)</label>
                                 <div className="relative group">
-                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
                                     <input 
                                         type="text"
                                         placeholder="Ketik minimal 3 karakter..."
                                         value={studentSearch}
                                         onChange={handleStudentSearch}
-                                        className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-md focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all text-sm"
+                                        className="w-full pl-9 pr-8 py-1.5 bg-white border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all text-xs"
                                     />
                                     {isSearchingStudents && (
-                                        <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-indigo-600" />
+                                        <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 animate-spin text-blue-600" />
                                     )}
                                 </div>
 
                                 {/* Results List */}
                                 {studentSearch.length > 2 && studentResults?.data?.data && !selectedStudent && (
-                                    <div className="max-h-48 overflow-y-auto border border-gray-100 rounded divide-y divide-gray-50 shadow-inner bg-gray-50/50">
+                                    <div className="max-h-44 overflow-y-auto border border-gray-200 rounded-md divide-y divide-gray-100 bg-white">
                                         {studentResults.data.data.map((student) => (
                                             <button 
                                                 key={student.id}
@@ -337,13 +342,13 @@ const NasabahPage = () => {
                                                     setSelectedStudent(student);
                                                     setStudentSearch(`${student.nis} - ${student.first_name}`);
                                                 }}
-                                                className="w-full px-4 py-3 flex items-center justify-between hover:bg-white transition-all text-left group"
+                                                className="w-full px-3 py-2 flex items-center justify-between hover:bg-blue-50 transition-all text-left group"
                                             >
                                                 <div>
-                                                    <p className="text-sm font-bold text-gray-900 group-hover:text-indigo-600">{student.first_name} {student.last_name}</p>
-                                                    <p className="text-[10px] text-gray-500">NIS: {student.nis}</p>
+                                                    <p className="text-xs font-bold text-gray-800 group-hover:text-blue-600">{student.first_name} {student.last_name}</p>
+                                                    <p className="text-[10px] text-gray-500 font-mono">NIS: {student.nis}</p>
                                                 </div>
-                                                <Plus className="w-4 h-4 text-gray-300 group-hover:text-indigo-500" />
+                                                <Plus className="w-3.5 h-3.5 text-gray-300 group-hover:text-blue-600" />
                                             </button>
                                         ))}
                                     </div>
@@ -351,19 +356,19 @@ const NasabahPage = () => {
 
                                 {/* Selected Student Card */}
                                 {selectedStudent && (
-                                    <div className="p-4 bg-indigo-50 border border-indigo-100 rounded flex items-center justify-between">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center font-bold text-white shadow-md">
+                                    <div className="p-2.5 bg-blue-50 border border-blue-200 rounded-md flex items-center justify-between">
+                                        <div className="flex items-center gap-2.5">
+                                            <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center font-bold text-white text-xs">
                                                 {selectedStudent.first_name[0]}
                                             </div>
                                             <div>
-                                                <p className="text-sm font-bold text-indigo-900">{selectedStudent.first_name} {selectedStudent.last_name}</p>
-                                                <p className="text-[10px] text-indigo-500 font-bold uppercase tracking-widest">{selectedStudent.nis}</p>
+                                                <p className="text-xs font-bold text-blue-900">{selectedStudent.first_name} {selectedStudent.last_name}</p>
+                                                <p className="text-[10px] text-blue-600 font-mono font-medium">{selectedStudent.nis}</p>
                                             </div>
                                         </div>
                                         <button 
                                             onClick={() => { setSelectedStudent(null); setStudentSearch(''); }}
-                                            className="text-[10px] font-bold text-rose-600 hover:bg-rose-50 px-2 py-1 rounded-md"
+                                            className="text-[10px] font-medium text-rose-600 hover:bg-rose-50 px-2 py-0.5 rounded border border-rose-200"
                                         >
                                             Batal
                                         </button>
@@ -372,13 +377,13 @@ const NasabahPage = () => {
                             </div>
 
                             {/* Options Grid */}
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Produk Tabungan</label>
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="space-y-1">
+                                    <label className="text-xs font-semibold text-gray-700">Produk Tabungan</label>
                                     <select 
                                         value={selectedProduct}
                                         onChange={(e) => setSelectedProduct(e.target.value)}
-                                        className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded text-sm focus:outline-none focus:border-indigo-600"
+                                        className="w-full px-2.5 py-1.5 bg-white border border-gray-300 rounded-md text-xs focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                                     >
                                         <option value="" disabled>Pilih Produk</option>
                                         {products.map(p => (
@@ -386,12 +391,12 @@ const NasabahPage = () => {
                                         ))}
                                     </select>
                                 </div>
-                                <div className="space-y-2">
-                                    <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Jenis Akad</label>
+                                <div className="space-y-1">
+                                    <label className="text-xs font-semibold text-gray-700">Jenis Akad</label>
                                     <select 
                                         value={selectedAkad}
                                         onChange={(e) => setSelectedAkad(e.target.value)}
-                                        className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded text-sm focus:outline-none focus:border-indigo-600"
+                                        className="w-full px-2.5 py-1.5 bg-white border border-gray-300 rounded-md text-xs focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                                     >
                                         <option value="wadiah">Wadiah (Titipan)</option>
                                         <option value="mudharabah">Mudharabah (Bagi Hasil)</option>
@@ -399,24 +404,23 @@ const NasabahPage = () => {
                                 </div>
                             </div>
 
-
-                            <div className="pt-4 border-t border-gray-100 flex gap-3">
+                            <div className="pt-3 border-t border-gray-200 flex justify-end gap-2">
                                 <button 
                                     onClick={() => setIsModalOpen(false)}
-                                    className="flex-1 px-4 py-2.5 text-sm font-bold text-gray-500 hover:bg-gray-50 rounded-md transition-all"
+                                    className="px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded-md transition-all"
                                 >
                                     Tutup
                                 </button>
                                 <button 
                                     onClick={handleCreateAccount}
                                     disabled={!selectedStudent || isCreating}
-                                    className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-md font-bold text-sm text-white shadow-lg transition-all ${
+                                    className={`flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md font-medium text-xs text-white transition-all ${
                                         selectedStudent && !isCreating 
-                                            ? 'bg-indigo-600 shadow-indigo-600/20 hover:bg-indigo-700' 
-                                            : 'bg-gray-300 shadow-none cursor-not-allowed'
+                                            ? 'bg-blue-600 hover:bg-blue-700' 
+                                            : 'bg-gray-300 cursor-not-allowed'
                                     }`}
                                 >
-                                    {isCreating ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
+                                    {isCreating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ShieldCheck className="w-3.5 h-3.5" />}
                                     Konfirmasi & Buka
                                 </button>
                             </div>
@@ -430,44 +434,47 @@ const NasabahPage = () => {
                 <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
                     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => !isUpdating && setIsEditModalOpen(false)}></div>
                     
-                    <div className="relative w-full max-w-sm bg-white rounded-lg shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
-                        <div className="px-6 py-4 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
-                            <h2 className="text-sm font-black text-gray-900 uppercase tracking-widest">Update Kartu Santri</h2>
+                    <div className="relative w-full max-w-sm bg-white rounded-md shadow-xl overflow-hidden animate-in fade-in zoom-in duration-200 border border-gray-200">
+                        <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
+                            <h2 className="text-xs font-bold text-gray-900 uppercase tracking-wider">Update Kartu Santri</h2>
                             <button onClick={() => setIsEditModalOpen(false)} className="text-gray-400 hover:text-gray-600">
                                 <X className="w-4 h-4" />
                             </button>
                         </div>
 
-                        <div className="p-6 space-y-4">
-                            <div className="p-3 bg-indigo-50 border border-indigo-100 rounded-lg">
-                                <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">Nasabah</p>
-                                <p className="text-sm font-bold text-indigo-900">{editingAccount?.customer_name}</p>
-                                <p className="text-[10px] text-indigo-600 font-mono">{editingAccount?.account_number}</p>
+                        <div className="p-4 space-y-3">
+                            <div className="p-2.5 bg-blue-50 border border-blue-200 rounded-md">
+                                <p className="text-[10px] font-bold text-blue-500 uppercase tracking-wider">Nasabah</p>
+                                <p className="text-xs font-bold text-slate-800">{editingAccount?.customer_name}</p>
+                                <p className="text-[10px] text-blue-600 font-mono">{editingAccount?.account_number}</p>
                             </div>
 
-                            <div className="space-y-2">
-                                <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Nomor Kartu Baru</label>
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold text-gray-700">Nomor Kartu Baru</label>
                                 <div className="relative">
-                                    <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                    <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
                                     <input 
                                         type="text"
                                         placeholder="Masukkan nomor kartu..."
                                         value={editCardNumber}
                                         onChange={(e) => setEditCardNumber(e.target.value)}
-                                        className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-md focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all text-sm font-mono"
+                                        className="w-full pl-9 pr-3 py-1.5 bg-white border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all text-xs font-mono"
                                         autoFocus
                                     />
                                 </div>
                             </div>
 
-                            <button 
-                                onClick={handleUpdateCard}
-                                disabled={isUpdating}
-                                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 text-white rounded-md font-bold text-sm shadow-lg shadow-indigo-600/20 hover:bg-indigo-700 transition-all active:scale-95 disabled:bg-gray-300 disabled:shadow-none"
-                            >
-                                {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                                Simpan Perubahan
-                            </button>
+                            <div className="pt-2 flex justify-end gap-2">
+                                <button onClick={() => setIsEditModalOpen(false)} className="px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded-md transition-all">Batal</button>
+                                <button 
+                                    onClick={handleUpdateCard}
+                                    disabled={isUpdating}
+                                    className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-md font-medium text-xs hover:bg-blue-700 transition-all disabled:opacity-50"
+                                >
+                                    {isUpdating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                                    Simpan Perubahan
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -478,34 +485,36 @@ const NasabahPage = () => {
                 <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
                     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => !isCreatingInstansi && setIsInstansiModalOpen(false)}></div>
                     
-                    <div className="relative w-full max-w-lg bg-white rounded-lg shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
-                        <div className="px-8 py-6 bg-slate-800 text-white relative">
-                            <h2 className="text-xl font-bold">Buka Rekening Instansi</h2>
-                            <p className="text-slate-300 text-xs mt-1">Buat rekening penampungan untuk instansi (MI, MTs, SMA, dll).</p>
-                            <div className="absolute top-6 right-8 opacity-20">
-                                <ShieldCheck className="w-12 h-12" />
+                    <div className="relative w-full max-w-lg bg-white rounded-md shadow-xl overflow-hidden animate-in fade-in zoom-in duration-200 border border-gray-200">
+                        <div className="px-4 py-3 bg-[#182234] text-white flex items-center justify-between">
+                            <div>
+                                <h2 className="text-sm font-bold">Buka Rekening Instansi</h2>
+                                <p className="text-slate-300 text-[11px]">Buat rekening penampungan untuk instansi (MI, MTs, SMA, dll)</p>
                             </div>
+                            <button onClick={() => setIsInstansiModalOpen(false)} className="text-slate-400 hover:text-white">
+                                <X className="w-4 h-4" />
+                            </button>
                         </div>
 
-                        <div className="p-8 space-y-6">
-                            <div className="space-y-3">
-                                <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Nama Instansi</label>
+                        <div className="p-4 space-y-3">
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold text-gray-700">Nama Instansi</label>
                                 <input 
                                     type="text"
                                     placeholder="Contoh: Instansi SMA Plus"
                                     value={instansiData.customer_name}
                                     onChange={(e) => setInstansiData({...instansiData, customer_name: e.target.value})}
-                                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-md focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all text-sm font-bold"
+                                    className="w-full px-3 py-1.5 bg-white border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all text-xs font-medium"
                                 />
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Produk Tabungan</label>
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="space-y-1">
+                                    <label className="text-xs font-semibold text-gray-700">Produk Tabungan</label>
                                     <select 
                                         value={instansiData.product_id}
                                         onChange={(e) => setInstansiData({...instansiData, product_id: e.target.value})}
-                                        className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded text-sm focus:outline-none focus:border-indigo-600"
+                                        className="w-full px-2.5 py-1.5 bg-white border border-gray-300 rounded-md text-xs focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                                     >
                                         <option value="" disabled>Pilih Produk</option>
                                         {products.map(p => (
@@ -513,12 +522,12 @@ const NasabahPage = () => {
                                         ))}
                                     </select>
                                 </div>
-                                <div className="space-y-2">
-                                    <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Jenis Akad</label>
+                                <div className="space-y-1">
+                                    <label className="text-xs font-semibold text-gray-700">Jenis Akad</label>
                                     <select 
                                         value={instansiData.akad_type}
                                         onChange={(e) => setInstansiData({...instansiData, akad_type: e.target.value})}
-                                        className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded text-sm focus:outline-none focus:border-indigo-600"
+                                        className="w-full px-2.5 py-1.5 bg-white border border-gray-300 rounded-md text-xs focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                                     >
                                         <option value="wadiah">Wadiah (Titipan)</option>
                                         <option value="mudharabah">Mudharabah (Bagi Hasil)</option>
@@ -526,23 +535,23 @@ const NasabahPage = () => {
                                 </div>
                             </div>
 
-                            <div className="pt-4 border-t border-gray-100 flex gap-3">
+                            <div className="pt-3 border-t border-gray-200 flex justify-end gap-2">
                                 <button 
                                     onClick={() => setIsInstansiModalOpen(false)}
-                                    className="flex-1 px-4 py-2.5 text-sm font-bold text-gray-500 hover:bg-gray-50 rounded-md transition-all"
+                                    className="px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded-md transition-all"
                                 >
                                     Batal
                                 </button>
                                 <button 
                                     onClick={handleCreateInstansi}
                                     disabled={!instansiData.customer_name || isCreatingInstansi}
-                                    className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-md font-bold text-sm text-white shadow-lg transition-all ${
+                                    className={`flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md font-medium text-xs text-white transition-all ${
                                         instansiData.customer_name && !isCreatingInstansi 
-                                            ? 'bg-slate-800 shadow-slate-800/20 hover:bg-slate-900' 
-                                            : 'bg-gray-300 shadow-none cursor-not-allowed'
+                                            ? 'bg-blue-600 hover:bg-blue-700' 
+                                            : 'bg-gray-300 cursor-not-allowed'
                                     }`}
                                 >
-                                    {isCreatingInstansi ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
+                                    {isCreatingInstansi ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ShieldCheck className="w-3.5 h-3.5" />}
                                     Konfirmasi & Buka
                                 </button>
                             </div>
@@ -556,12 +565,12 @@ const NasabahPage = () => {
                 <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
                     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => !isUpdating && setIsCloseModalOpen(false)}></div>
                     
-                    <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 border border-slate-100">
+                    <div className="relative w-full max-w-md bg-white rounded-md shadow-xl overflow-hidden animate-in fade-in zoom-in duration-200 border border-gray-200">
                         {/* Modal Header */}
-                        <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+                        <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between bg-gray-50">
                             <div className="flex items-center gap-2 text-rose-600">
-                                <AlertCircle className="w-5 h-5" />
-                                <h2 className="text-sm font-black uppercase tracking-widest text-slate-800">Tutup Rekening</h2>
+                                <AlertCircle className="w-4 h-4" />
+                                <h2 className="text-xs font-bold uppercase tracking-wider text-slate-800">Tutup Rekening</h2>
                             </div>
                             <button onClick={() => setIsCloseModalOpen(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
                                 <X className="w-4 h-4" />
@@ -569,56 +578,56 @@ const NasabahPage = () => {
                         </div>
 
                         {/* Modal Body */}
-                        <div className="p-6 space-y-4">
-                            <div className="p-4 bg-slate-50 border border-slate-100 rounded-xl space-y-1">
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Nasabah</p>
-                                <p className="text-base font-black text-slate-800 leading-tight">{closingAccount.customer_name}</p>
-                                <p className="text-xs text-indigo-600 font-mono font-bold">{closingAccount.account_number}</p>
+                        <div className="p-4 space-y-3">
+                            <div className="p-3 bg-gray-50 border border-gray-200 rounded-md space-y-0.5">
+                                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Nasabah</p>
+                                <p className="text-sm font-bold text-slate-800 leading-tight">{closingAccount.customer_name}</p>
+                                <p className="text-xs text-blue-600 font-mono font-medium">{closingAccount.account_number}</p>
                             </div>
 
                             {Number(closingAccount.balance) > 0 ? (
-                                <div className="space-y-4">
-                                    <div className="p-4 bg-rose-50 border border-rose-100 rounded-xl flex gap-3">
-                                        <AlertCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
-                                        <div className="space-y-1">
-                                            <p className="text-xs font-black text-rose-800 uppercase tracking-wider">Saldo Aktif Terdeteksi</p>
+                                <div className="space-y-3">
+                                    <div className="p-3 bg-rose-50 border border-rose-200 rounded-md flex gap-2.5">
+                                        <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                                        <div className="space-y-0.5">
+                                            <p className="text-xs font-bold text-rose-800">Saldo Aktif Terdeteksi</p>
                                             <p className="text-xs text-rose-700 leading-relaxed">
-                                                Rekening ini masih memiliki sisa saldo sebesar <strong className="font-extrabold">{formatIDR(closingAccount.balance)}</strong>. 
+                                                Rekening ini masih memiliki sisa saldo sebesar <strong className="font-bold">{formatIDR(closingAccount.balance)}</strong>. 
                                                 Silakan lakukan penarikan tunai terlebih dahulu hingga saldo menjadi <strong>Rp 0</strong> sebelum menutup rekening ini.
                                             </p>
                                         </div>
                                     </div>
                                     <button 
                                         onClick={() => setIsCloseModalOpen(false)}
-                                        className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-sm transition-all"
+                                        className="w-full py-1.5 bg-gray-100 hover:bg-gray-200 text-slate-700 rounded-md font-medium text-xs transition-all"
                                     >
                                         Mengerti
                                     </button>
                                 </div>
                             ) : (
-                                <div className="space-y-4">
-                                    <div className="p-4 bg-amber-50 border border-amber-100 rounded-xl flex gap-3">
-                                        <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-                                        <div className="space-y-1">
-                                            <p className="text-xs font-black text-amber-800 uppercase tracking-wider">Konfirmasi Penutupan</p>
+                                <div className="space-y-3">
+                                    <div className="p-3 bg-amber-50 border border-amber-200 rounded-md flex gap-2.5">
+                                        <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                                        <div className="space-y-0.5">
+                                            <p className="text-xs font-bold text-amber-800">Konfirmasi Penutupan</p>
                                             <p className="text-xs text-amber-700 leading-relaxed">
                                                 Apakah Anda yakin ingin menutup rekening ini? Tindakan ini <strong>tidak dapat dibatalkan</strong>. Rekening yang telah ditutup tidak dapat digunakan kembali untuk bertransaksi.
                                             </p>
                                         </div>
                                     </div>
-                                    <div className="flex gap-3">
+                                    <div className="flex gap-2">
                                         <button 
                                             onClick={() => setIsCloseModalOpen(false)}
-                                            className="flex-1 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-sm transition-all"
+                                            className="flex-1 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-slate-700 rounded-md font-medium text-xs transition-all"
                                         >
                                             Batal
                                         </button>
                                         <button 
                                             onClick={handleCloseAccount}
                                             disabled={isUpdating}
-                                            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-bold text-sm shadow-lg shadow-rose-600/10 transition-all active:scale-95 disabled:opacity-50"
+                                            className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-md font-medium text-xs transition-all disabled:opacity-50"
                                         >
-                                            {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                                            {isUpdating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
                                             Ya, Tutup Rekening
                                         </button>
                                     </div>

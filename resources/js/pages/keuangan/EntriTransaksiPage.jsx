@@ -123,37 +123,37 @@ const EntriTransaksiPage = () => {
 
     if (isConfirmed && createdTransaction) {
         return (
-            <div className="max-w-xl mx-auto py-12 animate-in fade-in zoom-in duration-500">
-                <div className="bg-white rounded-lg border border-emerald-100 shadow-2xl shadow-emerald-500/10 overflow-hidden text-center p-12 space-y-8">
-                    <div className="w-24 h-24 bg-emerald-500 text-white rounded-full flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/40 animate-bounce">
-                        <CheckCircle2 className="w-12 h-12" />
+            <div className="max-w-md mx-auto py-6">
+                <div className="bg-white rounded-md border border-gray-200 text-center p-6 space-y-5 shadow-none">
+                    <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
+                        <CheckCircle2 className="w-6 h-6" />
                     </div>
-                    <div className="space-y-2">
-                        <h2 className="text-3xl font-black text-slate-800 tracking-tight">Transaksi Sukses!</h2>
-                        <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Referensi: {createdTransaction.reference_number}</p>
+                    <div className="space-y-1">
+                        <h2 className="text-base font-bold text-gray-900">Transaksi Sukses!</h2>
+                        <p className="text-gray-400 font-mono text-xs">Referensi: {createdTransaction.reference_number}</p>
                     </div>
                     
-                    <div className="bg-slate-50 rounded-lg p-8 text-left space-y-4 border border-slate-100">
+                    <div className="bg-gray-50 rounded-md p-4 text-left space-y-2 border border-gray-200 text-xs">
                         <div className="flex justify-between items-center">
-                            <span className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Nasabah</span>
-                            <span className="font-black text-slate-800">{createdTransaction.source_account || createdTransaction.destination_account || 'CASH'}</span>
+                            <span className="text-gray-500 font-medium">Nasabah</span>
+                            <span className="font-semibold text-gray-800">{createdTransaction.source_account || createdTransaction.destination_account || 'CASH'}</span>
                         </div>
                         <div className="flex justify-between items-center">
-                            <span className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Jenis</span>
-                            <span className="font-black text-indigo-600">{selectedType?.name}</span>
+                            <span className="text-gray-500 font-medium">Jenis</span>
+                            <span className="font-semibold text-blue-600">{selectedType?.name}</span>
                         </div>
-                        <div className="pt-4 border-t border-slate-200/50 flex justify-between items-center">
-                            <span className="text-emerald-600 font-black uppercase tracking-widest text-xs">Total Nominal</span>
-                            <span className="text-2xl font-black text-emerald-600">{formatIDR(createdTransaction.amount)}</span>
+                        <div className="pt-2 border-t border-gray-200 flex justify-between items-center">
+                            <span className="text-gray-700 font-bold">Total Nominal</span>
+                            <span className="text-base font-bold text-emerald-600">{formatIDR(createdTransaction.amount)}</span>
                         </div>
                     </div>
 
-                    <div className="flex flex-col gap-3 pt-4">
+                    <div className="flex flex-col sm:flex-row gap-2 pt-2">
                         <button 
                             onClick={() => navigate(`/transaksi/${createdTransaction.id}`)}
-                            className="flex items-center justify-center gap-2 px-8 py-4 bg-indigo-600 text-white rounded-lg font-black shadow-xl shadow-indigo-600/30 hover:bg-indigo-700 transition-all active:scale-95"
+                            className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-md text-xs font-medium hover:bg-blue-700 transition-all"
                         >
-                            <FileText className="w-5 h-5" />
+                            <FileText className="w-4 h-4" />
                             Detail Transaksi
                         </button>
                         <button 
@@ -163,11 +163,11 @@ const EntriTransaksiPage = () => {
                                 setSelectedAccount(null);
                                 setSearchAccount('');
                                 setSelectedTypeId('');
-                                setAmount(0);
+                                setAmount('');
                             }}
-                            className="flex items-center justify-center gap-2 px-8 py-4 bg-white border border-slate-200 text-slate-600 rounded-lg font-black hover:bg-slate-50 transition-all active:scale-95"
+                            className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 bg-white border border-gray-300 text-gray-700 rounded-md text-xs font-medium hover:bg-gray-50 transition-all"
                         >
-                            Input Transaksi Baru
+                            Input Baru
                         </button>
                     </div>
                 </div>
@@ -176,219 +176,213 @@ const EntriTransaksiPage = () => {
     }
 
     return (
-        <div className="max-w-5xl mx-auto space-y-8 pb-20">
+        <div className="space-y-4">
             {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-                <div className="space-y-1">
-                    <h1 className="text-3xl font-black text-slate-900 tracking-tight">Entri Transaksi</h1>
-                    <p className="text-sm text-slate-400 font-bold uppercase tracking-widest flex items-center gap-2">
-                        <Wallet className="w-4 h-4 text-indigo-500" />
-                        Input Transaksi Berbasis Template
-                    </p>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                    <h1 className="text-base font-bold text-gray-900">Entri Transaksi</h1>
+                    <p className="text-xs text-gray-500">Input transaksi berbasis template aturan jurnal</p>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 {/* Form Section */}
-                <div className="lg:col-span-2 space-y-6">
-                    <div className="bg-white p-8 rounded-lg border border-slate-100 shadow-sm space-y-8">
-                        <form onSubmit={handleSubmit} className="space-y-8">
-                            
-                            {/* Account Selection */}
-                            <div className="space-y-4">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] block">1. Pilih Rekening Nasabah</label>
-                                <div className="relative group">
-                                    <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-indigo-600 transition-colors" />
-                                    <input 
-                                        type="text" 
-                                        placeholder="Cari NIS atau Nama Nasabah..." 
-                                        value={searchAccount}
-                                        onChange={(e) => {
-                                            setSearchAccount(e.target.value);
-                                            if (selectedAccount) setSelectedAccount(null);
-                                        }}
-                                        className="w-full pl-14 pr-10 py-5 text-lg bg-slate-50 border border-slate-100 rounded-lg focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 transition-all font-black placeholder:text-slate-300 placeholder:font-bold"
-                                    />
-                                    {isFetchingAccounts && <Loader2 className="absolute right-5 top-1/2 -translate-y-1/2 w-5 h-5 animate-spin text-indigo-500" />}
-                                    {!isFetchingAccounts && searchAccount.length >= 3 && !selectedAccount && accountsRes?.data?.data?.length > 0 && (
-                                        <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-100 shadow-2xl rounded-lg overflow-hidden z-50 max-h-60 overflow-y-auto no-scrollbar">
-                                            {accountsRes.data.data.map(acc => (
-                                                <button 
-                                                    key={acc.id}
-                                                    type="button"
-                                                    onClick={() => handleAccountSelect(acc)}
-                                                    className="w-full p-4 text-left hover:bg-indigo-50 transition-colors flex items-center justify-between group"
-                                                >
-                                                    <div>
-                                                        <p className="text-sm font-black text-slate-800">{acc.customer_name}</p>
-                                                        <p className="text-[10px] font-bold text-slate-400 font-mono">{acc.account_number}</p>
-                                                    </div>
-                                                    <ArrowRight className="w-4 h-4 text-slate-200 group-hover:text-indigo-500 transition-all group-hover:translate-x-1" />
-                                                </button>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                                {selectedAccount && (
-                                    <div className="flex items-center gap-4 p-5 bg-indigo-50 border border-indigo-100 rounded-lg animate-in zoom-in duration-300">
-                                        <div className="w-12 h-12 bg-indigo-600 text-white rounded-xl flex items-center justify-center shadow-lg shadow-indigo-600/20">
-                                            <ShieldCheck className="w-6 h-6" />
-                                        </div>
-                                        <div className="flex-1">
-                                            <p className="text-xs font-black text-indigo-900 uppercase tracking-widest">{selectedAccount.customer_name}</p>
-                                            <p className="text-sm font-bold text-indigo-600">Saldo: {formatIDR(selectedAccount.balance)}</p>
-                                        </div>
-                                        <button onClick={() => {setSelectedAccount(null); setSearchAccount('')}} className="p-2 hover:bg-indigo-100 rounded-xl text-indigo-400">
-                                            <X className="w-4 h-4" />
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Transaction Type Selection */}
-                            <div className="space-y-4">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] block">2. Pilih Jenis Transaksi</label>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                    {transactionTypes.map(type => (
-                                        <button
-                                            key={type.id}
-                                            type="button"
-                                            onClick={() => setSelectedTypeId(type.id.toString())}
-                                            className={`p-4 text-left rounded-lg border-2 transition-all flex items-center justify-between group ${
-                                                selectedTypeId === type.id.toString()
-                                                ? 'bg-indigo-600 border-indigo-600 text-white shadow-xl shadow-indigo-600/20'
-                                                : 'bg-white border-slate-100 hover:border-indigo-200 text-slate-600'
-                                            }`}
-                                        >
-                                            <div className="flex items-center gap-3">
-                                                <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${selectedTypeId === type.id.toString() ? 'bg-white/20' : 'bg-slate-100'}`}>
-                                                    <Hash className={`w-4 h-4 ${selectedTypeId === type.id.toString() ? 'text-white' : 'text-slate-400'}`} />
-                                                </div>
+                <div className="lg:col-span-2 bg-white border border-gray-200 rounded-md p-4 space-y-4 shadow-none">
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                        
+                        {/* Account Selection */}
+                        <div className="space-y-2">
+                            <label className="text-xs font-semibold text-gray-700 block">1. Pilih Rekening Nasabah</label>
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                <input 
+                                    type="text" 
+                                    placeholder="Cari NIS atau Nama Nasabah..." 
+                                    value={searchAccount}
+                                    onChange={(e) => {
+                                        setSearchAccount(e.target.value);
+                                        if (selectedAccount) setSelectedAccount(null);
+                                    }}
+                                    className="w-full pl-9 pr-8 h-9 text-xs bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all placeholder:text-gray-400"
+                                />
+                                {isFetchingAccounts && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-blue-600" />}
+                                {!isFetchingAccounts && searchAccount.length >= 3 && !selectedAccount && accountsRes?.data?.data?.length > 0 && (
+                                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 shadow-lg rounded-md overflow-hidden z-50 max-h-56 overflow-y-auto">
+                                        {accountsRes.data.data.map(acc => (
+                                            <button 
+                                                key={acc.id}
+                                                type="button"
+                                                onClick={() => handleAccountSelect(acc)}
+                                                className="w-full px-3 py-2 text-left hover:bg-blue-50 transition-colors flex items-center justify-between group border-b border-gray-100 last:border-0"
+                                            >
                                                 <div>
-                                                    <p className={`text-xs font-black uppercase tracking-widest ${selectedTypeId === type.id.toString() ? 'text-white' : 'text-slate-800'}`}>{type.name}</p>
-                                                    <p className={`text-[9px] font-bold opacity-60 ${selectedTypeId === type.id.toString() ? 'text-indigo-100' : 'text-slate-400'}`}>{type.code}</p>
+                                                    <p className="text-xs font-semibold text-gray-800">{acc.customer_name}</p>
+                                                    <p className="text-[10px] text-gray-500 font-mono">{acc.account_number}</p>
                                                 </div>
-                                            </div>
-                                            {selectedTypeId === type.id.toString() && <CheckCircle2 className="w-5 h-5 text-white" />}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Amount & Description */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                <div className="space-y-3">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                                        <Banknote className="w-4 h-4 text-emerald-500" />
-                                        Nominal Transaksi
-                                    </label>
-                                    <div className="relative group">
-                                        <span className="absolute left-5 top-1/2 -translate-y-1/2 text-xl font-black text-slate-400 group-focus-within:text-emerald-600">Rp</span>
-                                        <input 
-                                            type="text" 
-                                            placeholder="0"
-                                            value={amount}
-                                            onChange={(e) => {
-                                                const rawValue = e.target.value.replace(/[^0-9]/g, '');
-                                                if (rawValue === '') {
-                                                    setAmount('');
-                                                    return;
-                                                }
-                                                const formattedValue = new Intl.NumberFormat('id-ID').format(Number(rawValue));
-                                                setAmount(formattedValue);
-                                            }}
-                                            className="w-full pl-14 pr-6 py-5 text-2xl bg-slate-50 border-2 border-slate-100 rounded-lg focus:outline-none focus:border-emerald-500 transition-all font-black text-slate-800"
-                                        />
+                                                <ArrowRight className="w-3.5 h-3.5 text-gray-300 group-hover:text-blue-600 transition-all" />
+                                            </button>
+                                        ))}
                                     </div>
+                                )}
+                            </div>
+                            {selectedAccount && (
+                                <div className="flex items-center gap-3 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                                    <div className="w-8 h-8 bg-blue-600 text-white rounded-md flex items-center justify-center shrink-0">
+                                        <ShieldCheck className="w-4 h-4" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-xs font-bold text-gray-800 truncate">{selectedAccount.customer_name}</p>
+                                        <p className="text-[11px] text-blue-700 font-medium">Saldo: {formatIDR(selectedAccount.balance)} • <span className="font-mono text-gray-500">{selectedAccount.account_number}</span></p>
+                                    </div>
+                                    <button 
+                                        type="button"
+                                        onClick={() => {setSelectedAccount(null); setSearchAccount('')}} 
+                                        className="p-1 hover:bg-blue-100 rounded text-blue-600"
+                                    >
+                                        <X className="w-4 h-4" />
+                                    </button>
                                 </div>
-                                <div className="space-y-3">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                                        <FileText className="w-4 h-4 text-indigo-500" />
-                                        Keterangan
-                                    </label>
+                            )}
+                        </div>
+
+                        {/* Transaction Type Selection */}
+                        <div className="space-y-2">
+                            <label className="text-xs font-semibold text-gray-700 block">2. Pilih Jenis Transaksi</label>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                {transactionTypes.map(type => (
+                                    <button
+                                        key={type.id}
+                                        type="button"
+                                        onClick={() => setSelectedTypeId(type.id.toString())}
+                                        className={`p-2.5 text-left rounded-md border transition-all flex items-center justify-between text-xs ${
+                                            selectedTypeId === type.id.toString()
+                                            ? 'bg-blue-50 border-blue-500 text-blue-900 font-medium'
+                                            : 'bg-white border-gray-200 hover:border-gray-300 text-gray-700'
+                                        }`}
+                                    >
+                                        <div className="flex items-center gap-2">
+                                            <div className={`w-6 h-6 rounded flex items-center justify-center ${selectedTypeId === type.id.toString() ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-500'}`}>
+                                                <Hash className="w-3.5 h-3.5" />
+                                            </div>
+                                            <div>
+                                                <p className="font-semibold text-gray-800">{type.name}</p>
+                                                <p className="text-[10px] text-gray-400 font-mono">{type.code}</p>
+                                            </div>
+                                        </div>
+                                        {selectedTypeId === type.id.toString() && <CheckCircle2 className="w-4 h-4 text-blue-600" />}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Amount & Description */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-semibold text-gray-700 flex items-center gap-1.5">
+                                    <Banknote className="w-3.5 h-3.5 text-emerald-600" />
+                                    Nominal Transaksi
+                                </label>
+                                <div className="relative">
+                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400">Rp</span>
                                     <input 
                                         type="text" 
-                                        value={description}
-                                        onChange={(e) => setDescription(e.target.value)}
-                                        placeholder="Tambahkan catatan jika perlu..."
-                                        className="w-full px-6 py-5 text-sm bg-slate-50 border-2 border-slate-100 rounded-lg focus:outline-none focus:border-indigo-600 transition-all font-bold text-slate-700"
+                                        placeholder="0"
+                                        value={amount}
+                                        onChange={(e) => {
+                                            const rawValue = e.target.value.replace(/[^0-9]/g, '');
+                                            if (rawValue === '') {
+                                                setAmount('');
+                                                return;
+                                            }
+                                            const formattedValue = new Intl.NumberFormat('id-ID').format(Number(rawValue));
+                                            setAmount(formattedValue);
+                                        }}
+                                        className="w-full pl-9 pr-3 h-9 text-xs font-semibold bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-900"
                                     />
                                 </div>
                             </div>
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-semibold text-gray-700 flex items-center gap-1.5">
+                                    <FileText className="w-3.5 h-3.5 text-blue-600" />
+                                    Keterangan
+                                </label>
+                                <input 
+                                    type="text" 
+                                    value={description}
+                                    onChange={(e) => setDescription(e.target.value)}
+                                    placeholder="Tambahkan catatan jika perlu..."
+                                    className="w-full px-3 h-9 text-xs bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-900"
+                                />
+                            </div>
+                        </div>
 
-                            <button 
-                                type="submit"
-                                disabled={isSubmitting || !selectedTypeId || !amount || Number(amount.toString().replace(/\./g, '')) <= 0}
-                                className="w-full py-5 bg-indigo-600 disabled:bg-slate-100 disabled:text-slate-300 text-white rounded-lg text-lg font-black shadow-2xl shadow-indigo-600/20 hover:bg-indigo-700 transition-all active:scale-[0.98] flex items-center justify-center gap-3"
-                            >
-                                {isSubmitting ? <Loader2 className="w-6 h-6 animate-spin" /> : (
-                                    <>
-                                        <CheckCircle2 className="w-6 h-6" />
-                                        Proses Transaksi Sekarang
-                                    </>
-                                )}
-                            </button>
-                        </form>
-                    </div>
+                        <button 
+                            type="submit"
+                            disabled={isSubmitting || !selectedTypeId || !amount || Number(amount.toString().replace(/\./g, '')) <= 0}
+                            className="w-full py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-200 disabled:text-gray-400 text-white rounded-md text-xs font-medium transition-all flex items-center justify-center gap-2"
+                        >
+                            {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : (
+                                <>
+                                    <CheckCircle2 className="w-4 h-4" />
+                                    Proses Transaksi Sekarang
+                                </>
+                            )}
+                        </button>
+                    </form>
                 </div>
 
                 {/* Info Section / Rules Summary */}
-                <div className="space-y-6">
-                    <div className="bg-white p-8 rounded-lg border border-slate-100 shadow-sm space-y-6">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center">
-                                <Settings2 className="w-5 h-5" />
-                            </div>
-                            <h3 className="text-xs font-black text-slate-800 uppercase tracking-widest">Rincian Template</h3>
+                <div className="space-y-3">
+                    <div className="bg-white border border-gray-200 rounded-md p-4 space-y-3 shadow-none">
+                        <div className="flex items-center gap-2 border-b border-gray-200 pb-2.5">
+                            <Settings2 className="w-4 h-4 text-blue-600" />
+                            <h3 className="text-xs font-bold text-gray-800 uppercase tracking-wider">Rincian Template</h3>
                         </div>
 
                         {!selectedType ? (
-                            <div className="py-12 text-center space-y-3">
-                                <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto">
-                                    <AlertCircle className="w-8 h-8 text-slate-200" />
-                                </div>
-                                <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">Silakan pilih jenis transaksi</p>
+                            <div className="py-8 text-center space-y-2">
+                                <AlertCircle className="w-6 h-6 text-gray-300 mx-auto" />
+                                <p className="text-xs text-gray-400">Silakan pilih jenis transaksi</p>
                             </div>
                         ) : (
-                            <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-500">
-                                <div className="space-y-3">
+                            <div className="space-y-3">
+                                <div className="space-y-2">
                                     {selectedType.rules?.map((rule, idx) => (
-                                        <div key={idx} className="flex flex-col p-4 bg-slate-50 rounded-lg border border-slate-100 relative overflow-hidden group">
-                                            <div className={`absolute top-0 left-0 w-1 h-full ${rule.entry_type === 'debit' ? 'bg-blue-500' : 'bg-rose-500'}`}></div>
-                                            <div className="flex justify-between items-start mb-1">
-                                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{rule.description || 'Komponen'}</span>
-                                                <span className={`text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-tighter ${rule.entry_type === 'debit' ? 'bg-blue-100 text-blue-600' : 'bg-rose-100 text-rose-600'}`}>
+                                        <div key={idx} className="p-2.5 bg-gray-50 rounded-md border border-gray-200 relative text-xs space-y-1">
+                                            <div className="flex justify-between items-start">
+                                                <span className="font-medium text-gray-700">{rule.description || 'Komponen'}</span>
+                                                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded uppercase ${rule.entry_type === 'debit' ? 'bg-blue-100 text-blue-700' : 'bg-rose-100 text-rose-700'}`}>
                                                     {rule.entry_type}
                                                 </span>
                                             </div>
                                             <div className="flex justify-between items-end">
-                                                <p className="text-[10px] font-mono font-bold text-slate-500">{rule.coa_code}</p>
-                                                <p className="text-xs font-black text-slate-800">
+                                                <p className="text-[10px] font-mono text-gray-500">{rule.coa_code}</p>
+                                                <p className="font-semibold text-gray-900">
                                                     {rule.value_mode === 'fixed' ? formatIDR(rule.fixed_amount) : (rule.value_mode === 'total' ? '100% Total' : 'Sisa')}
                                                 </p>
                                             </div>
                                         </div>
                                     ))}
                                     {(!selectedType.rules || selectedType.rules.length === 0) && (
-                                        <p className="text-xs text-slate-400 italic">Tidak ada aturan penjurnalan khusus.</p>
+                                        <p className="text-xs text-gray-400 italic">Tidak ada aturan penjurnalan khusus.</p>
                                     )}
                                 </div>
 
-                                <div className="p-4 bg-indigo-600 rounded-lg text-white shadow-lg shadow-indigo-600/20">
-                                    <div className="flex justify-between items-center opacity-70 mb-1">
-                                        <span className="text-[10px] font-bold uppercase tracking-widest">Estimasi Total</span>
+                                <div className="p-3 bg-blue-600 text-white rounded-md">
+                                    <div className="flex justify-between items-center opacity-80 text-[10px] mb-0.5">
+                                        <span>Estimasi Total</span>
                                         <Info className="w-3 h-3" />
                                     </div>
-                                    <p className="text-xl font-black tracking-tight">{formatIDR(Number(amount.toString().replace(/\./g, '')))}</p>
+                                    <p className="text-base font-bold">{formatIDR(Number(amount.toString().replace(/\./g, '')))}</p>
                                 </div>
                             </div>
                         )}
                     </div>
 
-                    <div className="p-6 bg-amber-50 border border-amber-100 rounded-lg flex gap-3">
-                        <AlertCircle className="w-5 h-5 text-amber-500 shrink-0" />
-                        <p className="text-[10px] font-bold text-amber-800 leading-relaxed uppercase tracking-wider">
-                            PENTING: Pastikan saldo nasabah mencukupi jika transaksi bersifat debit (pengurangan saldo). Transaksi yang sudah diproses tidak dapat dibatalkan kecuali dengan fitur Reversal.
+                    <div className="p-3 bg-amber-50 border border-amber-200 rounded-md flex gap-2">
+                        <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                        <p className="text-[11px] text-amber-800 leading-relaxed">
+                            Pastikan saldo nasabah mencukupi jika transaksi bersifat debit. Transaksi yang sudah diproses hanya dapat dibatalkan melalui fitur Reversal.
                         </p>
                     </div>
                 </div>

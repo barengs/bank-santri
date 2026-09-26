@@ -20,15 +20,15 @@ const LaporanPage = () => {
             items: [
                 {
                     name: 'Jurnal Umum',
-                    icon: <FileText className="text-indigo-600" />,
+                    icon: <FileText className="w-4 h-4 text-blue-600" />,
                     path: '/laporan/jurnal',
                     detail: 'Daftar semua entri jurnal (debit/kredit) kronologis.'
                 },
                 {
                     name: 'Buku Besar',
-                    icon: <BookOpen className="text-indigo-600" />,
-                    path: '/laporan/jurnal', // For now redirect to journal
-                    detail: 'Rekap mutasi per akun COA.'
+                    icon: <BookOpen className="w-4 h-4 text-blue-600" />,
+                    path: '/laporan/jurnal',
+                    detail: 'Rekap mutasi dan saldo per akun COA.'
                 }
             ]
         },
@@ -38,99 +38,86 @@ const LaporanPage = () => {
             items: [
                 {
                     name: 'Neraca Saldo',
-                    icon: <Scale className="text-amber-600" />,
+                    icon: <Scale className="w-4 h-4 text-amber-600" />,
                     path: '/laporan/neraca-saldo',
                     detail: 'Cek keseimbangan debit & kredit seluruh akun.'
                 },
                 {
                     name: 'Laba Rugi',
-                    icon: <TrendingUp className="text-emerald-600" />,
+                    icon: <TrendingUp className="w-4 h-4 text-emerald-600" />,
                     path: '/laporan/keuangan',
-                    detail: 'Monitor pendapatan, beban, dan laba bersih.'
+                    detail: 'Monitor pendapatan, beban operasional, dan laba bersih.'
                 },
                 {
-                    name: 'Neraca',
-                    icon: <PieChart className="text-rose-600" />,
+                    name: 'Neraca Keuangan',
+                    icon: <PieChart className="w-4 h-4 text-rose-600" />,
                     path: '/laporan/keuangan',
-                    detail: 'Posisi Aset, Liabilitas, dan Ekuitas saat ini.'
+                    detail: 'Posisi Aktiva (Aset) dan Pasiva (Liabilitas & Ekuitas).'
                 }
             ]
         },
         {
-            title: 'Laporan Perbankan',
+            title: 'Laporan Rekening & Mutasi',
             description: 'Data spesifik simpanan santri dan mutasi nasabah.',
             items: [
                 {
                     name: 'Mutasi Rekening',
-                    icon: <Users className="text-sky-600" />,
+                    icon: <Users className="w-4 h-4 text-sky-600" />,
                     path: '/mutasi',
-                    detail: 'Cetak buku tabungan atau riwayat per santri.'
+                    detail: 'Cetak riwayat transaksi tabungan santri per NIS.'
                 },
                 {
-                    name: 'Rekap Saldo Tabungan',
-                    icon: <Wallet className="text-purple-600" />,
+                    name: 'Daftar Saldo Nasabah',
+                    icon: <Wallet className="w-4 h-4 text-purple-600" />,
                     path: '/nasabah',
-                    detail: 'Total simpanan santri per produk tabungan.'
+                    detail: 'Rekap tabungan santri, status rekening, dan cetak kartu.'
                 }
             ]
         }
     ];
 
     return (
-        <div className="p-6 space-y-12">
+        <div className="bg-white border border-gray-200 rounded-md p-4 space-y-5 shadow-none">
             {/* Header */}
-            <div className="space-y-1">
-                <h1 className="text-3xl font-black text-slate-800 tracking-tight">Pusat Laporan</h1>
-                <p className="text-sm text-slate-400 font-bold uppercase tracking-widest">Financial Reporting Center</p>
+            <div className="border-b border-gray-100 pb-3">
+                <h2 className="text-base font-bold text-gray-800">Pusat Laporan Keuangan</h2>
+                <p className="text-xs text-gray-500">Akses cepat seluruh laporan keuangan, neraca saldo, dan mutasi perbankan santri</p>
             </div>
 
-            <div className="grid grid-cols-1 gap-12">
+            <div className="space-y-5">
                 {reportCategories.map((category, idx) => (
-                    <div key={idx} className="space-y-6">
-                        <div className="space-y-1">
-                            <h2 className="text-lg font-black text-slate-800 tracking-tight uppercase">{category.title}</h2>
-                            <p className="text-xs text-slate-400 font-medium">{category.description}</p>
+                    <div key={idx} className="space-y-2.5">
+                        <div>
+                            <h3 className="text-xs font-bold text-gray-700 uppercase tracking-wider">{category.title}</h3>
+                            <p className="text-[11px] text-gray-400">{category.description}</p>
                         </div>
                         
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                             {category.items.map((item, itemIdx) => (
                                 <Link 
                                     key={itemIdx} 
                                     to={item.path}
-                                    className="group bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-indigo-500/10 hover:border-indigo-100 transition-all duration-300 relative overflow-hidden"
+                                    className="p-3 bg-gray-50 border border-gray-200 rounded-md hover:bg-white hover:border-blue-300 transition-colors flex items-start justify-between gap-3 group"
                                 >
-                                    <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <ArrowUpRight size={16} className="text-indigo-600" />
-                                    </div>
-                                    
-                                    <div className="space-y-4">
-                                        <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center group-hover:bg-indigo-50 transition-colors">
-                                            {React.cloneElement(item.icon, { size: 24 })}
+                                    <div className="flex items-start gap-2.5">
+                                        <div className="p-1.5 bg-white border border-gray-200 rounded shrink-0">
+                                            {item.icon}
                                         </div>
-                                        <div className="space-y-1">
-                                            <h3 className="font-black text-slate-800 tracking-tight">{item.name}</h3>
-                                            <p className="text-[10px] text-slate-400 font-medium leading-relaxed">
+                                        <div>
+                                            <h4 className="text-xs font-bold text-gray-800 group-hover:text-blue-600 transition-colors">
+                                                {item.name}
+                                            </h4>
+                                            <p className="text-[11px] text-gray-500 mt-0.5 leading-snug">
                                                 {item.detail}
                                             </p>
                                         </div>
                                     </div>
+                                    <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-blue-600 shrink-0 mt-0.5" />
                                 </Link>
                             ))}
                         </div>
                     </div>
                 ))}
-            </div>
-
-            {/* Footer / Tip */}
-            <div className="bg-slate-900 rounded-2xl p-8 flex items-center justify-between overflow-hidden relative">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full -mr-32 -mt-32 blur-3xl"></div>
-                <div className="space-y-2 relative z-10">
-                    <h4 className="text-white font-black tracking-tight">Butuh laporan khusus?</h4>
-                    <p className="text-slate-400 text-xs">Anda dapat mengekspor data ke Excel untuk pengolahan lebih lanjut di luar sistem.</p>
-                </div>
-                <button className="px-6 py-3 bg-white text-slate-900 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-indigo-50 transition-all relative z-10">
-                    Hubungi IT
-                </button>
             </div>
         </div>
     );

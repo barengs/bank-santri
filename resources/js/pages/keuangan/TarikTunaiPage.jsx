@@ -66,22 +66,15 @@ const TarikTunaiPage = () => {
         setAmount(new Intl.NumberFormat('id-ID').format(val));
     };
 
-    // Derived Limits & Balances
-    const currentBalance = Number(account?.balance || 0);
-    const minBalance = Number(account?.product?.minimum_balance || 0);
-    const dailyLimit = Number(account?.daily_withdrawal_limit || account?.product?.daily_withdrawal_limit || 0);
-    const maxWithdrawable = Math.max(0, currentBalance - minBalance);
-
-    const rawAmount = Number(amount.toString().replace(/\./g, ''));
-    const isExceedingBalance = rawAmount > maxWithdrawable;
+    const rawAmount = amount ? Number(amount.replace(/\./g, '')) : 0;
+    const minBalance = account?.product?.minimum_balance || 0;
+    const maxWithdrawable = account ? Math.max(0, account.balance - minBalance) : 0;
+    const dailyLimit = account?.product?.daily_withdrawal_limit || 0;
+    const isExceedingBalance = account && rawAmount > maxWithdrawable;
 
     const handleMaxWithdraw = () => {
         if (maxWithdrawable > 0) {
-            let targetAmt = maxWithdrawable;
-            if (!isInstansi && dailyLimit > 0) {
-                targetAmt = Math.min(targetAmt, dailyLimit);
-            }
-            setAmount(new Intl.NumberFormat('id-ID').format(targetAmt));
+            setAmount(new Intl.NumberFormat('id-ID').format(maxWithdrawable));
         }
     };
 
@@ -90,40 +83,33 @@ const TarikTunaiPage = () => {
         if (!account || !rawAmount || rawAmount <= 0) return;
 
         if (isExceedingBalance) {
-            toast.error("Nominal penarikan melebihi saldo yang tersedia.");
+            toast.error(`Nominal melebihi saldo yang dapat ditarik (${formatIDR(maxWithdrawable)})`);
             return;
         }
 
         try {
-            const desc = description.trim() || (isInstansi ? 'Pencairan operasional kas instansi' : 'Penarikan tunai uang saku santri');
             const res = await processWithdrawal({
                 account_number: account.account_number,
                 amount: rawAmount,
-                description: recipientName ? `${desc} (Penerima: ${recipientName})` : desc,
+                description: description || 'Tarik tunai teller',
+                recipient_name: recipientName || account.customer_name,
             }).unwrap();
 
-            const trxData = res.data;
-
             setReceiptData({
-                reference_number: trxData?.transaction?.reference_number || 'TRX-' + Date.now(),
-                created_at: trxData?.transaction?.created_at || new Date().toISOString(),
+                reference_number: res.data?.reference_number || 'TRX-' + Date.now(),
+                created_at: new Date().toISOString(),
                 account_number: account.account_number,
                 customer_name: account.customer_name,
-                is_instansi: isInstansi,
-                product_name: account.product?.product_name || 'Tabungan',
                 amount: rawAmount,
-                balance_before: trxData?.balance_before ?? account.balance,
-                balance_after: trxData?.balance_after ?? (account.balance - rawAmount),
-                remaining_quota: trxData?.remaining_quota,
-                daily_limit: trxData?.daily_limit,
-                description: desc,
+                balance_before: account.balance,
+                balance_after: res.data?.balance_after ?? (account.balance - rawAmount),
+                description: description || 'Penarikan Uang Saku',
                 recipient_name: recipientName || account.customer_name,
             });
 
             setShowReceipt(true);
             toast.success("Penarikan tunai berhasil diproses!");
 
-            // Refresh account data
             fetchAccount(account.account_number);
             setAmount('');
             setDescription('');
@@ -139,106 +125,97 @@ const TarikTunaiPage = () => {
     };
 
     return (
-        <div className="space-y-6 max-w-7xl mx-auto pb-12 animate-in fade-in duration-300">
+        <div className="bg-white border border-gray-200 rounded-md p-4 space-y-4 shadow-none">
             {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-                <div className="flex items-center gap-4">
-                    <div className="p-3 bg-amber-500/10 text-amber-600 rounded-xl">
-                        <ArrowUpCircle className="w-8 h-8" />
-                    </div>
-                    <div>
-                        <h1 className="text-xl font-black text-slate-800 tracking-tight">Tarik Tunai / Pencairan Kas</h1>
-                        <p className="text-xs text-slate-500 font-medium">Layanan penarikan uang saku santri & kas instansi pesantren oleh teller.</p>
-                    </div>
-                </div>
+            <div className="border-b border-gray-100 pb-3">
+                <h2 className="text-base font-bold text-gray-800">Tarik Tunai / Pencairan Kas Teller</h2>
+                <p className="text-xs text-gray-500">Layanan penarikan uang saku santri & kas operasional oleh petugas loket</p>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
                 {/* Form Pencarian & Input Penarikan (7 Cols) */}
-                <div className="lg:col-span-7 space-y-6">
-                    {/* Card 1: Pencarian Nasabah */}
-                    <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4">
-                        <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest block">
+                <div className="lg:col-span-7 space-y-4">
+                    {/* Pencarian Nasabah */}
+                    <div className="border border-gray-200 rounded-md p-3.5 space-y-2">
+                        <label className="text-[11px] font-semibold text-gray-600 uppercase block">
                             Cari Rekening Santri / Instansi
                         </label>
                         <form onSubmit={handleCheck} className="flex gap-2">
                             <div className="relative flex-1">
-                                <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                                <Search className="w-4 h-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
                                 <input 
                                     type="text" 
                                     placeholder="Ketik NIS Santri atau No. Rekening Instansi..." 
                                     value={nis}
                                     onChange={(e) => setNis(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all"
+                                    className="w-full pl-8 pr-3 py-1.5 bg-white border border-gray-300 rounded-md text-xs font-semibold text-gray-800 placeholder-gray-400 focus:ring-1 focus:ring-amber-500 focus:border-amber-500 outline-none"
                                 />
                             </div>
                             <button
                                 type="submit"
                                 disabled={isChecking || !nis.trim()}
-                                className="px-6 py-3 bg-amber-600 hover:bg-amber-700 active:scale-95 disabled:opacity-50 text-white font-bold text-sm rounded-xl transition-all shadow-md shadow-amber-600/20 flex items-center gap-2"
+                                className="px-4 py-1.5 bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white font-semibold text-xs rounded-md transition-colors flex items-center gap-1.5"
                             >
-                                {isChecking ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Periksa'}
+                                {isChecking ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Periksa'}
                             </button>
                         </form>
                     </div>
 
-                    {/* Card 2: Form Penarikan */}
-                    <div className={`bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-6 transition-all ${!account ? 'opacity-50 pointer-events-none' : ''}`}>
-                        <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-                            <h2 className="text-base font-bold text-slate-800 flex items-center gap-2">
-                                <Wallet className="w-5 h-5 text-amber-600" />
+                    {/* Form Penarikan */}
+                    <div className={`border border-gray-200 rounded-md p-3.5 space-y-3 ${!account ? 'opacity-50 pointer-events-none' : ''}`}>
+                        <div className="flex items-center justify-between border-b border-gray-100 pb-2.5">
+                            <h3 className="text-xs font-bold text-gray-800 flex items-center gap-1.5">
+                                <Wallet className="w-4 h-4 text-amber-600" />
                                 Nominal & Rincian Penarikan
-                            </h2>
+                            </h3>
                             {account && (
                                 <button 
                                     type="button" 
                                     onClick={handleMaxWithdraw}
-                                    className="text-xs font-bold text-amber-600 hover:text-amber-700 bg-amber-50 hover:bg-amber-100 px-3 py-1.5 rounded-lg transition-all"
+                                    className="text-[11px] font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 px-2 py-0.5 rounded transition-colors"
                                 >
                                     Tarik Maksimal
                                 </button>
                             )}
                         </div>
 
-                        <form onSubmit={handleSubmit} className="space-y-6">
-                            {/* Input Nominal */}
-                            <div className="space-y-2">
-                                <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest block">
+                        <form onSubmit={handleSubmit} className="space-y-3">
+                            <div className="space-y-1">
+                                <label className="text-[11px] font-semibold text-gray-600 uppercase block">
                                     Nominal Penarikan (IDR)
                                 </label>
                                 <div className="relative">
-                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-lg">Rp</span>
+                                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-sm">Rp</span>
                                     <input 
                                         type="text" 
-                                        placeholder="0"
+                                        placeholder="0" 
                                         value={amount}
                                         onChange={handleAmountChange}
-                                        className={`w-full pl-12 pr-4 py-3.5 bg-slate-50 border rounded-xl text-2xl font-black transition-all focus:outline-none ${
+                                        className={`w-full pl-8 pr-3 py-1.5 bg-white border rounded-md text-base font-bold outline-none transition-colors ${
                                             isExceedingBalance 
-                                                ? 'border-rose-300 text-rose-600 focus:ring-rose-500/20' 
-                                                : 'border-slate-200 text-slate-800 focus:ring-amber-500/20 focus:border-amber-500'
+                                                ? 'border-rose-400 text-rose-600 focus:ring-1 focus:ring-rose-500' 
+                                                : 'border-gray-300 text-gray-800 focus:ring-1 focus:ring-amber-500 focus:border-amber-500'
                                         }`}
                                     />
                                 </div>
-
                                 {isExceedingBalance && (
-                                    <div className="flex items-center gap-2 text-rose-600 text-xs font-semibold mt-1">
-                                        <AlertCircle className="w-4 h-4 shrink-0" />
-                                        <span>Nominal melebihi saldo yang dapat ditarik ({formatIDR(maxWithdrawable)})</span>
+                                    <div className="flex items-center gap-1 text-rose-600 text-xs font-medium mt-1">
+                                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                                        <span>Nominal melebihi saldo dapat ditarik ({formatIDR(maxWithdrawable)})</span>
                                     </div>
                                 )}
                             </div>
 
                             {/* Quick Amount Buttons */}
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Pilihan Cepat Nominal:</label>
-                                <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                            <div className="space-y-1">
+                                <span className="text-[10px] font-semibold text-gray-400 uppercase">Pilihan Cepat:</span>
+                                <div className="grid grid-cols-5 gap-1.5">
                                     {QUICK_AMOUNTS.map((val) => (
                                         <button
                                             key={val}
                                             type="button"
                                             onClick={() => setQuickAmount(val)}
-                                            className="py-2.5 px-2 bg-slate-50 hover:bg-amber-50 hover:border-amber-300 hover:text-amber-700 text-slate-700 font-bold text-xs rounded-xl border border-slate-200 transition-all active:scale-95"
+                                            className="py-1 px-1 bg-gray-50 hover:bg-amber-50 hover:border-amber-300 text-gray-700 font-medium text-[11px] rounded border border-gray-200 transition-colors"
                                         >
                                             {formatIDR(val)}
                                         </button>
@@ -247,47 +224,42 @@ const TarikTunaiPage = () => {
                             </div>
 
                             {/* Keterangan & Nama Pengambil */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="space-y-1.5">
-                                    <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest block">
-                                        Nama Pengambil (Opsional)
-                                    </label>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                <div className="space-y-1">
+                                    <label className="text-[11px] font-semibold text-gray-600 uppercase block">Nama Pengambil</label>
                                     <input 
                                         type="text" 
-                                        placeholder={account?.customer_name || 'Santri sendiri / Wali'} 
+                                        placeholder={account?.customer_name || 'Santri / Wali'} 
                                         value={recipientName}
                                         onChange={(e) => setRecipientName(e.target.value)}
-                                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:border-amber-500"
+                                        className="w-full px-2.5 py-1.5 bg-white border border-gray-300 rounded-md text-xs focus:ring-1 focus:ring-amber-500 focus:border-amber-500 outline-none"
                                     />
                                 </div>
-                                <div className="space-y-1.5">
-                                    <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest block">
-                                        Keperluan / Catatan
-                                    </label>
+                                <div className="space-y-1">
+                                    <label className="text-[11px] font-semibold text-gray-600 uppercase block">Keperluan / Catatan</label>
                                     <input 
                                         type="text" 
-                                        placeholder="Contoh: Beli kitab, uang jajan, dll." 
+                                        placeholder="Contoh: Beli kitab..." 
                                         value={description}
                                         onChange={(e) => setDescription(e.target.value)}
-                                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:border-amber-500"
+                                        className="w-full px-2.5 py-1.5 bg-white border border-gray-300 rounded-md text-xs focus:ring-1 focus:ring-amber-500 focus:border-amber-500 outline-none"
                                     />
                                 </div>
                             </div>
 
-                            {/* Submit Button */}
                             <button
                                 type="submit"
                                 disabled={isProcessing || !account || !rawAmount || rawAmount <= 0 || isExceedingBalance}
-                                className="w-full py-4 bg-amber-600 hover:bg-amber-700 active:scale-95 disabled:opacity-50 text-white font-black text-sm rounded-xl transition-all shadow-lg shadow-amber-600/30 flex items-center justify-center gap-2"
+                                className="w-full py-2 bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white font-semibold text-xs rounded-md transition-colors flex items-center justify-center gap-1.5"
                             >
                                 {isProcessing ? (
                                     <>
-                                        <Loader2 className="w-5 h-5 animate-spin" />
+                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
                                         <span>Memproses Penarikan...</span>
                                     </>
                                 ) : (
                                     <>
-                                        <ArrowUpCircle className="w-5 h-5" />
+                                        <ArrowUpCircle className="w-3.5 h-3.5" />
                                         <span>Konfirmasi & Tarik Tunai</span>
                                     </>
                                 )}
@@ -297,108 +269,64 @@ const TarikTunaiPage = () => {
                 </div>
 
                 {/* Info Profil & Saldo Nasabah (5 Cols) */}
-                <div className="lg:col-span-5 space-y-6">
+                <div className="lg:col-span-5 space-y-3">
                     {account ? (
-                        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden sticky top-6">
-                            {/* Card Header Profil */}
-                            <div className="p-6 bg-gradient-to-br from-slate-900 to-slate-800 text-white relative">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-16 h-16 rounded-2xl bg-slate-700/60 border border-slate-600 flex items-center justify-center font-black text-2xl text-amber-400 shadow-inner overflow-hidden shrink-0">
-                                        {account.student?.photo ? (
-                                            <img src={account.student.photo} alt={account.customer_name} className="w-full h-full object-cover" />
-                                        ) : isInstansi ? (
-                                            <Building2 className="w-8 h-8 text-amber-400" />
-                                        ) : (
-                                            account.customer_name ? account.customer_name.charAt(0) : 'S'
-                                        )}
-                                    </div>
-                                    <div className="space-y-1">
-                                        <div className="flex items-center gap-2">
-                                            <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider ${
-                                                isInstansi ? 'bg-indigo-500/20 text-indigo-300' : 'bg-amber-500/20 text-amber-300'
-                                            }`}>
-                                                {isInstansi ? 'Rekening Instansi' : 'Rekening Santri'}
-                                            </span>
-                                            <span className="px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-300">
-                                                {account.status}
-                                            </span>
-                                        </div>
-                                        <h3 className="text-base font-black tracking-tight leading-snug">{account.customer_name}</h3>
-                                        <p className="text-xs text-slate-400 font-mono">No. Rekening: {account.account_number}</p>
-                                    </div>
+                        <div className="border border-gray-200 rounded-md p-3.5 space-y-3 bg-gray-50">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded bg-amber-600 text-white flex items-center justify-center font-bold text-base shrink-0">
+                                    {isInstansi ? <Building2 className="w-5 h-5 text-white" /> : (account.customer_name ? account.customer_name.charAt(0) : 'S')}
                                 </div>
-
-                                {account.student && (
-                                    <div className="grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-slate-700/50 text-[11px] text-slate-300">
-                                        <div>
-                                            <span className="text-slate-500 block text-[9px] uppercase font-bold">Kamar / Asrama:</span>
-                                            <span className="font-semibold">{account.student.current_room?.hostel_name || '-'} / {account.student.current_room?.room_name || '-'}</span>
-                                        </div>
-                                        <div>
-                                            <span className="text-slate-500 block text-[9px] uppercase font-bold">Kelas:</span>
-                                            <span className="font-semibold">{account.student.current_class?.class_name || '-'}</span>
-                                        </div>
+                                <div className="min-w-0">
+                                    <div className="flex items-center gap-1.5">
+                                        <span className="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-blue-100 text-blue-800">
+                                            {isInstansi ? 'Instansi' : 'Santri'}
+                                        </span>
+                                        <span className="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-emerald-100 text-emerald-800">
+                                            {account.status}
+                                        </span>
                                     </div>
-                                )}
+                                    <h4 className="text-xs font-bold text-gray-800 truncate mt-0.5">{account.customer_name}</h4>
+                                    <p className="text-[10px] text-gray-500 font-mono">{account.account_number}</p>
+                                </div>
                             </div>
 
                             {/* Saldo Details */}
-                            <div className="p-6 space-y-4">
-                                <div className="p-4 bg-amber-50/60 rounded-xl border border-amber-100 flex items-center justify-between">
+                            <div className="border-t border-gray-200 pt-2.5 space-y-2 text-xs">
+                                <div className="p-2.5 bg-amber-50 rounded border border-amber-200 flex items-center justify-between">
                                     <div>
-                                        <span className="text-[10px] font-black text-amber-800 uppercase tracking-widest block">Total Saldo Rekening</span>
-                                        <span className="text-2xl font-black text-amber-600">{formatIDR(account.balance)}</span>
+                                        <span className="text-[10px] font-semibold text-amber-800 uppercase block">Total Saldo</span>
+                                        <span className="text-lg font-bold text-amber-700">{formatIDR(account.balance)}</span>
                                     </div>
-                                    <Wallet className="w-8 h-8 text-amber-500/30" />
+                                    <Wallet className="w-6 h-6 text-amber-600 opacity-60" />
                                 </div>
 
-                                <div className="space-y-2 text-xs font-semibold text-slate-600">
-                                    <div className="flex justify-between py-1.5 border-b border-slate-100">
-                                        <span className="text-slate-400">Produk Tabungan:</span>
-                                        <span className="font-bold text-slate-800">{account.product?.product_name || '-'}</span>
+                                <div className="space-y-1 text-gray-700">
+                                    <div className="flex justify-between py-1 border-b border-gray-200">
+                                        <span className="text-gray-500">Saldo Minimum:</span>
+                                        <span className="font-semibold">{formatIDR(minBalance)}</span>
                                     </div>
-                                    <div className="flex justify-between py-1.5 border-b border-slate-100">
-                                        <span className="text-slate-400">Akad Syariah:</span>
-                                        <span className="font-bold text-slate-800 uppercase">{account.akad_type || 'Wadiah'}</span>
+                                    <div className="flex justify-between py-1 border-b border-gray-200">
+                                        <span className="text-gray-500">Dapat Ditarik:</span>
+                                        <span className="font-bold text-emerald-700">{formatIDR(maxWithdrawable)}</span>
                                     </div>
-                                    <div className="flex justify-between py-1.5 border-b border-slate-100">
-                                        <span className="text-slate-400">Saldo Minimum Mengendap:</span>
-                                        <span className="font-bold text-slate-800">{formatIDR(minBalance)}</span>
-                                    </div>
-                                    <div className="flex justify-between py-1.5 border-b border-slate-100">
-                                        <span className="text-slate-400">Saldo Dapat Ditarik:</span>
-                                        <span className="font-bold text-emerald-600">{formatIDR(maxWithdrawable)}</span>
-                                    </div>
-
                                     {!isInstansi && (
-                                        <div className="flex justify-between py-1.5 border-b border-slate-100">
-                                            <span className="text-slate-400">Batas Limit Harian:</span>
-                                            <span className="font-bold text-slate-800">
-                                                {dailyLimit > 0 ? formatIDR(dailyLimit) + ' / hari' : <span className="text-slate-400 italic">Tanpa Batas</span>}
+                                        <div className="flex justify-between py-1">
+                                            <span className="text-gray-500">Limit Harian:</span>
+                                            <span className="font-semibold">
+                                                {dailyLimit > 0 ? formatIDR(dailyLimit) + ' / hari' : 'Bebas'}
                                             </span>
                                         </div>
                                     )}
                                 </div>
-
-                                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-start gap-2.5">
-                                    <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                                    <p className="text-[11px] text-slate-500 leading-relaxed">
-                                        Penarikan kas teller otomatis memotong saldo simpanan wadiah dan menerbitkan jurnal kas keluar secara real-time.
-                                    </p>
-                                </div>
                             </div>
                         </div>
                     ) : (
-                        <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm text-center space-y-4">
-                            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto text-slate-400">
-                                <User className="w-8 h-8" />
-                            </div>
-                            <div className="space-y-1">
-                                <h3 className="font-bold text-slate-700">Belum Ada Rekening Terpilih</h3>
-                                <p className="text-xs text-slate-400 max-w-xs mx-auto">
-                                    Masukkan NIS santri atau nomor rekening instansi di samping untuk memeriksa saldo dan kuota penarikan.
-                                </p>
-                            </div>
+                        <div className="border border-gray-200 rounded-md p-5 text-center space-y-1.5 bg-gray-50">
+                            <User className="w-6 h-6 text-gray-300 mx-auto" />
+                            <h4 className="text-xs font-bold text-gray-700">Belum Ada Rekening Terpilih</h4>
+                            <p className="text-[11px] text-gray-400 max-w-xs mx-auto">
+                                Masukkan NIS santri pada kolom pencarian untuk memeriksa saldo dan kuota penarikan kas.
+                            </p>
                         </div>
                     )}
                 </div>
@@ -406,107 +334,71 @@ const TarikTunaiPage = () => {
 
             {/* Thermal Receipt Print Modal */}
             {showReceipt && receiptData && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="relative w-full max-w-sm bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-100">
-                        {/* Printable Slip Content */}
-                        <div className="p-6 bg-white print:p-0 print:m-0" id="printable-receipt">
-                            <div className="text-center space-y-1">
-                                <h2 className="text-base font-black text-slate-900 tracking-tight">BANK SANTRI PESANTREN</h2>
-                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Slip Penarikan Tunai Kas</p>
-                                <p className="text-[9px] text-slate-400">Bukti Pengambilan Uang Saku & Kas</p>
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40">
+                    <div className="relative w-full max-w-sm bg-white rounded-md border border-gray-200 shadow-xl overflow-hidden">
+                        <div className="p-4 bg-white" id="printable-receipt">
+                            <div className="text-center pb-2 border-b border-gray-200">
+                                <h3 className="font-bold text-sm text-gray-800">BANK SANTRI PESANTREN</h3>
+                                <p className="text-[10px] text-gray-500 uppercase">Bukti Penarikan Tunai Kas</p>
                             </div>
 
-                            <div className="border-t border-dashed border-slate-300 my-3"></div>
-
-                            <div className="space-y-2 text-[11px] font-semibold text-slate-600">
+                            <div className="space-y-1 text-xs py-2 text-gray-700">
                                 <div className="flex justify-between">
-                                    <span className="text-slate-400">No. Ref:</span>
-                                    <span className="font-mono font-bold text-slate-800">{receiptData.reference_number}</span>
+                                    <span className="text-gray-400">Ref:</span>
+                                    <span className="font-mono font-semibold">{receiptData.reference_number}</span>
                                 </div>
                                 <div className="flex justify-between">
-                                    <span className="text-slate-400">Waktu:</span>
-                                    <span className="font-bold text-slate-800">
+                                    <span className="text-gray-400">Waktu:</span>
+                                    <span className="font-semibold">
                                         {new Date(receiptData.created_at).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' })}
                                     </span>
                                 </div>
                                 <div className="flex justify-between">
-                                    <span className="text-slate-400">No. Rekening:</span>
-                                    <span className="font-bold text-slate-800">{receiptData.account_number}</span>
+                                    <span className="text-gray-400">Rekening:</span>
+                                    <span className="font-mono font-semibold">{receiptData.account_number}</span>
                                 </div>
                                 <div className="flex justify-between">
-                                    <span className="text-slate-400">Nama:</span>
-                                    <span className="font-bold text-slate-800 uppercase">{receiptData.customer_name}</span>
+                                    <span className="text-gray-400">Nama:</span>
+                                    <span className="font-semibold uppercase">{receiptData.customer_name}</span>
                                 </div>
                                 {receiptData.recipient_name && receiptData.recipient_name !== receiptData.customer_name && (
                                     <div className="flex justify-between">
-                                        <span className="text-slate-400">Pengambil:</span>
-                                        <span className="font-bold text-slate-800">{receiptData.recipient_name}</span>
-                                    </div>
-                                )}
-                                <div className="flex justify-between">
-                                    <span className="text-slate-400">Keperluan:</span>
-                                    <span className="font-bold text-slate-800">{receiptData.description}</span>
-                                </div>
-                            </div>
-
-                            <div className="border-t border-dashed border-slate-300 my-3"></div>
-
-                            {/* Nominal Box */}
-                            <div className="p-3 bg-amber-50 rounded-xl text-center border border-amber-100">
-                                <span className="text-[9px] font-black text-amber-800 uppercase tracking-widest block">Nominal Penarikan</span>
-                                <span className="text-2xl font-black text-amber-600">{formatIDR(receiptData.amount)}</span>
-                            </div>
-
-                            <div className="space-y-1.5 text-[11px] font-semibold text-slate-600 mt-3">
-                                <div className="flex justify-between">
-                                    <span className="text-slate-400">Saldo Sebelumnya:</span>
-                                    <span className="font-bold text-slate-700">{formatIDR(receiptData.balance_before)}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-slate-400">Sisa Saldo:</span>
-                                    <span className="font-black text-slate-900">{formatIDR(receiptData.balance_after)}</span>
-                                </div>
-                                {receiptData.remaining_quota !== null && receiptData.remaining_quota !== undefined && (
-                                    <div className="flex justify-between text-amber-700">
-                                        <span>Sisa Kuota Hari Ini:</span>
-                                        <span className="font-black">{formatIDR(receiptData.remaining_quota)}</span>
+                                        <span className="text-gray-400">Pengambil:</span>
+                                        <span className="font-semibold">{receiptData.recipient_name}</span>
                                     </div>
                                 )}
                             </div>
 
-                            <div className="border-t border-dashed border-slate-300 my-4"></div>
+                            <div className="p-2.5 bg-amber-50 rounded text-center border border-amber-200 my-2">
+                                <span className="text-[10px] text-amber-800 uppercase font-semibold block">Nominal Penarikan</span>
+                                <span className="text-lg font-bold text-amber-700">{formatIDR(receiptData.amount)}</span>
+                            </div>
 
-                            {/* Signature Columns */}
-                            <div className="grid grid-cols-2 gap-4 text-center text-[10px] pt-1">
-                                <div className="space-y-8">
-                                    <span className="text-slate-400 font-bold block">Penerima Kas</span>
-                                    <span className="border-t border-slate-400 pt-1 block font-bold text-slate-800">
-                                        ( {receiptData.recipient_name || 'Santri/Wali'} )
-                                    </span>
+                            <div className="space-y-1 text-xs text-gray-700 pt-1 border-t border-gray-100">
+                                <div className="flex justify-between">
+                                    <span className="text-gray-400">Saldo Sebelumnya:</span>
+                                    <span>{formatIDR(receiptData.balance_before)}</span>
                                 </div>
-                                <div className="space-y-8">
-                                    <span className="text-slate-400 font-bold block">Teller Bank</span>
-                                    <span className="border-t border-slate-400 pt-1 block font-bold text-slate-800">
-                                        ( Petugas Loket )
-                                    </span>
+                                <div className="flex justify-between font-semibold">
+                                    <span className="text-gray-500">Sisa Saldo:</span>
+                                    <span className="text-gray-900">{formatIDR(receiptData.balance_after)}</span>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Modal Action Buttons */}
-                        <div className="p-4 bg-slate-50 border-t border-slate-100 flex gap-2 no-print">
+                        <div className="px-4 py-2.5 bg-gray-50 border-t border-gray-200 flex justify-end gap-2">
                             <button
                                 type="button"
                                 onClick={() => window.print()}
-                                className="flex-1 py-2.5 bg-amber-600 hover:bg-amber-700 active:scale-95 text-white font-bold text-xs rounded-xl shadow-md shadow-amber-600/20 flex items-center justify-center gap-1.5 transition-all"
+                                className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded flex items-center gap-1"
                             >
-                                <Printer className="w-4 h-4" />
+                                <Printer className="w-3.5 h-3.5" />
                                 Cetak Slip
                             </button>
                             <button
                                 type="button"
                                 onClick={handleCloseReceipt}
-                                className="px-5 py-2.5 bg-slate-200 hover:bg-slate-300 active:scale-95 text-slate-700 font-bold text-xs rounded-xl transition-all"
+                                className="px-3 py-1.5 border border-gray-300 text-gray-700 font-semibold text-xs rounded hover:bg-gray-100"
                             >
                                 Tutup
                             </button>

@@ -24,28 +24,29 @@ const Modal = ({ isOpen, onClose, title, children, size = 'md' }) => {
     };
 
     return (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4">
             {/* Backdrop */}
             <div 
-                className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"
+                className="absolute inset-0 bg-slate-900/50 backdrop-blur-[2px] transition-opacity"
                 onClick={onClose}
             />
 
-            {/* Modal Content */}
-            <div className={`relative w-full ${sizeClasses[size]} bg-white rounded-lg shadow-2xl shadow-slate-900/20 transform transition-all overflow-hidden border border-slate-100 flex flex-col max-h-[90vh]`}>
+            {/* Modal Dialog */}
+            <div className={`relative w-full ${sizeClasses[size]} bg-white rounded-md shadow-xl border border-gray-200 flex flex-col max-h-[90vh] overflow-hidden`}>
                 {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b border-slate-100">
-                    <h3 className="text-xl font-bold text-slate-800">{title}</h3>
+                <div className="flex items-center justify-between px-4 py-2.5 bg-gray-50 border-b border-gray-200">
+                    <h3 className="text-sm font-bold text-gray-800">{title}</h3>
                     <button 
+                        type="button"
                         onClick={onClose}
-                        className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-all"
+                        className="p-1 text-gray-400 hover:text-gray-700 hover:bg-gray-200/60 rounded transition-colors"
                     >
-                        <X size={20} />
+                        <X className="w-4 h-4" />
                     </button>
                 </div>
 
                 {/* Body */}
-                <div className="p-6 overflow-y-auto custom-scrollbar flex-1">
+                <div className="p-4 overflow-y-auto custom-scrollbar flex-1 text-xs text-gray-700">
                     {children}
                 </div>
             </div>

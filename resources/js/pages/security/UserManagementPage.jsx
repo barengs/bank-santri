@@ -9,7 +9,7 @@ import {
 } from '../../store/userApi';
 import { useGetRolesQuery } from '../../store/securityApi';
 import { toast } from 'react-toastify';
-import { UserPlus, Edit, Trash2, Shield, Mail, Lock, User as UserIcon, X } from 'lucide-react';
+import { UserPlus, Edit, Trash2, Shield, Mail, Lock, User as UserIcon, X, Check } from 'lucide-react';
 
 const UserManagementPage = () => {
     const [page, setPage] = useState(1);
@@ -64,7 +64,7 @@ const UserManagementPage = () => {
             }
             setIsModalOpen(false);
         } catch (err) {
-            toast.error(err.data?.message || 'Terjadi kesalahan');
+            toast.error(err.data?.message || 'Terjadi kesalahan sistem');
         }
     };
 
@@ -80,41 +80,43 @@ const UserManagementPage = () => {
     };
 
     const toggleRole = (roleId) => {
-        setFormData(prev => ({
-            ...prev,
-            role_ids: prev.role_ids.includes(roleId)
-                ? prev.role_ids.filter(id => id !== roleId)
-                : [...prev.role_ids, roleId]
-        }));
+        setFormData(prev => {
+            const exists = prev.role_ids.includes(roleId);
+            if (exists) {
+                return { ...prev, role_ids: prev.role_ids.filter(id => id !== roleId) };
+            } else {
+                return { ...prev, role_ids: [...prev.role_ids, roleId] };
+            }
+        });
     };
 
     const columns = [
         {
-            header: 'NAMA LENGKAP',
+            header: 'USER / EMAIL',
             accessorKey: 'name',
             cell: ({ row }) => (
-                <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold">
-                        {row.original.name.charAt(0).toUpperCase()}
+                <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-md bg-blue-600 text-white flex items-center justify-center font-bold text-xs shrink-0">
+                        {row.original.name?.[0] || 'U'}
                     </div>
                     <div>
-                        <div className="font-semibold text-slate-800">{row.original.name}</div>
-                        <div className="text-xs text-slate-500">{row.original.email}</div>
+                        <span className="font-semibold text-gray-900 block text-xs">{row.original.name}</span>
+                        <span className="text-[11px] text-gray-400">{row.original.email}</span>
                     </div>
                 </div>
             )
         },
         {
-            header: 'ROLE / AKSES',
+            header: 'ROLES / HAK AKSES',
             accessorKey: 'roles',
             cell: ({ row }) => (
                 <div className="flex flex-wrap gap-1">
                     {row.original.roles?.length > 0 ? row.original.roles.map(role => (
-                        <span key={role.id} className="px-2 py-0.5 bg-indigo-50 text-indigo-600 text-[10px] font-bold rounded-full uppercase border border-indigo-100">
+                        <span key={role.id} className="px-2 py-0.5 bg-blue-50 text-blue-700 text-[10px] font-semibold rounded border border-blue-200 uppercase">
                             {role.name}
                         </span>
                     )) : (
-                        <span className="text-slate-400 text-xs italic">No Role</span>
+                        <span className="text-gray-400 text-xs italic">Tanpa Role</span>
                     )}
                 </div>
             )
@@ -122,24 +124,24 @@ const UserManagementPage = () => {
         {
             header: 'TERDAFTAR',
             accessorKey: 'created_at',
-            cell: ({ row }) => <span className="text-slate-600 text-sm">{new Date(row.original.created_at).toLocaleDateString('id-ID')}</span>
+            cell: ({ row }) => <span className="text-gray-600 text-xs">{new Date(row.original.created_at).toLocaleDateString('id-ID')}</span>
         },
         {
             header: 'AKSI',
             id: 'actions',
             cell: ({ row }) => (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 justify-end">
                     <button 
                         onClick={() => handleOpenModal(row.original)}
-                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                        className="border border-blue-400 text-blue-600 hover:bg-blue-50 rounded px-2 py-0.5 text-xs font-medium transition-colors"
                     >
-                        <Edit size={18} />
+                        Edit
                     </button>
                     <button 
                         onClick={() => handleDelete(row.original.id)}
-                        className="p-2 text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                        className="border border-rose-300 text-rose-600 hover:bg-rose-50 rounded px-2 py-0.5 text-xs font-medium transition-colors"
                     >
-                        <Trash2 size={18} />
+                        Hapus
                     </button>
                 </div>
             )
@@ -147,17 +149,17 @@ const UserManagementPage = () => {
     ];
 
     return (
-        <div className="p-6 space-y-6">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="bg-white border border-gray-200 rounded-md p-4 space-y-4 shadow-none">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 pb-3">
                 <div>
-                    <h1 className="text-2xl font-bold text-slate-800">Manajemen User</h1>
-                    <p className="text-slate-500">Kelola akun staff dan hak akses sistem.</p>
+                    <h2 className="text-base font-bold text-gray-800">Manajemen User & Staff</h2>
+                    <p className="text-xs text-gray-500">Kelola akun staf, petugas teller, dan hak akses otorisasi</p>
                 </div>
                 <button 
                     onClick={() => handleOpenModal()}
-                    className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-md font-semibold transition-all shadow-lg shadow-indigo-600/20"
+                    className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-1.5 rounded-md text-xs font-semibold transition-colors"
                 >
-                    <UserPlus size={20} />
+                    <UserPlus size={16} />
                     <span>Tambah Staff</span>
                 </button>
             </div>
@@ -176,94 +178,89 @@ const UserManagementPage = () => {
                 onClose={() => setIsModalOpen(false)}
                 title={selectedUser ? 'Edit Staff' : 'Tambah Staff Baru'}
             >
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="grid grid-cols-1 gap-4">
-                        <div className="space-y-1.5">
-                            <label className="text-sm font-medium text-slate-700">Nama Lengkap</label>
-                            <div className="relative">
-                                <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                                <input
-                                    type="text"
-                                    required
-                                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
-                                    placeholder="Masukkan nama lengkap..."
-                                    value={formData.name}
-                                    onChange={(e) => setFormData({...formData, name: e.target.value})}
-                                />
-                            </div>
-                        </div>
-
-                        <div className="space-y-1.5">
-                            <label className="text-sm font-medium text-slate-700">Email Address</label>
-                            <div className="relative">
-                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                                <input
-                                    type="email"
-                                    required
-                                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
-                                    placeholder="nama@banksantri.id"
-                                    value={formData.email}
-                                    onChange={(e) => setFormData({...formData, email: e.target.value})}
-                                />
-                            </div>
-                        </div>
-
-                        <div className="space-y-1.5">
-                            <label className="text-sm font-medium text-slate-700">Password {selectedUser && '(Kosongkan jika tidak diubah)'}</label>
-                            <div className="relative">
-                                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                                <input
-                                    type="password"
-                                    required={!selectedUser}
-                                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
-                                    placeholder="••••••••"
-                                    value={formData.password}
-                                    onChange={(e) => setFormData({...formData, password: e.target.value})}
-                                />
-                            </div>
-                        </div>
-
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium text-slate-700">Pilih Role / Hak Akses</label>
-                            <div className="grid grid-cols-2 gap-2">
-                                {roles.map((role) => (
-                                    <div 
-                                        key={role.id}
-                                        onClick={() => toggleRole(role.id)}
-                                        className={`flex items-center gap-3 p-3 rounded-md border cursor-pointer transition-all ${
-                                            formData.role_ids.includes(role.id)
-                                                ? 'bg-indigo-50 border-indigo-200 text-indigo-700 shadow-sm'
-                                                : 'bg-white border-slate-200 text-slate-600 hover:border-indigo-200'
-                                        }`}
-                                    >
-                                        <div className={`w-5 h-5 rounded-md flex items-center justify-center border ${
-                                            formData.role_ids.includes(role.id)
-                                                ? 'bg-indigo-600 border-indigo-600'
-                                                : 'bg-white border-slate-300'
-                                        }`}>
-                                            {formData.role_ids.includes(role.id) && <X size={14} className="text-white rotate-45" />}
-                                        </div>
-                                        <div className="flex flex-col">
-                                            <span className="text-sm font-semibold capitalize">{role.name}</span>
-                                            <span className="text-[10px] opacity-70 uppercase tracking-wider">{role.slug}</span>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
+                <form onSubmit={handleSubmit} className="space-y-3">
+                    <div className="space-y-1">
+                        <label className="text-[11px] font-semibold text-gray-600 uppercase">Nama Lengkap</label>
+                        <div className="relative">
+                            <UserIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+                            <input
+                                type="text"
+                                required
+                                className="w-full pl-8 pr-3 py-1.5 bg-white border border-gray-300 rounded-md text-xs focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                                placeholder="Masukkan nama lengkap..."
+                                value={formData.name}
+                                onChange={(e) => setFormData({...formData, name: e.target.value})}
+                            />
                         </div>
                     </div>
 
-                    <div className="pt-4 flex items-center justify-end gap-3">
+                    <div className="space-y-1">
+                        <label className="text-[11px] font-semibold text-gray-600 uppercase">Email Address</label>
+                        <div className="relative">
+                            <Mail className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+                            <input
+                                type="email"
+                                required
+                                className="w-full pl-8 pr-3 py-1.5 bg-white border border-gray-300 rounded-md text-xs focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                                placeholder="nama@banksantri.id"
+                                value={formData.email}
+                                onChange={(e) => setFormData({...formData, email: e.target.value})}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="space-y-1">
+                        <label className="text-[11px] font-semibold text-gray-600 uppercase">Password {selectedUser && '(Kosongkan jika tidak diubah)'}</label>
+                        <div className="relative">
+                            <Lock className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+                            <input
+                                type="password"
+                                required={!selectedUser}
+                                className="w-full pl-8 pr-3 py-1.5 bg-white border border-gray-300 rounded-md text-xs focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                                placeholder="••••••••"
+                                value={formData.password}
+                                onChange={(e) => setFormData({...formData, password: e.target.value})}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="space-y-1.5 pt-1">
+                        <label className="text-[11px] font-semibold text-gray-600 uppercase">Pilih Role / Hak Akses</label>
+                        <div className="grid grid-cols-2 gap-2">
+                            {roles.map((role) => (
+                                <div 
+                                    key={role.id}
+                                    onClick={() => toggleRole(role.id)}
+                                    className={`flex items-center gap-2 p-2 rounded border cursor-pointer transition-colors text-xs ${
+                                        formData.role_ids.includes(role.id)
+                                            ? 'bg-blue-50 border-blue-300 text-blue-700'
+                                            : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300'
+                                    }`}
+                                >
+                                    <div className={`w-4 h-4 rounded flex items-center justify-center border ${
+                                        formData.role_ids.includes(role.id)
+                                            ? 'bg-blue-600 border-blue-600'
+                                            : 'bg-white border-gray-300'
+                                    }`}>
+                                        {formData.role_ids.includes(role.id) && <Check size={12} className="text-white" />}
+                                    </div>
+                                    <span className="font-semibold capitalize text-xs">{role.name}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="pt-3 border-t border-gray-100 flex items-center justify-end gap-2">
                         <button
                             type="button"
                             onClick={() => setIsModalOpen(false)}
-                            className="px-4 py-2.5 text-slate-600 hover:bg-slate-100 rounded-md font-semibold transition-all"
+                            className="px-3 py-1.5 text-gray-600 hover:bg-gray-100 rounded-md border border-gray-300 text-xs font-semibold transition-colors"
                         >
                             Batal
                         </button>
                         <button
                             type="submit"
-                            className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md font-semibold transition-all shadow-lg shadow-indigo-600/20"
+                            className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-xs font-semibold transition-colors"
                         >
                             {selectedUser ? 'Simpan Perubahan' : 'Simpan User'}
                         </button>

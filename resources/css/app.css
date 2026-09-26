@@ -11,14 +11,18 @@
 }
 
 @layer base {
+    body {
+        background-color: #f4f6f9;
+        color: #334155;
+    }
     input, select, textarea, button {
-        @apply transition-all duration-200 rounded-md;
+        @apply transition-all duration-150 rounded-md;
     }
 }
 
 .custom-scrollbar::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 5px;
+    height: 5px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
@@ -26,5 +30,6 @@
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-    @apply bg-slate-200 rounded-full hover:bg-slate-300;
+    @apply bg-slate-300 rounded hover:bg-slate-400;
 }
+

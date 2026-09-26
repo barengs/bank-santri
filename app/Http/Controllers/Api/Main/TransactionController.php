@@ -338,6 +338,21 @@ class TransactionController extends Controller
                 ]);
             }
 
+            // Mirror Jurnal COA untuk Reversal (Debit jadi Kredit, Kredit jadi Debit)
+            if ($original->ledgerEntries()->exists()) {
+                foreach ($original->ledgerEntries as $entry) {
+                    TransactionLedger::create([
+                        'transaction_id' => $reversal->id,
+                        'coa_code'       => $entry->coa_code,
+                        'debit'          => $entry->credit,
+                        'credit'         => $entry->debit,
+                        'description'    => $reversal->description,
+                    ]);
+                }
+            } else {
+                app(AccountingService::class)->ensureLedgerEntries($reversal);
+            }
+
             $original->update(['status' => 'reversed']);
 
             return response()->json([
@@ -367,6 +382,9 @@ class TransactionController extends Controller
 
                 $transaction->status = 'success';
                 $transaction->save();
+
+                // Pastikan jurnal umum (ledger COA) terisi dan seimbang dengan nominal terbaru
+                app(AccountingService::class)->ensureLedgerEntries($transaction);
 
                 // Hanya terapkan mutasi saldo jika ini bukan transaksi tagihan registrasi.
                 // Transaksi REG-* adalah catatan pendapatan bank (jurnal COA),

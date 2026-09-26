@@ -60,25 +60,25 @@ const TransactionItemPage = () => {
             header: 'Nama Rincian Biaya',
             cell: ({ row }) => (
                 <div className="flex flex-col">
-                    <span className="font-black text-indigo-600">{row.original.item_name}</span>
-                    <span className="text-[10px] font-bold text-gray-400 truncate max-w-[200px]">{row.original.description || '-'}</span>
+                    <span className="font-semibold text-gray-800">{row.original.item_name}</span>
+                    <span className="text-[10px] text-gray-400 truncate max-w-[200px]">{row.original.description || '-'}</span>
                 </div>
             )
         },
         {
             accessorKey: 'default_amount',
             header: 'Nominal Default',
-            cell: ({ row }) => <span className="font-bold text-slate-700">{formatIDR(row.original.default_amount)}</span>
+            cell: ({ row }) => <span className="font-semibold text-gray-800">{formatIDR(row.original.default_amount)}</span>
         },
         {
             accessorKey: 'coa_code',
             header: 'COA Tujuan',
             cell: ({ row }) => (
-                <div className="flex items-center gap-2">
-                    <div className="px-2 py-0.5 bg-slate-100 rounded text-[10px] font-mono font-black text-slate-500 border border-slate-200">
+                <div className="flex items-center gap-1.5">
+                    <span className="px-1.5 py-0.5 bg-gray-100 rounded text-[10px] font-mono text-gray-600 border border-gray-200">
                         {row.original.coa_code}
-                    </div>
-                    <span className="text-[10px] font-bold text-slate-400 truncate max-w-[150px]">{row.original.coa?.account_name}</span>
+                    </span>
+                    <span className="text-[11px] text-gray-600 truncate max-w-[150px]">{row.original.coa?.account_name}</span>
                 </div>
             )
         },
@@ -86,29 +86,31 @@ const TransactionItemPage = () => {
             accessorKey: 'is_active',
             header: 'Status',
             cell: ({ row }) => (
-                <div className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest ${
-                    row.original.is_active ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-rose-50 text-rose-600 border border-rose-100'
+                <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold border ${
+                    row.original.is_active 
+                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
+                        : 'bg-rose-50 text-rose-700 border-rose-200'
                 }`}>
                     {row.original.is_active ? 'Aktif' : 'Non-Aktif'}
-                </div>
+                </span>
             )
         },
         {
             id: 'actions',
             header: 'Aksi',
             cell: ({ row }) => (
-                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity justify-end">
+                <div className="flex items-center gap-1.5 justify-end">
                     <button 
                         onClick={() => handleEdit(row.original)}
-                        className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-md"
+                        className="border border-blue-400 text-blue-600 hover:bg-blue-50 rounded px-2 py-0.5 text-xs font-medium transition-colors"
                     >
-                        <Edit2 className="w-4 h-4" />
+                        Edit
                     </button>
                     <button 
                         onClick={() => handleDelete(row.original.id)}
-                        className="p-2 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-md"
+                        className="border border-rose-300 text-rose-600 hover:bg-rose-50 rounded px-2 py-0.5 text-xs font-medium transition-colors"
                     >
-                        <Trash2 className="w-4 h-4" />
+                        Hapus
                     </button>
                 </div>
             )
@@ -125,7 +127,7 @@ const TransactionItemPage = () => {
             entry_type: item.entry_type || 'credit',
             value_mode: item.value_mode || 'fixed',
             description: item.description || '',
-            is_active: !!item.is_active
+            is_active: Boolean(item.is_active)
         });
         setIsModalOpen(true);
     };
@@ -173,79 +175,75 @@ const TransactionItemPage = () => {
     };
 
     return (
-        <div className="space-y-6">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="bg-white border border-gray-200 rounded-md p-4 space-y-4 shadow-none">
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 pb-3">
                 <div>
-                    <h1 className="text-2xl font-black text-gray-900 tracking-tight">Master Rincian Transaksi</h1>
-                    <p className="text-sm text-gray-500 font-bold uppercase tracking-widest text-[10px] mt-1 flex items-center gap-2">
-                        <Layers className="w-4 h-4 text-indigo-600" />
-                        Detail Biaya & Komponen Transaksi
-                    </p>
+                    <h2 className="text-base font-bold text-gray-800">Master Rincian Transaksi</h2>
+                    <p className="text-xs text-gray-500">Detail komponen biaya satuan dan pemetaan akun COA</p>
                 </div>
                 <button 
                     onClick={() => { resetForm(); setIsModalOpen(true); }}
-                    className="flex items-center justify-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-md font-black text-sm shadow-xl shadow-indigo-600/20 hover:bg-indigo-700 transition-all active:scale-95"
+                    className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-md text-xs font-semibold hover:bg-blue-700 transition-colors"
                 >
-                    <Plus className="w-4 h-4" />
+                    <Plus className="w-3.5 h-3.5" />
                     Tambah Rincian
                 </button>
             </div>
 
-            <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
-                <DataTable 
-                    columns={columns}
-                    data={itemsRes?.data?.data || []}
-                    isLoading={isLoading}
-                    placeholder="Cari rincian biaya..."
-                />
-            </div>
+            <DataTable 
+                columns={columns}
+                data={itemsRes?.data?.data || []}
+                isLoading={isLoading}
+                placeholder="Cari rincian biaya..."
+            />
 
+            {/* Flat Modal */}
             {isModalOpen && (
                 <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-                    <div className="fixed inset-0 bg-slate-950/40 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => setIsModalOpen(false)}></div>
+                    <div className="fixed inset-0 bg-slate-900/40" onClick={() => setIsModalOpen(false)}></div>
                     
-                    <div className="relative w-full max-w-lg bg-white rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
-                        <div className="px-8 py-6 bg-indigo-600 text-white relative">
-                            <h2 className="text-xl font-black tracking-tight">{editingItem ? 'Edit Rincian Biaya' : 'Tambah Rincian Baru'}</h2>
-                            <p className="text-indigo-100 text-[10px] font-bold uppercase tracking-widest mt-1">Definisikan komponen biaya satuan.</p>
-                            <div className="absolute top-6 right-8 opacity-20">
-                                <DollarSign className="w-12 h-12" />
-                            </div>
+                    <div className="relative w-full max-w-lg bg-white rounded-md border border-gray-200 shadow-xl overflow-hidden animate-in fade-in duration-150">
+                        <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
+                            <h3 className="text-sm font-bold text-gray-800">{editingItem ? 'Edit Rincian Biaya' : 'Tambah Rincian Baru'}</h3>
+                            <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600">
+                                <X className="w-4 h-4" />
+                            </button>
                         </div>
 
-                        <form onSubmit={handleSubmit} className="p-8 space-y-6">
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Nama Rincian (Komponen)</label>
+                        <form onSubmit={handleSubmit} className="p-4 space-y-3">
+                            <div className="space-y-1">
+                                <label className="text-[11px] font-semibold text-gray-600 uppercase">Nama Rincian (Komponen)</label>
                                 <input 
                                     required
                                     type="text"
                                     placeholder="Misal: Biaya Buka Rekening"
                                     value={formData.item_name}
                                     onChange={(e) => setFormData({...formData, item_name: e.target.value})}
-                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-lg text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 transition-all"
+                                    className="w-full px-2.5 py-1.5 bg-white border border-gray-300 rounded-md text-xs focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none"
                                 />
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Nominal Default</label>
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="space-y-1">
+                                    <label className="text-[11px] font-semibold text-gray-600 uppercase">Nominal Default</label>
                                     <div className="relative">
-                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xs font-black text-slate-400">Rp</span>
+                                        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400">Rp</span>
                                         <input 
                                             required
                                             type="number"
                                             value={formData.default_amount}
                                             onChange={(e) => setFormData({...formData, default_amount: e.target.value})}
-                                            className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-lg text-sm font-black focus:border-indigo-600"
+                                            className="w-full pl-8 pr-2.5 py-1.5 bg-white border border-gray-300 rounded-md text-xs focus:border-blue-500 outline-none"
                                         />
                                     </div>
                                 </div>
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Status Aktif</label>
+                                <div className="space-y-1">
+                                    <label className="text-[11px] font-semibold text-gray-600 uppercase">Status Aktif</label>
                                     <select 
                                         value={formData.is_active}
                                         onChange={(e) => setFormData({...formData, is_active: e.target.value === 'true'})}
-                                        className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-lg text-sm font-bold"
+                                        className="w-full px-2.5 py-1.5 bg-white border border-gray-300 rounded-md text-xs focus:border-blue-500 outline-none"
                                     >
                                         <option value="true">AKTIF</option>
                                         <option value="false">NON-AKTIF</option>
@@ -253,41 +251,41 @@ const TransactionItemPage = () => {
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Tipe Jurnal</label>
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="space-y-1">
+                                    <label className="text-[11px] font-semibold text-gray-600 uppercase">Tipe Jurnal</label>
                                     <select 
                                         required
                                         value={formData.entry_type}
                                         onChange={(e) => setFormData({...formData, entry_type: e.target.value})}
-                                        className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-lg text-sm font-bold"
+                                        className="w-full px-2.5 py-1.5 bg-white border border-gray-300 rounded-md text-xs focus:border-blue-500 outline-none"
                                     >
                                         <option value="debit">DEBIT (Penambahan Saldo/Biaya)</option>
                                         <option value="credit">CREDIT (Pengurangan Saldo/Pendapatan)</option>
                                     </select>
                                 </div>
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Tipe Nominal</label>
+                                <div className="space-y-1">
+                                    <label className="text-[11px] font-semibold text-gray-600 uppercase">Tipe Nominal</label>
                                     <select 
                                         required
                                         value={formData.value_mode}
                                         onChange={(e) => setFormData({...formData, value_mode: e.target.value})}
-                                        className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-lg text-sm font-bold"
+                                        className="w-full px-2.5 py-1.5 bg-white border border-gray-300 rounded-md text-xs focus:border-blue-500 outline-none"
                                     >
-                                        <option value="total">Total Transaksi (Sesuai Input)</option>
-                                        <option value="fixed">Nominal Tetap (Sesuai Master)</option>
-                                        <option value="remainder">Sisa (Sisa Bagi Hasil)</option>
+                                        <option value="total">Total Transaksi</option>
+                                        <option value="fixed">Nominal Tetap</option>
+                                        <option value="remainder">Sisa Bagi Hasil</option>
                                     </select>
                                 </div>
                             </div>
 
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">COA Tujuan</label>
+                            <div className="space-y-1">
+                                <label className="text-[11px] font-semibold text-gray-600 uppercase">COA Tujuan</label>
                                 <select 
                                     required
                                     value={formData.coa_code}
                                     onChange={(e) => setFormData({...formData, coa_code: e.target.value})}
-                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-lg text-sm font-bold"
+                                    className="w-full px-2.5 py-1.5 bg-white border border-gray-300 rounded-md text-xs focus:border-blue-500 outline-none"
                                 >
                                     <option value="">Pilih COA...</option>
                                     {coaRes?.data?.map(acc => (
@@ -296,17 +294,14 @@ const TransactionItemPage = () => {
                                 </select>
                             </div>
 
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block flex items-center justify-between">
-                                    <span>Rekening Instansi Tujuan (Opsional)</span>
-                                    <span className="text-[9px] text-indigo-400 bg-indigo-50 px-2 py-0.5 rounded">Auto-Settlement</span>
-                                </label>
+                            <div className="space-y-1">
+                                <label className="text-[11px] font-semibold text-gray-600 uppercase">Rekening Instansi Tujuan (Opsional)</label>
                                 <select 
                                     value={formData.destination_account || ''}
                                     onChange={(e) => setFormData({...formData, destination_account: e.target.value})}
-                                    className="w-full px-4 py-3 bg-indigo-50/30 border border-indigo-100 rounded-lg text-sm font-bold focus:border-indigo-600"
+                                    className="w-full px-2.5 py-1.5 bg-white border border-gray-300 rounded-md text-xs focus:border-blue-500 outline-none"
                                 >
-                                    <option value="">-- Tidak Menggunakan Rekening Instansi (Masuk ke COA Langsung) --</option>
+                                    <option value="">-- Langsung ke COA (Tanpa Rekening Khusus) --</option>
                                     {instansiAccountsRes?.data?.data?.map(acc => (
                                         <option key={acc.account_number} value={acc.account_number}>
                                             {acc.customer_name} ({acc.account_number})
@@ -315,31 +310,30 @@ const TransactionItemPage = () => {
                                 </select>
                             </div>
 
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Keterangan Singkat</label>
+                            <div className="space-y-1">
+                                <label className="text-[11px] font-semibold text-gray-600 uppercase">Keterangan Singkat</label>
                                 <textarea 
                                     value={formData.description}
                                     onChange={(e) => setFormData({...formData, description: e.target.value})}
-                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-lg text-sm font-bold h-20 focus:border-indigo-600"
+                                    className="w-full px-2.5 py-1.5 bg-white border border-gray-300 rounded-md text-xs focus:border-blue-500 outline-none h-16"
                                     placeholder="Penjelasan opsional..."
                                 />
                             </div>
 
-                            <div className="pt-6 border-t border-slate-100 flex gap-3">
+                            <div className="pt-3 border-t border-gray-100 flex justify-end gap-2">
                                 <button 
                                     type="button"
                                     onClick={() => setIsModalOpen(false)}
-                                    className="flex-1 px-4 py-3.5 text-xs font-black text-slate-400 hover:bg-slate-50 rounded-lg transition-all flex items-center justify-center gap-2 uppercase tracking-widest"
+                                    className="px-3 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-100 rounded-md border border-gray-300 transition-colors"
                                 >
-                                    <X className="w-4 h-4" />
                                     Batal
                                 </button>
                                 <button 
                                     type="submit"
                                     disabled={isCreating || isUpdating}
-                                    className="flex-[2] flex items-center justify-center gap-2 px-4 py-3.5 bg-indigo-600 rounded-lg font-black text-xs text-white shadow-xl shadow-indigo-600/20 hover:bg-indigo-700 transition-all uppercase tracking-widest"
+                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 rounded-md font-semibold text-xs text-white hover:bg-blue-700 transition-colors disabled:opacity-50"
                                 >
-                                    {isCreating || isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                                    {isCreating || isUpdating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
                                     Simpan Rincian
                                 </button>
                             </div>

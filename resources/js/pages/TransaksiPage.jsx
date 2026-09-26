@@ -122,93 +122,84 @@ const TransaksiPage = () => {
             cell: ({ row }) => (
                 <button 
                     onClick={() => navigate(`/transaksi/${row.original.id}`)}
-                    className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-all group"
+                    className="px-2 py-0.5 border border-blue-400 text-blue-600 hover:bg-blue-50 rounded text-xs font-medium inline-flex items-center gap-1 transition-colors"
                 >
-                    <MoreHorizontal className="w-4 h-4 group-hover:scale-110" />
+                    <Eye className="w-3 h-3" />
+                    Detail
                 </button>
             )
         }
     ], [navigate]);
 
     return (
-        <div className="space-y-6">
-            {/* Page Header */}
-            <div className="space-y-1">
-                <h1 className="text-2xl font-black text-gray-900 tracking-tight">Manajemen Transaksi</h1>
-                <p className="text-sm text-gray-400 font-medium">Kelola semua transaksi di bank santri.</p>
-            </div>
-
-            {/* Filter Card */}
-            <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm flex flex-col md:flex-row gap-4 items-end">
-                <div className="flex-1 space-y-2">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Cari Data</label>
-                    <div className="relative group">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-indigo-600 transition-colors" />
-                        <input 
-                            type="text" 
-                            placeholder="Cari deskripsi, nominal, atau referensi..." 
-                            value={search}
-                            onChange={(e) => {
-                                setSearch(e.target.value);
-                                setPage(1);
-                            }}
-                            className="w-full pl-10 pr-4 py-2 text-sm bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-600 transition-all font-bold"
-                        />
-                    </div>
+        <div className="bg-white border border-gray-200 rounded-md p-4 space-y-4 shadow-none">
+            {/* Card Header & Filter Bar */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-1 border-b border-gray-100">
+                <div>
+                    <h1 className="text-lg font-bold text-gray-900 tracking-tight">Informasi Transaksi Bank</h1>
+                    <p className="text-xs text-gray-500">Daftar riwayat seluruh transaksi perbankan dan mutasi.</p>
                 </div>
-
-                <div className="w-full md:w-48 space-y-2">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Filter By Tipe</label>
-                    <div className="relative">
-                        <select 
-                            value={channel}
-                            onChange={(e) => {
-                                setChannel(e.target.value);
-                                setPage(1);
-                            }}
-                            className="w-full px-4 py-2 text-sm bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:border-indigo-600 appearance-none font-bold cursor-pointer"
-                        >
-                            <option value="">Semua Channel</option>
-                            <option value="teller">Teller</option>
-                            <option value="system">Sistem</option>
-                            <option value="api">API External</option>
-                        </select>
-                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                    </div>
-                </div>
-
-                <div className="w-full md:w-48 space-y-2">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Filter By Status</label>
-                    <div className="relative">
-                        <select 
-                            value={status}
-                            onChange={(e) => {
-                                setStatus(e.target.value);
-                                setPage(1);
-                            }}
-                            className="w-full px-4 py-2 text-sm bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:border-indigo-600 appearance-none font-bold cursor-pointer"
-                        >
-                            <option value="">Semua Status</option>
-                            <option value="success">Success</option>
-                            <option value="pending">Pending</option>
-                            <option value="failed">Failed</option>
-                        </select>
-                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                    </div>
-                </div>
-
-                <div className="flex gap-2 w-full md:w-auto">
-                    <button className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2 bg-white border border-gray-200 rounded-md text-sm font-black text-gray-600 hover:bg-gray-50 transition-all active:scale-95 shadow-sm">
-                        <FileSpreadsheet className="w-4 h-4" />
-                        Export Excel
+                <div className="flex items-center gap-2">
+                    <button className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-md text-xs font-medium transition-colors">
+                        <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
+                        Ekspor Excel
                     </button>
                     <button 
                         onClick={() => navigate('/topup')}
-                        className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2 bg-indigo-600 text-white rounded-md text-sm font-black shadow-lg shadow-indigo-600/20 hover:bg-indigo-700 transition-all active:scale-95"
+                        className="flex items-center justify-center gap-1.5 px-3.5 py-1.5 bg-[#007bff] hover:bg-blue-700 text-white rounded-md text-xs font-semibold shadow-none transition-colors"
                     >
-                        <Plus className="w-4 h-4" />
-                        Tambah Data
+                        <Plus className="w-3.5 h-3.5" />
+                        Tambah Transaksi
                     </button>
+                </div>
+            </div>
+
+            {/* Filter Bar */}
+            <div className="flex flex-wrap items-center gap-2.5">
+                <div className="relative flex-1 min-w-[200px]">
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+                    <input 
+                        type="text" 
+                        placeholder="Cari deskripsi, nominal, atau referensi..." 
+                        value={search}
+                        onChange={(e) => {
+                            setSearch(e.target.value);
+                            setPage(1);
+                        }}
+                        className="w-full pl-8 pr-3 py-1.5 text-xs bg-white border border-gray-300 rounded-md focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-gray-700 placeholder-gray-400"
+                    />
+                </div>
+
+                <div className="w-36">
+                    <select 
+                        value={channel}
+                        onChange={(e) => {
+                            setChannel(e.target.value);
+                            setPage(1);
+                        }}
+                        className="w-full px-2.5 py-1.5 text-xs bg-white border border-gray-300 rounded-md focus:outline-none focus:border-blue-500 text-gray-700 cursor-pointer"
+                    >
+                        <option value="">Semua Channel</option>
+                        <option value="teller">Teller</option>
+                        <option value="system">Sistem</option>
+                        <option value="api">API External</option>
+                    </select>
+                </div>
+
+                <div className="w-36">
+                    <select 
+                        value={status}
+                        onChange={(e) => {
+                            setStatus(e.target.value);
+                            setPage(1);
+                        }}
+                        className="w-full px-2.5 py-1.5 text-xs bg-white border border-gray-300 rounded-md focus:outline-none focus:border-blue-500 text-gray-700 cursor-pointer"
+                    >
+                        <option value="">Semua Status</option>
+                        <option value="success">Success</option>
+                        <option value="pending">Pending</option>
+                        <option value="failed">Failed</option>
+                    </select>
                 </div>
             </div>
 

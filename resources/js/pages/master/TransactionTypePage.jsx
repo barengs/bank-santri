@@ -49,15 +49,15 @@ const TransactionTypePage = () => {
         {
             accessorKey: 'code',
             header: 'Kode',
-            cell: ({ row }) => <span className="font-mono text-xs font-black text-gray-400">{row.original.code}</span>
+            cell: ({ row }) => <span className="font-mono text-xs font-semibold text-gray-700">{row.original.code}</span>
         },
         {
             accessorKey: 'name',
             header: 'Nama Transaksi',
             cell: ({ row }) => (
                 <div className="flex flex-col">
-                    <span className="font-black text-indigo-600">{row.original.name}</span>
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{row.original.category}</span>
+                    <span className="font-semibold text-gray-900">{row.original.name}</span>
+                    <span className="text-[10px] text-gray-400 uppercase">{row.original.category}</span>
                 </div>
             )
         },
@@ -65,17 +65,17 @@ const TransactionTypePage = () => {
             accessorKey: 'rules',
             header: 'Aturan Jurnal',
             cell: ({ row }) => (
-                <div className="flex flex-col gap-1">
+                <div className="flex flex-col gap-0.5">
                     {row.original.rules?.map((rule, idx) => (
-                        <div key={idx} className="flex items-center gap-1 text-[10px] font-bold">
-                            <span className={`text-[10px] font-black uppercase ${rule.entry_type === 'debit' ? 'text-blue-600' : 'text-rose-600'}`}>
+                        <div key={idx} className="flex items-center gap-1 text-[11px]">
+                            <span className={`font-bold ${rule.entry_type === 'debit' ? 'text-blue-600' : 'text-rose-600'}`}>
                                 {rule.entry_type === 'debit' ? 'DR' : 'CR'}
                             </span>
-                            <span className="text-[10px] font-bold text-slate-700">{rule.transaction_item?.item_name || rule.coa_code}</span>
-                            <span className="text-[9px] text-slate-400 font-medium lowercase">({rule.value_mode})</span>
+                            <span className="text-gray-700">{rule.transaction_item?.item_name || rule.coa_code}</span>
+                            <span className="text-[10px] text-gray-400 lowercase">({rule.value_mode})</span>
                         </div>
                     ))}
-                    {(!row.original.rules || row.original.rules.length === 0) && <span className="text-[10px] text-gray-300 italic">Belum ada aturan</span>}
+                    {(!row.original.rules || row.original.rules.length === 0) && <span className="text-[11px] text-gray-400 italic">Belum ada aturan</span>}
                 </div>
             )
         },
@@ -83,18 +83,18 @@ const TransactionTypePage = () => {
             id: 'actions',
             header: 'Aksi',
             cell: ({ row }) => (
-                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity justify-end">
+                <div className="flex items-center gap-1.5 justify-end">
                     <button 
                         onClick={() => handleEdit(row.original)}
-                        className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-md"
+                        className="border border-blue-400 text-blue-600 hover:bg-blue-50 rounded px-2 py-0.5 text-xs font-medium transition-colors"
                     >
-                        <Edit2 className="w-4 h-4" />
+                        Edit
                     </button>
                     <button 
                         onClick={() => handleDelete(row.original.id)}
-                        className="p-2 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-md"
+                        className="border border-rose-300 text-rose-600 hover:bg-rose-50 rounded px-2 py-0.5 text-xs font-medium transition-colors"
                     >
-                        <Trash2 className="w-4 h-4" />
+                        Hapus
                     </button>
                 </div>
             )
@@ -176,17 +176,18 @@ const TransactionTypePage = () => {
     };
 
     return (
-        <div className="space-y-6">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="bg-white border border-gray-200 rounded-md p-4 space-y-4 shadow-none">
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 pb-3">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Jenis Transaksi</h1>
-                    <p className="text-sm text-gray-500">Konfigurasi alur akuntansi untuk setiap jenis transaksi.</p>
+                    <h2 className="text-base font-bold text-gray-800">Jenis Transaksi</h2>
+                    <p className="text-xs text-gray-500">Konfigurasi alur pembukuan jurnal otomatis untuk setiap tipe transaksi</p>
                 </div>
                 <button 
                     onClick={() => { resetForm(); setIsModalOpen(true); }}
-                    className="flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 text-white rounded-md font-bold text-sm shadow-lg shadow-indigo-600/20 hover:bg-indigo-700 transition-all active:scale-95"
+                    className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-md text-xs font-semibold hover:bg-blue-700 transition-colors"
                 >
-                    <Plus className="w-4 h-4" />
+                    <Plus className="w-3.5 h-3.5" />
                     Tambah Jenis
                 </button>
             </div>
@@ -198,38 +199,38 @@ const TransactionTypePage = () => {
                 placeholder="Cari jenis transaksi..."
             />
 
+            {/* Flat Modal */}
             {isModalOpen && (
                 <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-                    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setIsModalOpen(false)}></div>
+                    <div className="fixed inset-0 bg-slate-900/40" onClick={() => setIsModalOpen(false)}></div>
                     
-                    <div className="relative w-full max-w-2xl bg-white rounded-md shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
-                        <div className="px-8 py-6 bg-indigo-600 text-white relative">
-                            <h2 className="text-xl font-bold">{editingType ? 'Edit Jenis Transaksi' : 'Tambah Jenis Baru'}</h2>
-                            <p className="text-indigo-100 text-xs mt-1">Atur kode transaksi dan aturan penjurnalan otomatis.</p>
-                            <div className="absolute top-6 right-8 opacity-20">
-                                <ArrowRightLeft className="w-12 h-12" />
-                            </div>
+                    <div className="relative w-full max-w-2xl bg-white rounded-md border border-gray-200 shadow-xl overflow-hidden animate-in fade-in duration-150">
+                        <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
+                            <h3 className="text-sm font-bold text-gray-800">{editingType ? 'Edit Jenis Transaksi' : 'Tambah Jenis Baru'}</h3>
+                            <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600">
+                                <X className="w-4 h-4" />
+                            </button>
                         </div>
 
-                        <form onSubmit={handleSubmit} className="p-8 space-y-6 max-h-[70vh] overflow-y-auto no-scrollbar">
-                            <div className="grid grid-cols-2 gap-4">
+                        <form onSubmit={handleSubmit} className="p-4 space-y-3 max-h-[75vh] overflow-y-auto">
+                            <div className="grid grid-cols-2 gap-3">
                                 <div className="space-y-1">
-                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Kode Transaksi</label>
+                                    <label className="text-[11px] font-semibold text-gray-600 uppercase">Kode Transaksi</label>
                                     <input 
                                         required
                                         type="text"
                                         placeholder="Misal: DEP-CASH"
                                         value={formData.code}
                                         onChange={(e) => setFormData({...formData, code: e.target.value.toUpperCase()})}
-                                        className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all"
+                                        className="w-full px-2.5 py-1.5 bg-white border border-gray-300 rounded-md text-xs focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none"
                                     />
                                 </div>
                                 <div className="space-y-1">
-                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Kategori</label>
+                                    <label className="text-[11px] font-semibold text-gray-600 uppercase">Kategori</label>
                                     <select 
                                         value={formData.category}
                                         onChange={(e) => setFormData({...formData, category: e.target.value})}
-                                        className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm focus:border-indigo-600"
+                                        className="w-full px-2.5 py-1.5 bg-white border border-gray-300 rounded-md text-xs focus:border-blue-500 outline-none"
                                     >
                                         <option value="transfer">Transfer</option>
                                         <option value="payment">Pembayaran</option>
@@ -241,41 +242,41 @@ const TransactionTypePage = () => {
                             </div>
 
                             <div className="space-y-1">
-                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Nama Transaksi</label>
+                                <label className="text-[11px] font-semibold text-gray-600 uppercase">Nama Transaksi</label>
                                 <input 
                                     required
                                     type="text"
                                     placeholder="Misal: Setoran Tunai"
                                     value={formData.name}
                                     onChange={(e) => setFormData({...formData, name: e.target.value})}
-                                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all"
+                                    className="w-full px-2.5 py-1.5 bg-white border border-gray-300 rounded-md text-xs focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none"
                                 />
                             </div>
 
                             {/* Rules Section */}
-                            <div className="space-y-4">
+                            <div className="space-y-2 pt-2 border-t border-gray-100">
                                 <div className="flex items-center justify-between">
-                                    <h3 className="text-xs font-black text-slate-800 uppercase tracking-widest">Konfigurasi Alur Jurnal</h3>
+                                    <h4 className="text-xs font-bold text-gray-700 uppercase">Konfigurasi Alur Jurnal</h4>
                                     <button 
                                         type="button"
                                         onClick={addRule}
-                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg font-black text-[10px] uppercase tracking-widest hover:bg-indigo-100 transition-all"
+                                        className="flex items-center gap-1 px-2.5 py-1 bg-blue-50 text-blue-600 border border-blue-200 rounded text-xs font-medium hover:bg-blue-100 transition-colors"
                                     >
-                                        <Plus className="w-3 h-3" />
+                                        <Plus className="w-3.5 h-3.5" />
                                         Tambah Baris
                                     </button>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    {/* Kolom DEBIT (Sumber/Masuk) */}
-                                    <div className="space-y-3">
-                                        <div className="px-4 py-2 bg-blue-50 border border-blue-100 rounded-md flex justify-between items-center">
-                                            <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">SUMBER / DEBIT (DARI MANA)</span>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    {/* Kolom DEBIT */}
+                                    <div className="space-y-2">
+                                        <div className="px-2.5 py-1 bg-blue-50 border border-blue-200 rounded text-[10px] font-bold text-blue-700 uppercase">
+                                            SUMBER / DEBIT (DARI MANA)
                                         </div>
                                         {formData.rules.filter(r => r.entry_type === 'debit' || !r.transaction_item_id).map((rule) => {
                                             const originalIdx = formData.rules.indexOf(rule);
                                             return (
-                                                <div key={originalIdx} className="p-4 bg-white border border-slate-100 rounded-lg shadow-sm space-y-3 relative group">
+                                                <div key={originalIdx} className="p-2.5 bg-gray-50 border border-gray-200 rounded space-y-1.5 relative group">
                                                     <select 
                                                         required
                                                         value={rule.transaction_item_id || ''}
@@ -289,7 +290,7 @@ const TransactionTypePage = () => {
                                                                 updateRule(originalIdx, 'fixed_amount', item.default_amount);
                                                             }
                                                         }}
-                                                        className="w-full text-xs font-black text-slate-800 border-none p-0 focus:ring-0 bg-transparent"
+                                                        className="w-full text-xs font-medium text-gray-800 bg-white border border-gray-300 rounded px-2 py-1 outline-none"
                                                     >
                                                         <option value="">-- Pilih Sumber Dana --</option>
                                                         {transactionItems?.map(item => (
@@ -298,33 +299,33 @@ const TransactionTypePage = () => {
                                                     </select>
                                                     
                                                     {rule.transaction_item_id && (
-                                                        <div className="flex items-center justify-between pt-2 border-t border-slate-50">
-                                                            <span className="text-[9px] font-mono font-bold text-slate-400">COA: {rule.coa_code}</span>
-                                                            <span className="text-[9px] font-black text-indigo-500 uppercase tracking-tighter">Mode: {rule.value_mode}</span>
+                                                        <div className="flex items-center justify-between text-[10px] text-gray-500 pt-1">
+                                                            <span className="font-mono">COA: {rule.coa_code}</span>
+                                                            <span className="font-semibold text-blue-600">Mode: {rule.value_mode}</span>
                                                         </div>
                                                     )}
 
                                                     <button 
                                                         type="button"
                                                         onClick={() => removeRule(originalIdx)}
-                                                        className="absolute -top-2 -right-2 p-1.5 bg-white border border-slate-100 text-slate-300 hover:text-rose-600 rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-all"
+                                                        className="absolute -top-1.5 -right-1.5 p-0.5 bg-white border border-gray-200 text-gray-400 hover:text-rose-600 rounded-full shadow-sm"
                                                     >
-                                                        <MinusCircle className="w-3 h-3" />
+                                                        <MinusCircle className="w-3.5 h-3.5" />
                                                     </button>
                                                 </div>
                                             );
                                         })}
                                     </div>
 
-                                    {/* Kolom KREDIT (Alokasi/Keluar) */}
-                                    <div className="space-y-3">
-                                        <div className="px-4 py-2 bg-rose-50 border border-rose-100 rounded-md flex justify-between items-center">
-                                            <span className="text-[10px] font-black text-rose-600 uppercase tracking-widest">ALOKASI / KREDIT (KE MANA)</span>
+                                    {/* Kolom KREDIT */}
+                                    <div className="space-y-2">
+                                        <div className="px-2.5 py-1 bg-rose-50 border border-rose-200 rounded text-[10px] font-bold text-rose-700 uppercase">
+                                            ALOKASI / KREDIT (KE MANA)
                                         </div>
                                         {formData.rules.filter(r => r.entry_type === 'credit').map((rule) => {
                                             const originalIdx = formData.rules.indexOf(rule);
                                             return (
-                                                <div key={originalIdx} className="p-4 bg-white border border-slate-100 rounded-lg shadow-sm space-y-3 relative group">
+                                                <div key={originalIdx} className="p-2.5 bg-gray-50 border border-gray-200 rounded space-y-1.5 relative group">
                                                     <select 
                                                         required
                                                         value={rule.transaction_item_id || ''}
@@ -338,7 +339,7 @@ const TransactionTypePage = () => {
                                                                 updateRule(originalIdx, 'fixed_amount', item.default_amount);
                                                             }
                                                         }}
-                                                        className="w-full text-xs font-black text-slate-800 border-none p-0 focus:ring-0 bg-transparent"
+                                                        className="w-full text-xs font-medium text-gray-800 bg-white border border-gray-300 rounded px-2 py-1 outline-none"
                                                     >
                                                         <option value="">-- Pilih Alokasi Dana --</option>
                                                         {transactionItems?.map(item => (
@@ -347,18 +348,18 @@ const TransactionTypePage = () => {
                                                     </select>
                                                     
                                                     {rule.transaction_item_id && (
-                                                        <div className="flex items-center justify-between pt-2 border-t border-slate-50">
-                                                            <span className="text-[9px] font-mono font-bold text-slate-400">COA: {rule.coa_code}</span>
-                                                            <span className="text-[9px] font-black text-indigo-500 uppercase tracking-tighter">Mode: {rule.value_mode}</span>
+                                                        <div className="flex items-center justify-between text-[10px] text-gray-500 pt-1">
+                                                            <span className="font-mono">COA: {rule.coa_code}</span>
+                                                            <span className="font-semibold text-rose-600">Mode: {rule.value_mode}</span>
                                                         </div>
                                                     )}
 
                                                     <button 
                                                         type="button"
                                                         onClick={() => removeRule(originalIdx)}
-                                                        className="absolute -top-2 -right-2 p-1.5 bg-white border border-slate-100 text-slate-300 hover:text-rose-600 rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-all"
+                                                        className="absolute -top-1.5 -right-1.5 p-0.5 bg-white border border-gray-200 text-gray-400 hover:text-rose-600 rounded-full shadow-sm"
                                                     >
-                                                        <MinusCircle className="w-3 h-3" />
+                                                        <MinusCircle className="w-3.5 h-3.5" />
                                                     </button>
                                                 </div>
                                             );
@@ -367,21 +368,20 @@ const TransactionTypePage = () => {
                                 </div>
                             </div>
 
-                            <div className="pt-6 border-t border-gray-100 flex gap-3">
+                            <div className="pt-3 border-t border-gray-100 flex justify-end gap-2">
                                 <button 
                                     type="button"
                                     onClick={() => setIsModalOpen(false)}
-                                    className="flex-1 px-4 py-2.5 text-sm font-bold text-gray-500 hover:bg-gray-50 rounded-md transition-all flex items-center justify-center gap-2"
+                                    className="px-3 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-100 rounded-md border border-gray-300 transition-colors"
                                 >
-                                    <X className="w-4 h-4" />
                                     Batal
                                 </button>
                                 <button 
                                     type="submit"
                                     disabled={isCreating || isUpdating}
-                                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 rounded-md font-bold text-sm text-white shadow-lg shadow-indigo-600/20 hover:bg-indigo-700 transition-all"
+                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 rounded-md font-semibold text-xs text-white hover:bg-blue-700 transition-colors disabled:opacity-50"
                                 >
-                                    {isCreating || isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                                    {isCreating || isUpdating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
                                     Simpan Jenis
                                 </button>
                             </div>

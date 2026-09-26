@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import DataTable from '../../components/DataTable';
 import { useGetActivityLogsQuery } from '../../store/securityApi';
-import { History, User, Box, Activity as ActivityIcon, Clock } from 'lucide-react';
+import { History, User, Activity as ActivityIcon } from 'lucide-react';
 
 const AuditTrailPage = () => {
     const [page, setPage] = useState(1);
@@ -13,10 +13,10 @@ const AuditTrailPage = () => {
             accessorKey: 'created_at',
             cell: ({ row }) => (
                 <div className="flex flex-col">
-                    <span className="text-xs font-bold text-slate-700">
+                    <span className="text-xs font-semibold text-gray-800">
                         {new Date(row.original.created_at).toLocaleString('id-ID')}
                     </span>
-                    <span className="text-[10px] text-slate-400">
+                    <span className="text-[10px] text-gray-400">
                         {new Date(row.original.created_at).toLocaleDateString('id-ID', { weekday: 'long' })}
                     </span>
                 </div>
@@ -27,12 +27,12 @@ const AuditTrailPage = () => {
             accessorKey: 'causer.name',
             cell: ({ row }) => (
                 <div className="flex items-center gap-2">
-                    <div className="p-1.5 bg-slate-100 rounded-md">
-                        <User size={14} className="text-slate-500" />
+                    <div className="w-7 h-7 rounded bg-gray-100 flex items-center justify-center text-gray-600 font-bold text-xs shrink-0">
+                        {row.original.causer?.name?.[0] || 'S'}
                     </div>
                     <div className="flex flex-col">
-                        <span className="text-xs font-bold text-slate-700">{row.original.causer?.name || 'System'}</span>
-                        <span className="text-[10px] text-slate-400 uppercase">{row.original.causer?.email || '-'}</span>
+                        <span className="text-xs font-semibold text-gray-800">{row.original.causer?.name || 'System'}</span>
+                        <span className="text-[10px] text-gray-400">{row.original.causer?.email || '-'}</span>
                     </div>
                 </div>
             )
@@ -41,7 +41,7 @@ const AuditTrailPage = () => {
             header: 'MODUL',
             accessorKey: 'log_name',
             cell: ({ row }) => (
-                <span className="px-2 py-0.5 bg-slate-100 text-slate-600 rounded text-[10px] font-black uppercase tracking-widest border border-slate-200">
+                <span className="px-2 py-0.5 bg-gray-100 text-gray-700 rounded text-[10px] font-semibold uppercase border border-gray-200">
                     {row.original.log_name.replace('_', ' ')}
                 </span>
             )
@@ -51,12 +51,12 @@ const AuditTrailPage = () => {
             accessorKey: 'description',
             cell: ({ row }) => {
                 const colors = {
-                    created: 'text-emerald-600',
-                    updated: 'text-amber-600',
-                    deleted: 'text-rose-600'
+                    created: 'text-emerald-700 bg-emerald-50 border-emerald-200',
+                    updated: 'text-amber-700 bg-amber-50 border-amber-200',
+                    deleted: 'text-rose-700 bg-rose-50 border-rose-200'
                 };
                 return (
-                    <span className={`text-xs font-black uppercase tracking-tighter ${colors[row.original.description] || 'text-slate-600'}`}>
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-semibold uppercase border ${colors[row.original.description] || 'text-gray-700 bg-gray-50 border-gray-200'}`}>
                         {row.original.description}
                     </span>
                 );
@@ -67,17 +67,17 @@ const AuditTrailPage = () => {
             id: 'properties',
             cell: ({ row }) => {
                 const props = row.original.properties;
-                if (!props || (!props.attributes && !props.old)) return <span className="text-[10px] text-slate-300">-</span>;
+                if (!props || (!props.attributes && !props.old)) return <span className="text-xs text-gray-300">-</span>;
                 
                 return (
-                    <div className="max-w-xs overflow-hidden">
+                    <div className="max-w-xs overflow-hidden text-[11px]">
                         {props.attributes && (
-                            <div className="text-[10px] text-slate-600 truncate">
+                            <div className="text-gray-700 truncate">
                                 <strong>New:</strong> {JSON.stringify(props.attributes)}
                             </div>
                         )}
                         {props.old && (
-                            <div className="text-[10px] text-slate-400 truncate">
+                            <div className="text-gray-400 truncate">
                                 <strong>Old:</strong> {JSON.stringify(props.old)}
                             </div>
                         )}
@@ -88,40 +88,28 @@ const AuditTrailPage = () => {
     ];
 
     return (
-        <div className="p-6 space-y-6">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div className="space-y-1">
-                    <h1 className="text-2xl font-black text-slate-800 tracking-tight">Audit Trail</h1>
-                    <p className="text-xs text-slate-400 font-bold uppercase tracking-widest flex items-center gap-2">
-                        <History className="w-4 h-4 text-indigo-600" />
-                        Sistem Log & Jejak Audit
-                    </p>
+        <div className="bg-white border border-gray-200 rounded-md p-4 space-y-4 shadow-none">
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 pb-3">
+                <div>
+                    <h2 className="text-base font-bold text-gray-800">Audit Trail & Log Aktivitas</h2>
+                    <p className="text-xs text-gray-500">Rekam jejak setiap aksi, perubahan data, dan transaksi di dalam sistem</p>
+                </div>
+                <div className="flex items-center gap-2">
+                    <span className="px-3 py-1 bg-gray-50 border border-gray-200 rounded-md text-xs font-semibold text-gray-700">
+                        Total Log: {logsRes?.data?.total || 0}
+                    </span>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-white p-4 rounded-lg border border-slate-100 shadow-sm flex items-center gap-4">
-                    <div className="p-3 bg-indigo-50 text-indigo-600 rounded-md">
-                        <ActivityIcon size={20} />
-                    </div>
-                    <div>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Total Logs</p>
-                        <p className="text-xl font-black text-slate-800">{logsRes?.data?.total || 0}</p>
-                    </div>
-                </div>
-                {/* Additional stats could go here */}
-            </div>
-
-            <div className="bg-white rounded-lg border border-slate-100 shadow-sm overflow-hidden">
-                <DataTable 
-                    columns={columns}
-                    data={logsRes?.data?.data || []}
-                    isLoading={isLoading || isFetching}
-                    meta={logsRes?.data}
-                    onPageChange={setPage}
-                    placeholder="Cari log audit..."
-                />
-            </div>
+            <DataTable 
+                columns={columns}
+                data={logsRes?.data?.data || []}
+                isLoading={isLoading || isFetching}
+                meta={logsRes?.data}
+                onPageChange={setPage}
+                placeholder="Cari log audit..."
+            />
         </div>
     );
 };
