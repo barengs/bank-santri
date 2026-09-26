@@ -27,6 +27,7 @@ class RBACSeeder extends Seeder
                 ['name' => 'Entri Transaksi', 'icon' => 'PlusCircle', 'path' => '/entri-transaksi'],
                 ['name' => 'Rekening Bank', 'icon' => 'Users', 'path' => '/nasabah'],
                 ['name' => 'Top-Up / Setor Tunai', 'icon' => 'PlusCircle', 'path' => '/topup'],
+                ['name' => 'Tarik Tunai', 'icon' => 'ArrowUpCircle', 'path' => '/tarik-tunai'],
                 ['name' => 'Transfer Bank', 'icon' => 'Send', 'path' => '/transfer'],
                 ['name' => 'Mutasi Rekening', 'icon' => 'History', 'path' => '/mutasi'],
             ]],
@@ -37,7 +38,6 @@ class RBACSeeder extends Seeder
                 ['name' => 'Verifikasi Top-up', 'icon' => 'ShieldCheck', 'path' => '/verifikasi-topup'],
             ]],
 
-            ['name' => 'Kasir Koperasi', 'icon' => 'ShoppingCart', 'path' => '/koperasi', 'roles' => ['admin', 'adminbank', 'teller']],
             ['name' => 'Laporan', 'icon' => 'PieChart', 'path' => '/laporan', 'roles' => ['admin', 'adminbank', 'pimpinan']],
             
             ['name' => 'divider_master', 'is_divider' => true, 'roles' => ['admin', 'adminbank']],

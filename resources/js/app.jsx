@@ -18,8 +18,8 @@ import LoginPage from './pages/LoginPage';
 import PaketPembayaranPage from './pages/keuangan/PaketPembayaranPage';
 import ProsesPembayaranPage from './pages/keuangan/ProsesPembayaranPage';
 import VerifikasiTopupPage from './pages/keuangan/VerifikasiTopupPage';
-import KasirKoperasiPage from './pages/keuangan/KasirKoperasiPage';
 import TopUpCashPage from './pages/keuangan/TopUpCashPage';
+import TarikTunaiPage from './pages/keuangan/TarikTunaiPage';
 import TransferBankPage from './pages/keuangan/TransferBankPage';
 import TransactionDetailPage from './pages/keuangan/TransactionDetailPage';
 import EntriTransaksiPage from './pages/keuangan/EntriTransaksiPage';
@@ -66,8 +66,8 @@ const App = () => {
                             <Route path="paket-pembayaran" element={<PaketPembayaranPage />} />
                             <Route path="proses-pembayaran" element={<ProsesPembayaranPage />} />
                             <Route path="verifikasi-topup" element={<VerifikasiTopupPage />} />
-                            <Route path="koperasi" element={<KasirKoperasiPage />} />
                             <Route path="topup" element={<TopUpCashPage />} />
+                            <Route path="tarik-tunai" element={<TarikTunaiPage />} />
                             <Route path="transfer" element={<TransferBankPage />} />
                             <Route path="entri-transaksi" element={<EntriTransaksiPage />} />
                             <Route path="transaksi-pendaftaran" element={<ProsesPembayaranPage />} /> {/* Shortcut */}

@@ -36,8 +36,8 @@ return [
     ],
 
     'smpt' => [
-        'url' => env('SMPT_URL', 'http://localhost:8000'),
-        'internal_key' => env('INTERNAL_API_KEY', 'smpt-banksantri-internal-secret-2026'),
+        'url' => env('SMPT_URL', env('SMPT_API_URL', 'http://localhost:8000')),
+        'internal_key' => env('INTERNAL_API_KEY', env('SMPT_INTERNAL_KEY', env('BANK_SANTRI_INTERNAL_KEY', 'smpt-banksantri-internal-secret-2026'))),
     ],
 
 ];

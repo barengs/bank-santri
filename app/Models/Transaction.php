@@ -48,6 +48,11 @@ class Transaction extends Model
         return $this->belongsTo(TransactionType::class, 'transaction_type_id', 'id');
     }
 
+    public function type()
+    {
+        return $this->transactionType();
+    }
+
     public function ledgerEntries()
     {
         return $this->hasMany(TransactionLedger::class, 'transaction_id', 'id');

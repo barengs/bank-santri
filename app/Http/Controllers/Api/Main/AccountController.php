@@ -33,32 +33,23 @@ class AccountController extends Controller
      */
     protected function smptHttp(?Request $request = null)
     {
-        $http = Http::acceptJson()->timeout(10);
+        $http = Http::acceptJson()->timeout(15);
 
-        // Forward user bearer token if present
-        $token = $request?->bearerToken() ?? request()?->bearerToken();
+        $internalKey = config('services.smpt.internal_key')
+            ?? env('INTERNAL_API_KEY')
+            ?? env('SMPT_INTERNAL_KEY')
+            ?? env('BANK_SANTRI_INTERNAL_KEY', 'smpt-banksantri-internal-secret-2026');
 
-        // Fallback: generate system JWT token since bank-santri and SMPT share JWT_SECRET
-        if (!$token) {
-            try {
-                $user = Auth::user() ?? User::first();
-                if ($user) {
-                    $token = JWTAuth::fromUser($user);
-                }
-            } catch (\Throwable $e) {
-                Log::warning('Failed to generate system JWT for SMPT request: ' . $e->getMessage());
-            }
-        }
-
-        if ($token) {
-            $http = $http->withToken($token);
-        }
-
-        $internalKey = config('services.smpt.internal_key');
         if ($internalKey) {
             $http = $http->withHeaders([
                 'X-Internal-Key' => $internalKey,
             ]);
+        }
+
+        // Forward user bearer token if present
+        $token = $request?->bearerToken() ?? request()?->bearerToken();
+        if ($token) {
+            $http = $http->withToken($token);
         }
 
         return $http;

@@ -23,10 +23,12 @@ class ProductController extends Controller
             'product_code' => 'required|string|max:20|unique:products,product_code',
             'product_name' => 'required|string|max:100',
             'product_type' => 'required|in:Tabungan,Deposito,Pinjaman',
-            'interest_rate'=> 'nullable|numeric|min:0|max:100',
-            'admin_fee'    => 'nullable|numeric|min:0',
-            'opening_fee'  => 'required|numeric|min:0',
-            'is_active'    => 'boolean',
+            'interest_rate'          => 'nullable|numeric|min:0|max:100',
+            'admin_fee'              => 'nullable|numeric|min:0',
+            'opening_fee'            => 'required|numeric|min:0',
+            'minimum_balance'        => 'nullable|numeric|min:0',
+            'daily_withdrawal_limit' => 'nullable|numeric|min:0',
+            'is_active'              => 'boolean',
         ]);
 
         if ($validator->fails()) {
@@ -46,13 +48,15 @@ class ProductController extends Controller
     {
         $product = Product::findOrFail($id);
         $validator = Validator::make($request->all(), [
-            'product_code' => 'sometimes|string|max:20|unique:products,product_code,' . $id,
-            'product_name' => 'sometimes|string|max:100',
-            'product_type' => 'sometimes|in:Tabungan,Deposito,Pinjaman',
-            'interest_rate'=> 'nullable|numeric|min:0|max:100',
-            'admin_fee'    => 'nullable|numeric|min:0',
-            'opening_fee'  => 'nullable|numeric|min:0',
-            'is_active'    => 'sometimes|boolean',
+            'product_code'           => 'sometimes|string|max:20|unique:products,product_code,' . $id,
+            'product_name'           => 'sometimes|string|max:100',
+            'product_type'           => 'sometimes|in:Tabungan,Deposito,Pinjaman',
+            'interest_rate'          => 'nullable|numeric|min:0|max:100',
+            'admin_fee'              => 'nullable|numeric|min:0',
+            'opening_fee'            => 'nullable|numeric|min:0',
+            'minimum_balance'        => 'nullable|numeric|min:0',
+            'daily_withdrawal_limit' => 'nullable|numeric|min:0',
+            'is_active'              => 'sometimes|boolean',
         ]);
 
         if ($validator->fails()) {

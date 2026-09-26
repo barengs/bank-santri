@@ -102,11 +102,12 @@ Route::group(['prefix' => 'main', 'middleware' => ['autoprovision', 'auth:api']]
     Route::post('koperasi/merchants/{id}/rotate',   [\App\Http\Controllers\Api\Main\KoperasiMerchantController::class, 'rotateKey']);
 });
 
-// Koperasi — autentikasi via X-Koperasi-Key header (tidak butuh JWT)
+// Koperasi & Dapur Outlet API — autentikasi via X-Koperasi-Key header (tidak butuh JWT)
 Route::group(['prefix' => 'koperasi', 'middleware' => ['koperasi.key']], function () {
-    Route::get('check/{nis}',   [KoperasiController::class, 'check']);
-    Route::post('debit',        [KoperasiController::class, 'debit']);
-    Route::get('transactions',  [KoperasiController::class, 'transactions']);
+    Route::get('config',              [KoperasiController::class, 'config']);
+    Route::get('check/{identifier}',  [KoperasiController::class, 'check']);
+    Route::post('debit',              [KoperasiController::class, 'debit']);
+    Route::get('transactions',        [KoperasiController::class, 'transactions']);
 });
 
 // Midtrans Webhook (public — validasi via signature di dalam method)

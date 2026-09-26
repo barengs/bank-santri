@@ -142,10 +142,23 @@ class AccountingService
     {
         return DB::transaction(function () use ($transaction) {
             if ($transaction->source_account) {
-                $src = Account::where('account_number', $transaction->source_account)->lockForUpdate()->firstOrFail();
+                $src = Account::with('product')->where('account_number', $transaction->source_account)->lockForUpdate()->firstOrFail();
                 if ($src->status !== 'AKTIF') {
-                    throw new \Exception("Transaksi ditolak: Rekening pengirim ({$src->account_number}) tidak aktif (Status: {$src->status}).");
+                    throw new \Exception("Transaksi ditolak: Rekening ({$src->account_number}) tidak aktif (Status: {$src->status}).");
                 }
+
+                // Proteksi Overdraft (Saldo Minus) & Saldo Minimum Mengendap
+                $minBalance = (float) ($src->product->minimum_balance ?? 0);
+                if (($src->balance - $transaction->amount) < $minBalance) {
+                    $saldoFormat = 'Rp ' . number_format($src->balance, 0, ',', '.');
+                    $pesan = "Transaksi ditolak: Saldo rekening ({$src->account_number}) tidak mencukupi. Saldo saat ini: {$saldoFormat}";
+                    if ($minBalance > 0) {
+                        $minFormat = 'Rp ' . number_format($minBalance, 0, ',', '.');
+                        $pesan .= " (Saldo minimum mengendap: {$minFormat})";
+                    }
+                    throw new \Exception($pesan);
+                }
+
                 $before = $src->balance;
                 $src->balance -= $transaction->amount;
                 $src->save();

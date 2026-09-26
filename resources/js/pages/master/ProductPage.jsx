@@ -72,6 +72,20 @@ const ProductPage = () => {
             cell: ({ row }) => <span>{formatIDR(row.original.admin_fee)}/bln</span>
         },
         {
+            accessorKey: 'minimum_balance',
+            header: 'Saldo Mengendap',
+            cell: ({ row }) => <span>{formatIDR(row.original.minimum_balance || 0)}</span>
+        },
+        {
+            accessorKey: 'daily_withdrawal_limit',
+            header: 'Limit Tarik / Hari',
+            cell: ({ row }) => (
+                <span className="font-semibold text-slate-700">
+                    {row.original.daily_withdrawal_limit > 0 ? formatIDR(row.original.daily_withdrawal_limit) : <span className="text-gray-400 italic">Tanpa Batas</span>}
+                </span>
+            )
+        },
+        {
             accessorKey: 'is_active',
             header: 'Status',
             cell: ({ row }) => (
@@ -116,6 +130,8 @@ const ProductPage = () => {
             interest_rate: product.interest_rate,
             admin_fee: product.admin_fee,
             opening_fee: product.opening_fee,
+            minimum_balance: product.minimum_balance || 0,
+            daily_withdrawal_limit: product.daily_withdrawal_limit || 0,
             is_active: product.is_active
         });
         setIsModalOpen(true);
@@ -253,6 +269,31 @@ const ProductPage = () => {
                                         onChange={(e) => setFormData({...formData, admin_fee: e.target.value})}
                                         className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm focus:border-indigo-600"
                                     />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-1">
+                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Saldo Mengendap (IDR)</label>
+                                    <input 
+                                        type="number"
+                                        placeholder="0"
+                                        value={formData.minimum_balance}
+                                        onChange={(e) => setFormData({...formData, minimum_balance: e.target.value})}
+                                        className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm focus:border-indigo-600"
+                                    />
+                                    <span className="text-[9px] text-gray-400">Saldo minimum wajib di rekening</span>
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Batas Tarik / Hari (IDR)</label>
+                                    <input 
+                                        type="number"
+                                        placeholder="0 = Tanpa Batas"
+                                        value={formData.daily_withdrawal_limit}
+                                        onChange={(e) => setFormData({...formData, daily_withdrawal_limit: e.target.value})}
+                                        className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm focus:border-indigo-600"
+                                    />
+                                    <span className="text-[9px] text-gray-400">Limit penarikan per hari (0 = bebas)</span>
                                 </div>
                             </div>
 

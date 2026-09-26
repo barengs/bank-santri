@@ -8,6 +8,8 @@ class KoperasiTransaction extends Model
 {
     protected $fillable = [
         'account_number',
+        'user_id',
+        'cashier_name',
         'reference_number',
         'amount',
         'balance_before',
@@ -26,5 +28,10 @@ class KoperasiTransaction extends Model
     public function account()
     {
         return $this->belongsTo(Account::class, 'account_number', 'account_number');
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 }

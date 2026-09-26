@@ -15,6 +15,7 @@ class Account extends Model
 
     protected $fillable = [
         'account_number', // = NIS santri
+        'card_number',    // RFID / NFC / Barcode card UID
         'customer_id',    // student ID di smpt
         'customer_name',  // nama santri (denormalized untuk performa)
         'product_id',

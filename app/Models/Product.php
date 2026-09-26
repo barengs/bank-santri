@@ -22,7 +22,7 @@ class Product extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['product_name', 'product_code', 'is_active'])
+            ->logOnly(['product_name', 'product_code', 'is_active', 'minimum_balance', 'daily_withdrawal_limit'])
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs()
             ->useLogName('master_data');

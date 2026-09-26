@@ -21,14 +21,16 @@ import {
     ChevronDown,
     DollarSign,
     Store,
-    Lock
+    Lock,
+    ArrowUpCircle
 } from 'lucide-react';
 import { useGetSidebarQuery } from '../store/securityApi';
 
 const IconMap = {
     LayoutDashboard, Users, CreditCard, History, Settings, ChevronLeft,
     Banknote, PieChart, Package, Receipt, ShieldCheck, ShoppingCart,
-    PlusCircle, Send, ArrowRightLeft, ChevronDown, DollarSign, Store, Lock
+    PlusCircle, Send, ArrowRightLeft, ChevronDown, DollarSign, Store, Lock,
+    ArrowUpCircle
 };
 
 const Sidebar = ({ isOpen, setIsOpen }) => {

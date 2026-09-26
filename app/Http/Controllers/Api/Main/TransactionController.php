@@ -114,8 +114,10 @@ class TransactionController extends Controller
         ]);
 
         try {
+            $typeCode = TransactionType::where('code', 'TOPUP-SANTRI')->exists() ? 'TOPUP-SANTRI' : 'CASH-DEP';
+
             $transaction = app(AccountingService::class)->recordTransaction(
-                'CASH-DEP',
+                $typeCode,
                 $request->amount,
                 null,
                 $request->account_number,
@@ -123,10 +125,16 @@ class TransactionController extends Controller
                 'teller'
             );
 
+            $accountAfter = Account::with('product')->where('account_number', $request->account_number)->first();
+
             return response()->json([
                 'status'  => 'success',
                 'message' => 'Setoran tunai berhasil diproses.',
-                'data'    => $transaction,
+                'data'    => [
+                    'transaction'    => $transaction,
+                    'account'        => $accountAfter,
+                    'balance_after'  => $accountAfter?->balance,
+                ],
             ], 201);
         } catch (\Exception $e) {
             return response()->json(['status' => 'error', 'message' => $e->getMessage()], 422);
@@ -145,8 +153,40 @@ class TransactionController extends Controller
         ]);
 
         try {
+            $account = Account::with('product')->where('account_number', $request->account_number)->firstOrFail();
+
+            if ($account->status !== 'AKTIF') {
+                return response()->json([
+                    'status'  => 'error',
+                    'message' => "Rekening tidak aktif (Status: {$account->status})."
+                ], 422);
+            }
+
+            // Validasi Limit Harian (Santri vs Non-Santri/Instansi)
+            $dailyLimit = (float) ($account->daily_withdrawal_limit ?? $account->product->daily_withdrawal_limit ?? 0);
+
+            if ($dailyLimit > 0) {
+                $todayTotalWithdrawal = (float) Transaction::where('source_account', $account->account_number)
+                    ->where('status', 'success')
+                    ->whereDate('created_at', now()->toDateString())
+                    ->whereHas('type', function ($q) {
+                        $q->whereIn('code', ['WDR-SANTRI', 'CASH-WDR', 'COOP-BUY']);
+                    })
+                    ->sum('amount');
+
+                if (($todayTotalWithdrawal + $request->amount) > $dailyLimit) {
+                    $sisaKuota = max(0, $dailyLimit - $todayTotalWithdrawal);
+                    $pesan = "Penarikan melebihi batas limit harian. Maksimal: Rp " . number_format($dailyLimit, 0, ',', '.') . 
+                             " / hari. Sudah ditarik hari ini: Rp " . number_format($todayTotalWithdrawal, 0, ',', '.') . 
+                             ". Sisa kuota hari ini: Rp " . number_format($sisaKuota, 0, ',', '.');
+                    return response()->json(['status' => 'error', 'message' => $pesan], 422);
+                }
+            }
+
+            $typeCode = TransactionType::where('code', 'WDR-SANTRI')->exists() ? 'WDR-SANTRI' : 'CASH-WDR';
+
             $transaction = app(AccountingService::class)->recordTransaction(
-                'CASH-WDR',
+                $typeCode,
                 $request->amount,
                 $request->account_number,
                 null,
@@ -154,10 +194,29 @@ class TransactionController extends Controller
                 'teller'
             );
 
+            $accountAfter = Account::with('product')->where('account_number', $request->account_number)->first();
+            $todayTotalAfter = (float) Transaction::where('source_account', $account->account_number)
+                ->where('status', 'success')
+                ->whereDate('created_at', now()->toDateString())
+                ->whereHas('type', function ($q) {
+                    $q->whereIn('code', ['WDR-SANTRI', 'CASH-WDR', 'COOP-BUY']);
+                })
+                ->sum('amount');
+
+            $sisaKuotaAfter = $dailyLimit > 0 ? max(0, $dailyLimit - $todayTotalAfter) : null;
+
             return response()->json([
                 'status'  => 'success',
                 'message' => 'Penarikan tunai berhasil diproses.',
-                'data'    => $transaction,
+                'data'    => [
+                    'transaction'       => $transaction,
+                    'account'           => $accountAfter,
+                    'balance_before'    => $account->balance,
+                    'balance_after'     => $accountAfter?->balance,
+                    'daily_limit'       => $dailyLimit,
+                    'today_withdrawal'  => $todayTotalAfter,
+                    'remaining_quota'   => $sisaKuotaAfter,
+                ],
             ], 201);
         } catch (\Exception $e) {
             return response()->json(['status' => 'error', 'message' => $e->getMessage()], 422);
