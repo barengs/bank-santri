@@ -11,7 +11,7 @@ const MainLayout = () => {
     const routeMeta = getRouteMeta(location.pathname);
 
     return (
-        <div className="flex w-full min-h-screen bg-[#f4f6f9] overflow-x-hidden text-slate-800">
+        <div className="flex h-screen w-full bg-[#f4f6f9] overflow-hidden text-slate-800">
             {/* Sidebar Overlay (Mobile) */}
             {isSidebarOpen && (
                 <div 
@@ -25,7 +25,7 @@ const MainLayout = () => {
 
             {/* Main Content Area */}
             <div 
-                className={`flex-1 flex flex-col min-h-screen w-full min-w-0 transition-all duration-300 ${
+                className={`flex-1 flex flex-col h-screen w-full min-w-0 overflow-hidden transition-all duration-300 ${
                     isSidebarOpen ? 'pl-60' : 'pl-16'
                 }`}
             >
@@ -35,11 +35,11 @@ const MainLayout = () => {
                     onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} 
                 />
 
-                {/* Content Container */}
-                <main className="flex-1 mt-14 md:mt-16 p-4 md:p-5 overflow-y-auto">
+                {/* Content Container (Scrollable) */}
+                <main className="flex-1 overflow-y-auto p-4 md:p-5 custom-scrollbar min-h-0">
                     {/* Breadcrumbs */}
                     {location.pathname !== '/' && (
-                        <div className="flex items-center text-xs text-gray-500 gap-1.5 mb-3 flex-wrap">
+                        <div className="flex items-center text-xs text-gray-500 gap-1.5 mb-3 flex-wrap select-none">
                             <Link to="/" className="flex items-center gap-1 text-gray-500 hover:text-blue-600 transition-colors">
                                 <Home className="w-3.5 h-3.5 text-gray-400" />
                                 <span>Dashboard</span>
@@ -60,13 +60,13 @@ const MainLayout = () => {
                     )}
 
                     {/* Page Content */}
-                    <div className="w-full">
+                    <div className="w-full pb-6">
                         <Outlet />
                     </div>
                 </main>
 
                 {/* Footer matching SMPT style */}
-                <footer className="w-full py-2 px-6 bg-[#182234] text-white text-xs text-center border-t border-slate-800">
+                <footer className="w-full py-2 px-6 bg-[#182234] text-white text-xs text-center border-t border-slate-800 shrink-0 select-none z-10">
                     <p className="text-[11px] text-slate-300">
                         © 2026 All rights reserved. Made with <span className="text-rose-500">❤️</span> by PT. Unggul Mediatama Indonesia
                     </p>

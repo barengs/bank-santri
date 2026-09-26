@@ -19,6 +19,7 @@ class AccountingReportController extends Controller
         $perPage   = ($perPage <= 0) ? 20 : min($perPage, 500);
         $startDate = $request->get('start_date');
         $endDate   = $request->get('end_date');
+        $search    = $request->get('search');
 
         $query = TransactionLedger::with(['transaction', 'coa'])
             ->join('transactions', 'transaction_ledgers.transaction_id', '=', 'transactions.id')
@@ -30,6 +31,13 @@ class AccountingReportController extends Controller
         }
         if (!empty($endDate)) {
             $query->whereDate('transactions.created_at', '<=', $endDate);
+        }
+        if (!empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('transaction_ledgers.description', 'like', "%{$search}%")
+                  ->orWhere('transaction_ledgers.coa_code', 'like', "%{$search}%")
+                  ->orWhere('transactions.reference_number', 'like', "%{$search}%");
+            });
         }
 
         return response()->json([

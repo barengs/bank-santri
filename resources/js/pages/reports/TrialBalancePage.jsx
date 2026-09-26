@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useGetTrialBalanceQuery } from '../../store/reportApi';
+import DataTable from '../../components/DataTable';
 import { 
     Scale, 
     Calendar, 
@@ -24,6 +25,63 @@ const TrialBalancePage = () => {
     const data = tbRes?.data || [];
     const meta = tbRes?.meta || { total_debit: 0, total_credit: 0 };
     const isBalanced = Math.abs(meta.total_debit - meta.total_credit) < 1;
+
+    const columns = useMemo(() => [
+        {
+            header: 'KODE AKUN',
+            accessorKey: 'coa_code',
+            cell: ({ row }) => (
+                <span className="font-mono text-blue-600 font-semibold text-xs">
+                    {row.original.coa_code}
+                </span>
+            )
+        },
+        {
+            header: 'NAMA AKUN',
+            accessorKey: 'coa_name',
+            cell: ({ row }) => (
+                <span className="font-medium text-gray-800 text-xs">
+                    {row.original.coa_name}
+                </span>
+            )
+        },
+        {
+            header: 'TIPE',
+            accessorKey: 'account_type',
+            cell: ({ row }) => (
+                <span className="text-[10px] uppercase font-bold text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
+                    {row.original.account_type || '-'}
+                </span>
+            )
+        },
+        {
+            header: 'DEBIT',
+            accessorKey: 'debit',
+            cell: ({ row }) => (
+                <span className={`text-xs font-semibold ${row.original.debit > 0 ? 'text-gray-900' : 'text-gray-300'}`}>
+                    {row.original.debit > 0 ? formatIDR(row.original.debit) : '-'}
+                </span>
+            )
+        },
+        {
+            header: 'KREDIT',
+            accessorKey: 'credit',
+            cell: ({ row }) => (
+                <span className={`text-xs font-semibold ${row.original.credit > 0 ? 'text-gray-900' : 'text-gray-300'}`}>
+                    {row.original.credit > 0 ? formatIDR(row.original.credit) : '-'}
+                </span>
+            )
+        },
+        {
+            header: 'SALDO AKHIR',
+            accessorKey: 'balance',
+            cell: ({ row }) => (
+                <span className="text-xs font-bold text-gray-900">
+                    {formatIDR(row.original.balance)}
+                </span>
+            )
+        }
+    ], []);
 
     return (
         <div className="bg-white border border-gray-200 rounded-md p-4 space-y-4 shadow-none">
@@ -71,49 +129,21 @@ const TrialBalancePage = () => {
                 </div>
             </div>
 
-            {/* Trial Balance Table */}
-            <div className="border border-gray-200 rounded-md overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                        <thead className="bg-slate-50 border-b border-gray-200">
-                            <tr className="text-xs font-semibold text-gray-700">
-                                <th className="px-3.5 py-2.5">Kode Akun</th>
-                                <th className="px-3.5 py-2.5">Nama Akun</th>
-                                <th className="px-3.5 py-2.5 text-right">Debit</th>
-                                <th className="px-3.5 py-2.5 text-right">Kredit</th>
-                                <th className="px-3.5 py-2.5 text-right">Saldo Akhir</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
-                            {isLoading ? (
-                                <tr>
-                                    <td colSpan="5" className="px-3.5 py-10 text-center text-gray-400 text-xs">Memuat data neraca saldo...</td>
-                                </tr>
-                            ) : data.length === 0 ? (
-                                <tr>
-                                    <td colSpan="5" className="px-3.5 py-10 text-center text-gray-400 text-xs">Belum ada data transaksi</td>
-                                </tr>
-                            ) : (
-                                data.map((row) => (
-                                    <tr key={row.coa_code} className="hover:bg-slate-50 transition-colors text-xs text-gray-800">
-                                        <td className="px-3.5 py-2 font-mono text-blue-600 font-semibold">{row.coa_code}</td>
-                                        <td className="px-3.5 py-2 font-medium">{row.coa_name}</td>
-                                        <td className="px-3.5 py-2 text-right">{row.debit > 0 ? formatIDR(row.debit) : '-'}</td>
-                                        <td className="px-3.5 py-2 text-right">{row.credit > 0 ? formatIDR(row.credit) : '-'}</td>
-                                        <td className="px-3.5 py-2 font-bold text-gray-900 text-right">{formatIDR(row.balance)}</td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                        <tfoot className="bg-slate-50 border-t border-gray-200 font-bold text-xs text-gray-900">
-                            <tr>
-                                <td colSpan="2" className="px-3.5 py-2.5 uppercase text-[11px] text-gray-600">Total Keseluruhan</td>
-                                <td className="px-3.5 py-2.5 text-right">{formatIDR(meta.total_debit)}</td>
-                                <td className="px-3.5 py-2.5 text-right">{formatIDR(meta.total_credit)}</td>
-                                <td className="px-3.5 py-2.5"></td>
-                            </tr>
-                        </tfoot>
-                    </table>
+            {/* Trial Balance Table with Pagination & Search */}
+            <DataTable 
+                columns={columns}
+                data={data}
+                isLoading={isLoading}
+                placeholder="Cari kode akun atau nama akun..."
+                pageSizeOptions={[10, 20, 50, 100]}
+            />
+
+            {/* Total Footer Summary */}
+            <div className="p-3 bg-slate-50 border border-gray-200 rounded-md flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs font-bold text-gray-800">
+                <span className="uppercase text-[11px] text-gray-500">Akumulasi Total Neraca Saldo:</span>
+                <div className="flex items-center gap-4">
+                    <span>Debit: <span className="text-blue-600">{formatIDR(meta.total_debit)}</span></span>
+                    <span>Kredit: <span className="text-blue-600">{formatIDR(meta.total_credit)}</span></span>
                 </div>
             </div>
         </div>

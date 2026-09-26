@@ -5,6 +5,8 @@ import { FileText, Calendar, Download, Printer } from 'lucide-react';
 
 const JournalPage = () => {
     const [page, setPage] = useState(1);
+    const [perPage, setPerPage] = useState(20);
+    const [search, setSearch] = useState('');
     const [dateRange, setDateRange] = useState({
         start_date: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
         end_date: new Date().toISOString().split('T')[0],
@@ -12,6 +14,8 @@ const JournalPage = () => {
 
     const { data: journalRes, isLoading, isFetching } = useGetJournalQuery({
         page,
+        per_page: perPage,
+        ...(search ? { search } : {}),
         ...(dateRange.start_date ? { start_date: dateRange.start_date } : {}),
         ...(dateRange.end_date ? { end_date: dateRange.end_date } : {})
     });
@@ -19,16 +23,19 @@ const JournalPage = () => {
     const setFilterToday = () => {
         const today = new Date().toISOString().split('T')[0];
         setDateRange({ start_date: today, end_date: today });
+        setPage(1);
     };
 
     const setFilterThisMonth = () => {
         const firstDay = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
         const today = new Date().toISOString().split('T')[0];
         setDateRange({ start_date: firstDay, end_date: today });
+        setPage(1);
     };
 
     const setFilterAll = () => {
         setDateRange({ start_date: '', end_date: '' });
+        setPage(1);
     };
 
     const formatIDR = (amount) => {
@@ -169,7 +176,16 @@ const JournalPage = () => {
                 isLoading={isLoading || isFetching}
                 meta={journalRes?.data}
                 onPageChange={setPage}
-                placeholder="Cari transaksi..."
+                perPage={perPage}
+                onPerPageChange={(newPerPage) => {
+                    setPerPage(newPerPage);
+                    setPage(1);
+                }}
+                onSearchChange={(q) => {
+                    setSearch(q);
+                    setPage(1);
+                }}
+                placeholder="Cari transaksi, ref, atau akun..."
             />
         </div>
     );

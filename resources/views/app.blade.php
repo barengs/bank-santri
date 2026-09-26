@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-screen bg-gray-50">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full bg-[#f4f6f9]">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -34,7 +34,7 @@
     @viteReactRefresh
     @vite(['resources/css/app.css', 'resources/js/app.jsx'])
 </head>
-<body class="h-screen font-sans antialiased text-gray-900 overflow-hidden">
+<body class="h-full font-sans antialiased text-slate-800 bg-[#f4f6f9] overflow-hidden">
     <div id="app" class="h-full"></div>
 </body>
 </html>

@@ -83,9 +83,7 @@ const Topbar = ({ isSidebarOpen, onToggleSidebar }) => {
 
     return (
         <header 
-            className={`fixed top-0 right-0 z-30 flex items-center justify-between h-14 md:h-16 bg-white border-b border-gray-200 transition-all duration-300 ${
-                isSidebarOpen ? 'left-60' : 'left-16'
-            }`}
+            className="w-full flex items-center justify-between h-14 md:h-16 bg-white border-b border-gray-200 shrink-0 z-20 select-none"
         >
             {/* Left Section: Sidebar Toggle & Page Title */}
             <div className="flex items-center gap-3 px-4 md:px-6">
