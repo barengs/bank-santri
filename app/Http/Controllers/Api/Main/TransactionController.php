@@ -545,5 +545,14 @@ class TransactionController extends Controller
 
         return $pdf->download('bukti_transaksi_' . $transaction->reference_number . '.pdf');
     }
+
+    /**
+     * Export Daftar Transaksi ke Excel.
+     * Filter: account_number, status, channel, date_from, date_to, search
+     */
+    public function exportExcel(Request $request)
+    {
+        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\TransactionExport($request), 'laporan_transaksi_' . date('Y-m-d_H-i-s') . '.xlsx');
+    }
 }
 

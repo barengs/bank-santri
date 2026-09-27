@@ -81,6 +81,7 @@ Route::group(['prefix' => 'main', 'middleware' => ['autoprovision', 'auth:api']]
     Route::apiResource('account', AccountController::class);
 
     // Transaksi
+    Route::get('transaction/export',           [TransactionController::class, 'exportExcel']);
     Route::get('transaction/print',            [TransactionController::class, 'printPdf']);
     Route::get('transaction/{id}/print',       [TransactionController::class, 'printDetailPdf']);
     Route::post('transaction/cash-deposit',    [TransactionController::class, 'cashDeposit']);
