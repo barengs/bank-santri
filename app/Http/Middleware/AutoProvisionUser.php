@@ -20,6 +20,11 @@ class AutoProvisionUser
      */
     public function handle(Request $request, Closure $next)
     {
+        // Support token passed via query parameter (e.g., for direct browser PDF/Excel downloads)
+        if ($queryToken = $request->query('token')) {
+            $request->headers->set('Authorization', 'Bearer ' . $queryToken);
+        }
+
         try {
             // Check if already authenticated by ID
             if ($user = auth('api')->user()) {

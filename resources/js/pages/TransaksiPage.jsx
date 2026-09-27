@@ -130,7 +130,11 @@ const TransaksiPage = () => {
                         Detail
                     </button>
                     <button 
-                        onClick={() => window.open(`/api/main/transaction/${row.original.id}/print`, '_blank')}
+                        onClick={() => {
+                            const token = localStorage.getItem('token');
+                            const url = `/api/main/transaction/${row.original.id}/print${token ? `?token=${token}` : ''}`;
+                            window.open(url, '_blank');
+                        }}
                         className="px-2 py-0.5 border border-gray-300 text-gray-700 hover:bg-gray-100 rounded text-xs font-medium inline-flex items-center gap-1 transition-colors"
                         title="Cetak Struk Transaksi PDF"
                     >
@@ -157,6 +161,8 @@ const TransaksiPage = () => {
                             if (search) params.append('search', search);
                             if (status) params.append('status', status);
                             if (channel) params.append('channel', channel);
+                            const token = localStorage.getItem('token');
+                            if (token) params.append('token', token);
                             window.open(`/api/main/transaction/export?${params.toString()}`, '_blank');
                         }}
                         className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-md text-xs font-medium transition-colors"
@@ -171,6 +177,8 @@ const TransaksiPage = () => {
                             if (search) params.append('search', search);
                             if (status) params.append('status', status);
                             if (channel) params.append('channel', channel);
+                            const token = localStorage.getItem('token');
+                            if (token) params.append('token', token);
                             window.open(`/api/main/transaction/print?${params.toString()}`, '_blank');
                         }}
                         className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-md text-xs font-medium transition-colors"
