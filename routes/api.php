@@ -78,6 +78,7 @@ Route::group(['prefix' => 'main', 'middleware' => ['autoprovision', 'auth:api']]
     // Rekening santri & Instansi
     Route::get('account/smpt-search', [AccountController::class, 'smptSearch']);
     Route::post('account/instansi', [AccountController::class, 'storeInstansi']);
+    Route::get('account/{accountNumber}/rekening-koran/print', [AccountController::class, 'printRekeningKoran']);
     Route::apiResource('account', AccountController::class);
 
     // Transaksi

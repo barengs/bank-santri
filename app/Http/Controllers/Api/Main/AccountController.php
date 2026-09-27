@@ -441,4 +441,58 @@ class AccountController extends Controller
             'data' => $account
         ]);
     }
+
+    /**
+     * Cetak Rekening Koran (Mutasi) format PDF
+     */
+    public function printRekeningKoran(Request $request, string $accountNumber)
+    {
+        $account = Account::with('product')->where('account_number', $accountNumber)->firstOrFail();
+        
+        $startDate = $request->get('start_date');
+        $endDate   = $request->get('end_date');
+        $month     = $request->get('month');
+        $year      = $request->get('year');
+
+        $query = \App\Models\AccountMovement::where('account_number', $accountNumber)
+            ->with('transaction');
+
+        if ($startDate && $endDate) {
+            $query->whereDate('created_at', '>=', $startDate)
+                  ->whereDate('created_at', '<=', $endDate);
+        } elseif ($month && $year) {
+            $query->whereMonth('created_at', $month)
+                  ->whereYear('created_at', $year);
+        } else {
+            // Default 1 bulan terakhir jika tidak ada filter
+            $startDate = now()->subMonth()->format('Y-m-d');
+            $endDate = now()->format('Y-m-d');
+            $query->whereDate('created_at', '>=', $startDate)
+                  ->whereDate('created_at', '<=', $endDate);
+        }
+
+        $movements = $query->orderBy('created_at', 'asc')->get();
+
+        // Hitung Saldo Awal (sebelum record mutasi pertama pada periode yang dipilih)
+        $firstMovementDate = $startDate ?? ($month ? "$year-$month-01" : now()->subMonth()->format('Y-m-d'));
+        
+        // Asumsi AccountMovement menyimpan balance_after yang akurat,
+        // saldo awal = balance_after transaksi sebelumnya
+        $previousMovement = \App\Models\AccountMovement::where('account_number', $accountNumber)
+            ->whereDate('created_at', '<', $firstMovementDate)
+            ->orderBy('created_at', 'desc')
+            ->first();
+
+        $openingBalance = $previousMovement ? $previousMovement->balance_after : 0;
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.rekening-koran', [
+            'account'        => $account,
+            'movements'      => $movements,
+            'openingBalance' => $openingBalance,
+            'filters'        => $request->only(['start_date', 'end_date', 'month', 'year']),
+            'generated_at'   => now()->format('d M Y H:i:s'),
+        ])->setPaper('a4', 'portrait');
+
+        return $pdf->download('Rekening_Koran_' . $accountNumber . '_' . now()->format('YmdHis') . '.pdf');
+    }
 }

@@ -14,11 +14,13 @@ import {
 import { useLazyGetAccountDetailQuery } from '../store/accountApi';
 import { useGetAccountTransactionsQuery } from '../store/transactionApi';
 import DataTable from '../components/DataTable';
+import RekeningKoranModal from '../components/RekeningKoranModal';
 
 const MutasiPage = () => {
     const [accountNumber, setAccountNumber] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
     const [page, setPage] = useState(1);
+    const [isKoranOpen, setIsKoranOpen] = useState(false);
 
     // API Hooks
     const [fetchAccount, { data: accountRes, isFetching: isFetchingAccount }] = useLazyGetAccountDetailQuery();
@@ -105,17 +107,23 @@ const MutasiPage = () => {
                     </div>
                     {account && (
                         <div className="flex items-center gap-2">
-                            <button className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-300 rounded-md text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors">
-                                <Download className="w-3.5 h-3.5" />
-                                Ekspor PDF
-                            </button>
-                            <button className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-md text-xs font-semibold hover:bg-blue-700 transition-colors">
+                            <button 
+                                onClick={() => setIsKoranOpen(true)}
+                                className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-md text-xs font-semibold hover:bg-blue-700 transition-colors shadow-sm"
+                            >
                                 <Printer className="w-3.5 h-3.5" />
-                                Cetak
+                                Cetak Rekening Koran
                             </button>
                         </div>
                     )}
                 </div>
+
+                <RekeningKoranModal 
+                    isOpen={isKoranOpen}
+                    onClose={() => setIsKoranOpen(false)}
+                    accountNumber={accountNumber}
+                    customerName={account?.customer_name}
+                />
 
                 <form onSubmit={handleSearch} className="flex gap-2">
                     <div className="relative flex-1">

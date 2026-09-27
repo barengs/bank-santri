@@ -1,16 +1,18 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
     ArrowLeft, CreditCard, User, ShieldCheck, 
     History, TrendingUp, TrendingDown, Clock,
-    Loader2, AlertCircle
+    Loader2, AlertCircle, Printer
 } from 'lucide-react';
 import { useGetTransactionsQuery } from '../store/transactionApi';
 import { useGetAccountsQuery } from '../store/accountApi';
+import RekeningKoranModal from '../components/RekeningKoranModal';
 
 const NasabahDetailPage = () => {
     const { accountNumber } = useParams();
     const navigate = useNavigate();
+    const [isKoranOpen, setIsKoranOpen] = useState(false);
 
     // Fetch Account Info
     const { data: accountsRes, isLoading: isLoadingAccount } = useGetAccountsQuery({ search: accountNumber });
@@ -72,6 +74,13 @@ const NasabahDetailPage = () => {
                 </div>
                 <div className="flex items-center gap-2">
                     <button 
+                        onClick={() => setIsKoranOpen(true)}
+                        className="px-3 py-1.5 border border-emerald-400 text-emerald-600 rounded-md text-xs font-medium hover:bg-emerald-50 transition-colors inline-flex items-center gap-1.5"
+                    >
+                        <Printer className="w-3.5 h-3.5" />
+                        Cetak Rekening Koran
+                    </button>
+                    <button 
                         onClick={() => navigate('/mutasi')}
                         className="px-3 py-1.5 border border-blue-400 text-blue-600 rounded-md text-xs font-medium hover:bg-blue-50 transition-colors"
                     >
@@ -79,6 +88,13 @@ const NasabahDetailPage = () => {
                     </button>
                 </div>
             </div>
+
+            <RekeningKoranModal 
+                isOpen={isKoranOpen} 
+                onClose={() => setIsKoranOpen(false)} 
+                accountNumber={accountNumber}
+                customerName={account.customer_name}
+            />
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 {/* Left Column: Account Summary */}

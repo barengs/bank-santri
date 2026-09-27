@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Plus, Filter, Download, MoreHorizontal, AlertCircle, Edit2, Trash2, Eye, User, ShieldCheck, UserPlus, Loader2, CreditCard, Check, X } from 'lucide-react';
+import { Search, Plus, Filter, Download, MoreHorizontal, AlertCircle, Edit2, Trash2, Eye, User, ShieldCheck, UserPlus, Loader2, CreditCard, Check, X, Printer } from 'lucide-react';
 import { 
     useGetAccountsQuery, 
     useCreateAccountMutation, 
@@ -10,6 +10,7 @@ import {
 } from '../store/accountApi';
 import { useGetProductsQuery } from '../store/productApi';
 import DataTable from '../components/DataTable';
+import RekeningKoranModal from '../components/RekeningKoranModal';
 import { toast } from 'react-toastify';
 
 const NasabahPage = () => {
@@ -33,6 +34,9 @@ const NasabahPage = () => {
     // Close Account State
     const [isCloseModalOpen, setIsCloseModalOpen] = useState(false);
     const [closingAccount, setClosingAccount] = useState(null);
+
+    // Rekening Koran State
+    const [koranAccount, setKoranAccount] = useState(null);
 
     // API Hooks
     const { data: accountsRes, isLoading, isFetching } = useGetAccountsQuery({
@@ -150,6 +154,17 @@ const NasabahPage = () => {
                     >
                         <CreditCard className="w-3 h-3 text-gray-500" />
                         Kartu
+                    </button>
+                    <button 
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setKoranAccount(row.original);
+                        }}
+                        className="px-2 py-0.5 border border-emerald-300 text-emerald-600 hover:bg-emerald-50 rounded text-xs font-medium inline-flex items-center gap-1 transition-colors"
+                        title="Cetak Rekening Koran"
+                    >
+                        <Printer className="w-3 h-3" />
+                        Koran
                     </button>
                     <button 
                         onClick={(e) => {
@@ -637,6 +652,14 @@ const NasabahPage = () => {
                     </div>
                 </div>
             )}
+
+            {/* Rekening Koran Modal */}
+            <RekeningKoranModal 
+                isOpen={Boolean(koranAccount)}
+                onClose={() => setKoranAccount(null)}
+                accountNumber={koranAccount?.account_number}
+                customerName={koranAccount?.customer_name}
+            />
         </div>
     );
 };
