@@ -9,6 +9,13 @@ export const reportApi = baseApi.injectEndpoints({
             }),
             providesTags: ['Journal'],
         }),
+        getGeneralLedger: builder.query({
+            query: (params) => ({
+                url: '/reports/general-ledger',
+                params,
+            }),
+            providesTags: ['GeneralLedger'],
+        }),
         getTrialBalance: builder.query({
             query: (params) => ({
                 url: '/reports/trial-balance',
@@ -30,12 +37,18 @@ export const reportApi = baseApi.injectEndpoints({
             }),
             providesTags: ['BalanceSheet'],
         }),
+        getReconciliation: builder.query({
+            query: () => '/reports/reconciliation',
+            providesTags: ['Reconciliation'],
+        }),
     }),
 });
 
 export const {
     useGetJournalQuery,
+    useGetGeneralLedgerQuery,
     useGetTrialBalanceQuery,
     useGetProfitLossQuery,
     useGetBalanceSheetQuery,
+    useGetReconciliationQuery,
 } = reportApi;

@@ -244,4 +244,154 @@ class AccountingReportController extends Controller
             ]
         ]);
     }
+
+    /**
+     * Buku Besar (General Ledger per Account)
+     */
+    public function generalLedger(Request $request)
+    {
+        // Default to Kas Utama if no COA code is provided
+        $coaCode = $request->get('coa_code', '1101');
+        $startDate = $request->get('start_date', now()->startOfMonth()->format('Y-m-d'));
+        $endDate = $request->get('end_date', now()->format('Y-m-d'));
+
+        $coa = ChartOfAccount::where('coa_code', $coaCode)->first();
+
+        if (!$coa) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Akun COA tidak ditemukan'
+            ], 404);
+        }
+
+        $isDebitNormal = in_array(strtolower($coa->account_type), ['asset', 'expense']);
+
+        // Calculate Opening Balance (Saldo Awal) before start_date
+        $openingQuery = DB::table('transaction_ledgers')
+            ->join('transactions', 'transaction_ledgers.transaction_id', '=', 'transactions.id')
+            ->where('transaction_ledgers.coa_code', $coaCode)
+            ->whereDate('transactions.created_at', '<', $startDate)
+            ->select(
+                DB::raw('SUM(transaction_ledgers.debit) as total_debit'),
+                DB::raw('SUM(transaction_ledgers.credit) as total_credit')
+            )->first();
+
+        $openingDebit = (float) ($openingQuery->total_debit ?? 0);
+        $openingCredit = (float) ($openingQuery->total_credit ?? 0);
+        
+        $openingBalance = $isDebitNormal 
+            ? ($openingDebit - $openingCredit)
+            : ($openingCredit - $openingDebit);
+
+        // Get Transactions within the period
+        $entriesQuery = DB::table('transaction_ledgers')
+            ->join('transactions', 'transaction_ledgers.transaction_id', '=', 'transactions.id')
+            ->where('transaction_ledgers.coa_code', $coaCode)
+            ->whereBetween('transactions.created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
+            ->select(
+                'transactions.created_at as date',
+                'transactions.reference_number',
+                'transaction_ledgers.description',
+                'transaction_ledgers.debit',
+                'transaction_ledgers.credit'
+            )
+            ->orderBy('transactions.created_at', 'asc')
+            ->orderBy('transaction_ledgers.id', 'asc')
+            ->get();
+
+        $runningBalance = $openingBalance;
+        $totalDebitPeriod = 0;
+        $totalCreditPeriod = 0;
+
+        $entries = $entriesQuery->map(function ($row) use (&$runningBalance, &$totalDebitPeriod, &$totalCreditPeriod, $isDebitNormal) {
+            $debit = (float) $row->debit;
+            $credit = (float) $row->credit;
+            
+            $totalDebitPeriod += $debit;
+            $totalCreditPeriod += $credit;
+
+            if ($isDebitNormal) {
+                $runningBalance += ($debit - $credit);
+            } else {
+                $runningBalance += ($credit - $debit);
+            }
+
+            return [
+                'date' => $row->date,
+                'reference_number' => $row->reference_number,
+                'description' => $row->description,
+                'debit' => $debit,
+                'credit' => $credit,
+                'balance' => $runningBalance
+            ];
+        });
+
+        return response()->json([
+            'status' => 'success',
+            'data' => [
+                'account' => [
+                    'coa_code' => $coa->coa_code,
+                    'account_name' => $coa->account_name,
+                    'account_type' => $coa->account_type,
+                    'normal_balance' => $isDebitNormal ? 'Debit' : 'Kredit'
+                ],
+                'summary' => [
+                    'opening_balance' => $openingBalance,
+                    'total_debit_period' => $totalDebitPeriod,
+                    'total_credit_period' => $totalCreditPeriod,
+                    'closing_balance' => $runningBalance
+                ],
+                'entries' => $entries
+            ]
+        ]);
+    }
+
+    /**
+     * Rekonsiliasi Tabungan Santri (Sub-ledger vs GL 2100)
+     */
+    public function savingsReconciliation(Request $request)
+    {
+        // 1. Get Sub-ledger (Total Saldo Nasabah di tabel accounts)
+        $subLedgerTotal = (float) \App\Models\Account::sum('balance');
+        $totalAccounts = \App\Models\Account::count();
+
+        // 2. Get General Ledger for Tabungan Santri (COA 2100)
+        $glQuery = DB::table('transaction_ledgers')
+            ->where('coa_code', '2100')
+            ->select(
+                DB::raw('SUM(credit) as total_credit'),
+                DB::raw('SUM(debit) as total_debit')
+            )->first();
+        
+        $glCredit = (float) ($glQuery->total_credit ?? 0);
+        $glDebit = (float) ($glQuery->total_debit ?? 0);
+        
+        // Tabungan Santri is Liability, normal balance is Credit
+        $glTotal = $glCredit - $glDebit;
+
+        $difference = round($subLedgerTotal - $glTotal, 2);
+
+        return response()->json([
+            'status' => 'success',
+            'data' => [
+                'sub_ledger' => [
+                    'total_accounts' => $totalAccounts,
+                    'total_balance' => $subLedgerTotal,
+                    'last_updated' => now()->toDateTimeString()
+                ],
+                'general_ledger' => [
+                    'coa_code' => '2100',
+                    'coa_name' => 'Tabungan Santri',
+                    'total_debit' => $glDebit,
+                    'total_credit' => $glCredit,
+                    'total_balance' => $glTotal
+                ],
+                'reconciliation' => [
+                    'difference' => $difference,
+                    'is_balanced' => abs($difference) < 0.01,
+                    'status_message' => abs($difference) < 0.01 ? 'SINKRON' : 'TIDAK SINKRON (TERDAPAT SELISIH)'
+                ]
+            ]
+        ]);
+    }
 }

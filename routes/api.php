@@ -146,8 +146,10 @@ Route::group(['middleware' => ['auth:api']], function () {
     // Accounting Reports
     Route::prefix('reports')->middleware(['auth:api'])->group(function () {
         Route::get('journal', [\App\Http\Controllers\Api\Reports\AccountingReportController::class, 'journal']);
+        Route::get('general-ledger', [\App\Http\Controllers\Api\Reports\AccountingReportController::class, 'generalLedger']);
         Route::get('trial-balance', [\App\Http\Controllers\Api\Reports\AccountingReportController::class, 'trialBalance']);
         Route::get('profit-loss', [\App\Http\Controllers\Api\Reports\AccountingReportController::class, 'profitLoss']);
         Route::get('balance-sheet', [\App\Http\Controllers\Api\Reports\AccountingReportController::class, 'balanceSheet']);
+        Route::get('reconciliation', [\App\Http\Controllers\Api\Reports\AccountingReportController::class, 'savingsReconciliation']);
     });
 });

@@ -27,8 +27,8 @@ const LaporanPage = () => {
                 {
                     name: 'Buku Besar',
                     icon: <BookOpen className="w-4 h-4 text-blue-600" />,
-                    path: '/laporan/jurnal',
-                    detail: 'Rekap mutasi dan saldo per akun COA.'
+                    path: '/laporan/buku-besar',
+                    detail: 'Rekap mutasi dan saldo berjalan per akun COA.'
                 }
             ]
         },
@@ -71,6 +71,12 @@ const LaporanPage = () => {
                     icon: <Wallet className="w-4 h-4 text-purple-600" />,
                     path: '/nasabah',
                     detail: 'Rekap tabungan santri, status rekening, dan cetak kartu.'
+                },
+                {
+                    name: 'Rekonsiliasi Tabungan',
+                    icon: <Scale className="w-4 h-4 text-emerald-600" />,
+                    path: '/laporan/rekonsiliasi',
+                    detail: 'Pencocokan saldo nasabah (Sub-Ledger) vs GL 2100.'
                 }
             ]
         }

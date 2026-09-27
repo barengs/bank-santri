@@ -40,8 +40,10 @@ import AuditTrailPage from './pages/security/AuditTrailPage';
 // Report Pages
 import { 
     JournalPage, 
+    GeneralLedgerPage,
     TrialBalancePage, 
     FinancialStatementPage, 
+    ReconciliationPage,
     LaporanPage 
 } from './pages/reports';
 
@@ -98,8 +100,10 @@ const App = () => {
                             {/* Reports */}
                             <Route path="laporan" element={<LaporanPage />} />
                             <Route path="laporan/jurnal" element={<JournalPage />} />
+                            <Route path="laporan/buku-besar" element={<GeneralLedgerPage />} />
                             <Route path="laporan/neraca-saldo" element={<TrialBalancePage />} />
                             <Route path="laporan/keuangan" element={<FinancialStatementPage />} />
+                            <Route path="laporan/rekonsiliasi" element={<ReconciliationPage />} />
                         </Route>
                     </Routes>
                 </AuthMonitor>

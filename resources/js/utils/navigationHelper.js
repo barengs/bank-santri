@@ -286,6 +286,28 @@ export const getRouteMeta = (pathname) => {
         };
     }
 
+    if (pathname === '/laporan/buku-besar') {
+        return {
+            title: 'Buku Besar',
+            section: 'Laporan',
+            crumbs: [
+                { name: 'Laporan', path: '/laporan' },
+                { name: 'Buku Besar' }
+            ]
+        };
+    }
+
+    if (pathname === '/laporan/rekonsiliasi') {
+        return {
+            title: 'Rekonsiliasi Tabungan',
+            section: 'Laporan',
+            crumbs: [
+                { name: 'Laporan', path: '/laporan' },
+                { name: 'Rekonsiliasi Tabungan' }
+            ]
+        };
+    }
+
     if (pathname === '/laporan/neraca-saldo') {
         return {
             title: 'Neraca Saldo',
