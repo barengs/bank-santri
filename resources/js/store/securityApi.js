@@ -15,8 +15,8 @@ export const securityApi = baseApi.injectEndpoints({
             providesTags: ['Role'],
         }),
         syncRoleMenus: builder.mutation({
-            query: ({ id, menu_ids }) => ({
-                url: `/security/roles/${id}/sync-menus`,
+            query: ({ id, roleId, menu_ids }) => ({
+                url: `/security/roles/${id || roleId}/sync-menus`,
                 method: 'POST',
                 body: { menu_ids },
             }),

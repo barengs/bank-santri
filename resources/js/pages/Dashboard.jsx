@@ -49,7 +49,7 @@ const Dashboard = () => {
 
     const quickAccess = [
         { name: 'PROSES PEMBAYARAN', path: '/proses-pembayaran', icon: Receipt, color: 'bg-blue-600' },
-        { name: 'KASIR KOPERASI', path: '/koperasi', icon: ShoppingCart, color: 'bg-indigo-600' },
+        { name: 'ENTRI TRANSAKSI', path: '/entri-transaksi', icon: ShoppingCart, color: 'bg-indigo-600' },
         { name: 'PAKET PEMBAYARAN', path: '/paket-pembayaran', icon: Package, color: 'bg-emerald-600' },
         { name: 'VERIFIKASI TOP-UP', path: '/verifikasi-topup', icon: TrendingUp, color: 'bg-amber-600' },
         { name: 'DAFTAR REKENING', path: '/nasabah', icon: Users, color: 'bg-slate-700' },

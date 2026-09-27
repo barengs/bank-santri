@@ -76,7 +76,7 @@ const RoleManagementPage = () => {
     const handleSavePermissions = async () => {
         if (!selectedRole) return;
         try {
-            await syncMenus({ roleId: selectedRole.id, menu_ids: checkedMenus }).unwrap();
+            await syncMenus({ id: selectedRole.id, menu_ids: checkedMenus }).unwrap();
             toast.success(`Hak akses menu untuk role ${selectedRole.name} berhasil disimpan!`);
         } catch (err) {
             toast.error(err.data?.message || 'Gagal menyimpan hak akses menu');
