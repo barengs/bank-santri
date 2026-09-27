@@ -134,4 +134,37 @@ class ChartOfAccountController extends Controller
         $coa->delete();
         return response()->json(['status' => 'success', 'message' => 'COA berhasil dihapus.']);
     }
+
+    public function export()
+    {
+        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\Master\ChartOfAccountExport, 'laporan_coa_' . date('Y-m-d_H-i-s') . '.xlsx');
+    }
+
+    public function backup()
+    {
+        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\Master\ChartOfAccountBackupExport, 'backup_coa_' . date('Y-m-d_H-i-s') . '.csv', \Maatwebsite\Excel\Excel::CSV);
+    }
+
+    public function downloadTemplate()
+    {
+        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\Master\ChartOfAccountTemplateExport, 'template_coa.xlsx');
+    }
+
+    public function import(\Illuminate\Http\Request $request)
+    {
+        $request->validate(['file' => 'required|file|mimes:xlsx,xls,csv|max:10240']);
+        $import = new \App\Imports\Master\ChartOfAccountImport();
+        \Maatwebsite\Excel\Facades\Excel::import($import, $request->file('file'));
+        $success = $import->getSuccessCount();
+        $fail = $import->getFailureCount();
+        return response()->json([
+            'status' => 'success',
+            'message' => "Import selesai: $success berhasil, $fail gagal.",
+            'data' => [
+                'success_count' => $success,
+                'failure_count' => $fail,
+                'errors' => $import->getErrors()
+            ]
+        ]);
+    }
 }

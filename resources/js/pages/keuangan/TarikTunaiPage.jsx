@@ -17,6 +17,7 @@ import {
 import { useLazyGetAccountDetailQuery } from '../../store/accountApi';
 import { useCashWithdrawalMutation } from '../../store/transactionApi';
 import { toast } from 'react-toastify';
+import { printReceiptPdf } from '../../utils/reportPdf';
 
 const QUICK_AMOUNTS = [10000, 20000, 50000, 100000, 200000];
 
@@ -389,11 +390,11 @@ const TarikTunaiPage = () => {
                         <div className="px-4 py-2.5 bg-gray-50 border-t border-gray-200 flex justify-end gap-2">
                             <button
                                 type="button"
-                                onClick={() => window.print()}
+                                onClick={() => printReceiptPdf(receiptData, 'BUKTI TARIK TUNAI')}
                                 className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded flex items-center gap-1"
                             >
                                 <Printer className="w-3.5 h-3.5" />
-                                Cetak Slip
+                                Cetak PDF
                             </button>
                             <button
                                 type="button"

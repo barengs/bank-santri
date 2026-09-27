@@ -11,6 +11,7 @@ import {
     Printer,
     FileText
 } from 'lucide-react';
+import { printReconciliationPdf } from '../../utils/reportPdf';
 
 const ReconciliationPage = () => {
     const { data: reconRes, isLoading, isFetching, refetch } = useGetReconciliationQuery();
@@ -47,11 +48,11 @@ const ReconciliationPage = () => {
                         Sinkronkan Ulang
                     </button>
                     <button 
-                        onClick={() => window.print()}
+                        onClick={() => printReconciliationPdf(data)}
                         className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-md text-xs font-semibold hover:bg-blue-700 transition-colors"
                     >
                         <Printer size={14} />
-                        Cetak Berita Acara
+                        Cetak PDF
                     </button>
                 </div>
             </div>

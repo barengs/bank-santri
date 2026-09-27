@@ -479,4 +479,71 @@ class TransactionController extends Controller
             'data' => $movements
         ]);
     }
+
+    /**
+     * Print Daftar Transaksi sebagai PDF.
+     * Filter: account_number, status, channel, date_from, date_to, search
+     */
+    public function printPdf(Request $request)
+    {
+        $query = Transaction::with([
+                'sourceAccount:account_number,customer_name',
+                'destinationAccount:account_number,customer_name',
+                'transactionType:id,name,code',
+            ])
+            ->when($request->account_number, function ($q, $an) {
+                $q->where(function ($query) use ($an) {
+                    $query->where('source_account', $an)
+                          ->orWhere('destination_account', $an);
+                });
+            })
+            ->when($request->status, fn($q, $s)  => $q->where('status', $s))
+            ->when($request->channel, fn($q, $c) => $q->where('channel', $c))
+            ->when($request->date_from, fn($q, $d) => $q->whereDate('created_at', '>=', $d))
+            ->when($request->date_to,   fn($q, $d) => $q->whereDate('created_at', '<=', $d))
+            ->when($request->search, function ($q, $s) {
+                $q->where(function ($query) use ($s) {
+                    $query->where('reference_number', 'like', "%{$s}%")
+                          ->orWhere('description', 'like', "%{$s}%");
+                });
+            })
+            ->orderBy('created_at', 'desc')
+            ->limit(500); // batas agar PDF tidak terlalu besar
+
+        $transactions = $query->get()->map(function ($trx) {
+            $trx->source_account_name      = $trx->sourceAccount?->customer_name;
+            $trx->destination_account_name = $trx->destinationAccount?->customer_name;
+            $trx->transaction_type_name    = $trx->transactionType?->name;
+            return $trx;
+        });
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.transactions', [
+            'transactions' => $transactions,
+            'filters'      => $request->only(['account_number', 'status', 'channel', 'date_from', 'date_to', 'search']),
+            'generated_at' => now()->format('d M Y H:i:s'),
+        ])->setPaper('a4', 'landscape');
+
+        return $pdf->download('transaksi_' . now()->format('Y-m-d_H-i-s') . '.pdf');
+    }
+
+    /**
+     * Print Bukti Transaksi tunggal sebagai PDF.
+     */
+    public function printDetailPdf(string $id)
+    {
+        $transaction = Transaction::with([
+            'ledgerEntries',
+            'sourceAccount',
+            'destinationAccount',
+            'transactionType',
+        ])->findOrFail($id);
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.transaction-detail', [
+            'transaction'  => $transaction,
+            'generated_at' => now()->format('d M Y H:i:s'),
+        ])->setPaper([0, 0, 226.77, 453.54]); // thermal 80mm
+
+        return $pdf->download('bukti_transaksi_' . $transaction->reference_number . '.pdf');
+    }
 }
+

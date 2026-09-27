@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useGetTransactionDetailQuery } from '../../store/transactionApi';
+import { printReceiptPdf } from '../../utils/reportPdf';
 
 const TransactionDetailPage = () => {
     const { id } = useParams();
@@ -108,11 +109,11 @@ const TransactionDetailPage = () => {
                         </button>
                     )}
                     <button 
-                        onClick={() => window.print()}
+                        onClick={() => printReceiptPdf(data, 'BUKTI TRANSAKSI')}
                         className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded text-xs font-semibold hover:bg-blue-700"
                     >
                         <Printer className="w-3.5 h-3.5" />
-                        Cetak
+                        Cetak PDF
                     </button>
                 </div>
             </div>

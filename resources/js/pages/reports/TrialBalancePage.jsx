@@ -9,6 +9,7 @@ import {
     CheckCircle,
     AlertCircle
 } from 'lucide-react';
+import { printTrialBalancePdf } from '../../utils/reportPdf';
 
 const TrialBalancePage = () => {
     const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
@@ -92,9 +93,12 @@ const TrialBalancePage = () => {
                     <p className="text-xs text-gray-500">Cek keseimbangan debit & kredit seluruh akun per tanggal tertentu</p>
                 </div>
                 <div className="flex items-center gap-2">
-                    <button className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-md text-xs font-semibold hover:bg-blue-700 transition-colors">
+                    <button 
+                        onClick={() => printTrialBalancePdf(data, meta, endDate)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-md text-xs font-semibold hover:bg-blue-700 transition-colors"
+                    >
                         <Printer size={14} />
-                        Cetak Laporan
+                        Cetak PDF
                     </button>
                 </div>
             </div>

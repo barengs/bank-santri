@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useGetJournalQuery } from '../../store/reportApi';
 import DataTable from '../../components/DataTable';
 import { FileText, Calendar, Download, Printer } from 'lucide-react';
+import { printJournalPdf } from '../../utils/reportPdf';
 
 const JournalPage = () => {
     const [page, setPage] = useState(1);
@@ -110,9 +111,12 @@ const JournalPage = () => {
                     <p className="text-xs text-gray-500">Pencatatan riwayat transaksi keuangan dan pembukuan akuntansi</p>
                 </div>
                 <div className="flex items-center gap-2">
-                    <button className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-300 rounded-md text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors">
+                    <button 
+                        onClick={() => printJournalPdf(journalRes?.data?.data || [], dateRange)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-300 rounded-md text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
                         <Printer size={14} />
-                        Cetak
+                        Cetak PDF
                     </button>
                     <button className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-md text-xs font-semibold hover:bg-blue-700 transition-colors">
                         <Download size={14} />

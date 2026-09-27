@@ -12,6 +12,7 @@ import {
     ArrowDownLeft,
     Wallet
 } from 'lucide-react';
+import { printGeneralLedgerPdf } from '../../utils/reportPdf';
 
 const GeneralLedgerPage = () => {
     const [selectedCoa, setSelectedCoa] = useState('1101');
@@ -66,7 +67,7 @@ const GeneralLedgerPage = () => {
     const entries = ledgerData?.entries || [];
 
     const handlePrint = () => {
-        window.print();
+        printGeneralLedgerPdf(accountInfo, entries, summary, dateRange);
     };
 
     const handleExportCSV = () => {

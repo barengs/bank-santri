@@ -32,14 +32,36 @@ Route::group(['middleware' => ['api'], 'prefix' => 'auth'], function () {
 
 // Master Data (butuh auth)
 Route::group(['prefix' => 'master', 'middleware' => ['autoprovision', 'auth:api']], function () {
+    // Product Export / Import / Backup
+    Route::get('product/export', [ProductController::class, 'export']);
+    Route::get('product/backup', [ProductController::class, 'backup']);
+    Route::get('product/import/template', [ProductController::class, 'downloadTemplate']);
+    Route::post('product/import', [ProductController::class, 'import']);
     Route::apiResource('product', ProductController::class);
+
+    // Chart of Account Export / Import / Backup
+    Route::get('chart-of-account/export', [ChartOfAccountController::class, 'export']);
+    Route::get('chart-of-account/backup', [ChartOfAccountController::class, 'backup']);
+    Route::get('chart-of-account/import/template', [ChartOfAccountController::class, 'downloadTemplate']);
+    Route::post('chart-of-account/import', [ChartOfAccountController::class, 'import']);
     Route::get('chart-of-account/header-accounts', [ChartOfAccountController::class, 'headerAccounts']);
     Route::get('chart-of-account/detail-accounts', [ChartOfAccountController::class, 'detailAccounts']);
     Route::apiResource('chart-of-account', ChartOfAccountController::class);
+
+    // Transaction Item Export / Import / Backup
+    Route::get('transaction-item/export', [\App\Http\Controllers\Api\Master\TransactionItemController::class, 'export']);
+    Route::get('transaction-item/backup', [\App\Http\Controllers\Api\Master\TransactionItemController::class, 'backup']);
+    Route::get('transaction-item/import/template', [\App\Http\Controllers\Api\Master\TransactionItemController::class, 'downloadTemplate']);
+    Route::post('transaction-item/import', [\App\Http\Controllers\Api\Master\TransactionItemController::class, 'import']);
     Route::apiResource('transaction-item', \App\Http\Controllers\Api\Master\TransactionItemController::class);
+
     Route::apiResource('user', UserController::class);
 
-    // Paket Pembayaran
+    // Paket Pembayaran Export / Import / Backup
+    Route::get('payment-package/export', [PaymentPackageController::class, 'export']);
+    Route::get('payment-package/backup', [PaymentPackageController::class, 'backup']);
+    Route::get('payment-package/import/template', [PaymentPackageController::class, 'downloadTemplate']);
+    Route::post('payment-package/import', [PaymentPackageController::class, 'import']);
     Route::apiResource('payment-package', PaymentPackageController::class);
 
     // Konfigurasi / Setting
@@ -59,6 +81,8 @@ Route::group(['prefix' => 'main', 'middleware' => ['autoprovision', 'auth:api']]
     Route::apiResource('account', AccountController::class);
 
     // Transaksi
+    Route::get('transaction/print',            [TransactionController::class, 'printPdf']);
+    Route::get('transaction/{id}/print',       [TransactionController::class, 'printDetailPdf']);
     Route::post('transaction/cash-deposit',    [TransactionController::class, 'cashDeposit']);
     Route::post('transaction/cash-withdrawal', [TransactionController::class, 'cashWithdrawal']);
     Route::post('transaction/fund-transfer',   [TransactionController::class, 'fundTransfer']);

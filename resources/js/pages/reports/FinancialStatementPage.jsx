@@ -11,6 +11,7 @@ import {
     CheckCircle,
     AlertCircle
 } from 'lucide-react';
+import { printFinancialStatementPdf } from '../../utils/reportPdf';
 
 const FinancialStatementPage = () => {
     const [activeTab, setActiveTab] = useState('pl'); // pl or bs
@@ -42,9 +43,18 @@ const FinancialStatementPage = () => {
                     <p className="text-xs text-gray-500">Laporan Laba Rugi dan Neraca Keuangan Konsolidasi</p>
                 </div>
                 <div className="flex items-center gap-2">
-                    <button className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-md text-xs font-semibold hover:bg-blue-700 transition-colors">
+                    <button 
+                        onClick={() => {
+                            if (activeTab === 'pl') {
+                                printFinancialStatementPdf('pl', pl, dateRange);
+                            } else {
+                                printFinancialStatementPdf('bs', bs, dateRange);
+                            }
+                        }}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-md text-xs font-semibold hover:bg-blue-700 transition-colors"
+                    >
                         <Download size={14} />
-                        Unduh PDF
+                        Cetak PDF
                     </button>
                 </div>
             </div>

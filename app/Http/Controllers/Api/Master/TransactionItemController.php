@@ -76,4 +76,37 @@ class TransactionItemController extends Controller
 
         return response()->json(['status' => 'success', 'message' => 'Item berhasil dihapus.']);
     }
+
+    public function export()
+    {
+        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\Master\TransactionItemExport, 'laporan_item_transaksi_' . date('Y-m-d_H-i-s') . '.xlsx');
+    }
+
+    public function backup()
+    {
+        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\Master\TransactionItemBackupExport, 'backup_item_transaksi_' . date('Y-m-d_H-i-s') . '.csv', \Maatwebsite\Excel\Excel::CSV);
+    }
+
+    public function downloadTemplate()
+    {
+        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\Master\TransactionItemTemplateExport, 'template_item_transaksi.xlsx');
+    }
+
+    public function import(\Illuminate\Http\Request $request)
+    {
+        $request->validate(['file' => 'required|file|mimes:xlsx,xls,csv|max:10240']);
+        $import = new \App\Imports\Master\TransactionItemImport();
+        \Maatwebsite\Excel\Facades\Excel::import($import, $request->file('file'));
+        $success = $import->getSuccessCount();
+        $fail = $import->getFailureCount();
+        return response()->json([
+            'status' => 'success',
+            'message' => "Import selesai: $success berhasil, $fail gagal.",
+            'data' => [
+                'success_count' => $success,
+                'failure_count' => $fail,
+                'errors' => $import->getErrors()
+            ]
+        ]);
+    }
 }

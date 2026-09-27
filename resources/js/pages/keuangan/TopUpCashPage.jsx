@@ -15,6 +15,7 @@ import { useLazyGetAccountDetailQuery } from '../../store/accountApi';
 import { useGetPaymentPackagesQuery } from '../../store/paymentApi';
 import { useCashTopUpMutation } from '../../store/topUpApi';
 import { toast } from 'react-toastify';
+import { printReceiptPdf } from '../../utils/reportPdf';
 
 const TopUpCashPage = () => {
     const [nis, setNis] = useState('');
@@ -288,11 +289,11 @@ const TopUpCashPage = () => {
 
                         <div className="px-4 py-2.5 bg-gray-50 border-t border-gray-200 flex justify-end gap-2">
                             <button
-                                onClick={() => window.print()}
+                                onClick={() => printReceiptPdf(receiptData, 'BUKTI SETORAN TUNAI')}
                                 className="px-3 py-1.5 bg-blue-600 text-white rounded text-xs font-semibold hover:bg-blue-700 flex items-center gap-1"
                             >
                                 <Printer className="w-3.5 h-3.5" />
-                                Cetak
+                                Cetak PDF
                             </button>
                             <button
                                 onClick={handleCloseReceipt}

@@ -16,6 +16,7 @@ import {
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useGetTransactionsQuery, useActivateTransactionMutation } from '../../store/transactionApi';
 import { toast } from 'react-toastify';
+import { printReceiptPdf } from '../../utils/reportPdf';
 
 const ProsesPembayaranPage = () => {
     const [searchParams, setSearchParams] = useSearchParams();
@@ -114,11 +115,11 @@ const ProsesPembayaranPage = () => {
 
                 <div className="flex gap-2 justify-center pt-2">
                     <button 
-                        onClick={() => window.print()}
+                        onClick={() => printReceiptPdf(confirmedTransaction, 'BUKTI PEMBAYARAN')}
                         className="px-3.5 py-1.5 bg-blue-600 text-white rounded-md text-xs font-semibold hover:bg-blue-700 flex items-center gap-1.5"
                     >
                         <Printer size={14} />
-                        Cetak Struk
+                        Cetak PDF
                     </button>
                     <button 
                         onClick={() => {
