@@ -3,6 +3,8 @@ import {
     useGetRolesQuery, 
     useGetMenusQuery, 
     useSyncRoleMenusMutation,
+    useSyncRolePermissionsMutation,
+    useGetPermissionsQuery,
     useCreateRoleMutation,
     useUpdateRoleMutation,
     useDestroyRoleMutation
@@ -27,19 +29,23 @@ import Modal from '../../components/Modal';
 const RoleManagementPage = () => {
     const [selectedRole, setSelectedRole] = useState(null);
     const [checkedMenus, setCheckedMenus] = useState([]);
+    const [checkedPermissions, setCheckedPermissions] = useState([]);
     const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
     const [roleFormData, setRoleFormData] = useState({ name: '', slug: '', description: '' });
     const [editingRole, setEditingRole] = useState(null);
 
     const { data: rolesRes, isLoading: rolesLoading } = useGetRolesQuery();
     const { data: menusRes, isLoading: menusLoading } = useGetMenusQuery();
+    const { data: permissionsRes, isLoading: permissionsLoading } = useGetPermissionsQuery();
     const [syncMenus, { isLoading: isSyncing }] = useSyncRoleMenusMutation();
+    const [syncPermissions, { isLoading: isSyncingPermissions }] = useSyncRolePermissionsMutation();
     const [createRole] = useCreateRoleMutation();
     const [updateRole] = useUpdateRoleMutation();
     const [destroyRole] = useDestroyRoleMutation();
 
     const roles = rolesRes?.data || [];
     const menus = menusRes?.data || [];
+    const permissions = permissionsRes?.data || [];
 
     useEffect(() => {
         if (roles.length > 0 && !selectedRole) {
@@ -51,6 +57,8 @@ const RoleManagementPage = () => {
         if (selectedRole) {
             const menuIds = selectedRole.menus?.map(m => m.id) || [];
             setCheckedMenus(menuIds);
+            const permIds = selectedRole.permissions?.map(p => p.id) || [];
+            setCheckedPermissions(permIds);
         }
     }, [selectedRole]);
 
@@ -77,9 +85,10 @@ const RoleManagementPage = () => {
         if (!selectedRole) return;
         try {
             await syncMenus({ id: selectedRole.id, menu_ids: checkedMenus }).unwrap();
-            toast.success(`Hak akses menu untuk role ${selectedRole.name} berhasil disimpan!`);
+            await syncPermissions({ id: selectedRole.id, permission_ids: checkedPermissions }).unwrap();
+            toast.success(`Hak akses menu dan permission matrix untuk role ${selectedRole.name} berhasil disimpan!`);
         } catch (err) {
-            toast.error(err.data?.message || 'Gagal menyimpan hak akses menu');
+            toast.error(err.data?.message || 'Gagal menyimpan hak akses');
         }
     };
 
@@ -123,7 +132,7 @@ const RoleManagementPage = () => {
         }
     };
 
-    if (rolesLoading || menusLoading) {
+    if (rolesLoading || menusLoading || permissionsLoading) {
         return <div className="p-8 text-center text-xs text-gray-500">Memuat data keamanan...</div>;
     }
 
@@ -257,6 +266,73 @@ const RoleManagementPage = () => {
                                         )}
                                     </div>
                                 ))}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Permission Matrix */}
+                    <div className="mt-6 pt-4 border-t border-gray-200">
+                        <div className="flex items-center justify-between mb-3">
+                            <span className="text-xs font-bold text-gray-600 uppercase tracking-wider">
+                                Permission Matrix (CRUD, Print, Approve)
+                            </span>
+                        </div>
+                        
+                        {!selectedRole ? (
+                            <div className="text-xs text-gray-400 text-center py-4">Pilih role untuk mengatur permission matrix</div>
+                        ) : (
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-xs border border-gray-200 rounded-md overflow-hidden">
+                                    <thead>
+                                        <tr className="bg-gray-50 border-b border-gray-200">
+                                            <th className="text-left px-3 py-2 font-semibold text-gray-600">Modul</th>
+                                            <th className="text-center px-3 py-2 font-semibold text-gray-600">Create</th>
+                                            <th className="text-center px-3 py-2 font-semibold text-gray-600">Read</th>
+                                            <th className="text-center px-3 py-2 font-semibold text-gray-600">Update</th>
+                                            <th className="text-center px-3 py-2 font-semibold text-gray-600">Delete</th>
+                                            <th className="text-center px-3 py-2 font-semibold text-gray-600">Print</th>
+                                            <th className="text-center px-3 py-2 font-semibold text-gray-600">Approve</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-100">
+                                        {(() => {
+                                            const modules = [...new Set(permissions.map(p => p.module || 'general'))];
+                                            return modules.map(module => {
+                                                const modulePerms = permissions.filter(p => (p.module || 'general') === module);
+                                                const getPerm = (action) => modulePerms.find(p => p.name.endsWith(`.${action}`));
+                                                return (
+                                                    <tr key={module} className="hover:bg-gray-50">
+                                                        <td className="px-3 py-2 font-semibold text-gray-700 capitalize">{module}</td>
+                                                        {['create', 'read', 'update', 'delete', 'print', 'approve'].map(action => {
+                                                            const perm = getPerm(action);
+                                                            const isChecked = perm ? checkedPermissions.includes(perm.id) : false;
+                                                            return (
+                                                                <td key={action} className="text-center px-3 py-2">
+                                                                    {perm ? (
+                                                                        <input
+                                                                            type="checkbox"
+                                                                            checked={isChecked}
+                                                                            onChange={() => {
+                                                                                setCheckedPermissions(prev =>
+                                                                                    isChecked
+                                                                                        ? prev.filter(id => id !== perm.id)
+                                                                                        : [...prev, perm.id]
+                                                                                );
+                                                                            }}
+                                                                            className="rounded text-blue-600 focus:ring-blue-500"
+                                                                        />
+                                                                    ) : (
+                                                                        <span className="text-gray-300">-</span>
+                                                                    )}
+                                                                </td>
+                                                            );
+                                                        })}
+                                                    </tr>
+                                                );
+                                            });
+                                        })()}
+                                    </tbody>
+                                </table>
                             </div>
                         )}
                     </div>

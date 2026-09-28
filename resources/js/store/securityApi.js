@@ -22,6 +22,14 @@ export const securityApi = baseApi.injectEndpoints({
             }),
             invalidatesTags: ['Role', 'Sidebar'],
         }),
+        syncRolePermissions: builder.mutation({
+            query: ({ id, roleId, permission_ids }) => ({
+                url: `/security/roles/${id || roleId}/sync-permissions`,
+                method: 'POST',
+                body: { permission_ids },
+            }),
+            invalidatesTags: ['Role'],
+        }),
         getPermissions: builder.query({
             query: () => '/security/permissions',
             providesTags: ['Permission'],
@@ -61,6 +69,7 @@ export const {
     useGetMenusQuery,
     useGetRolesQuery,
     useSyncRoleMenusMutation,
+    useSyncRolePermissionsMutation,
     useGetPermissionsQuery,
     useCreateRoleMutation,
     useUpdateRoleMutation,

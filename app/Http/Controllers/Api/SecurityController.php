@@ -93,6 +93,13 @@ class SecurityController extends Controller
         return response()->json(['message' => 'Hak akses menu berhasil diperbarui.']);
     }
 
+    public function syncRolePermissions(Request $request, $id)
+    {
+        $role = Role::findOrFail($id);
+        $role->syncPermissions($request->permission_ids); // Spatie handles this
+        return response()->json(['message' => 'Permission matrix berhasil diperbarui.']);
+    }
+
     // Permission CRUD
     public function getPermissions()
     {

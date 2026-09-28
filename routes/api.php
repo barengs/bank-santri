@@ -165,6 +165,7 @@ Route::group(['middleware' => ['auth:api']], function () {
         Route::put('roles/{id}', [SecurityController::class, 'updateRole']);
         Route::delete('roles/{id}', [SecurityController::class, 'destroyRole']);
         Route::post('roles/{id}/sync-menus', [SecurityController::class, 'syncRoleMenus']);
+        Route::post('roles/{id}/sync-permissions', [SecurityController::class, 'syncRolePermissions']);
         Route::get('permissions', [SecurityController::class, 'getPermissions']);
         Route::get('activity-logs', [\App\Http\Controllers\Api\ActivityLogController::class, 'index']);
     });
