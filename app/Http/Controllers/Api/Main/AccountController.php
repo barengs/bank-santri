@@ -124,8 +124,12 @@ class AccountController extends Controller
             }
         }
 
-        if ($isInstansi) {
-            $query->where('customer_id', 0);
+        if ($isInstansi !== null && $isInstansi !== '') {
+            if ($isInstansi == '1' || $isInstansi === true || $isInstansi === 'true') {
+                $query->where('customer_id', 0);
+            } elseif ($isInstansi == '0' || $isInstansi === false || $isInstansi === 'false') {
+                $query->where('customer_id', '>', 0);
+            }
         }
 
         return response()->json([

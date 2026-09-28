@@ -17,6 +17,7 @@ const NasabahPage = () => {
     const navigate = useNavigate();
     const [page, setPage] = useState(1);
     const [search, setSearch] = useState('');
+    const [activeTab, setActiveTab] = useState('santri');
     const [isModalOpen, setIsModalOpen] = useState(false);
     
     // Modal State
@@ -42,7 +43,8 @@ const NasabahPage = () => {
     const { data: accountsRes, isLoading, isFetching } = useGetAccountsQuery({
         page,
         search,
-        per_page: 10
+        per_page: 10,
+        is_instansi: activeTab === 'instansi' ? '1' : '0'
     });
     const [triggerSearch, { data: studentResults, isFetching: isSearchingStudents }] = useLazySearchSmptStudentsQuery();
     const [createAccount, { isLoading: isCreating }] = useCreateAccountMutation();
@@ -298,6 +300,32 @@ const NasabahPage = () => {
                         Buka Rekening Santri
                     </button>
                 </div>
+            </div>
+
+            {/* Tabs */}
+            <div className="flex items-center gap-1 border-b border-gray-200">
+                <button
+                    onClick={() => { setActiveTab('santri'); setPage(1); setSearch(''); }}
+                    className={`px-4 py-2 text-sm font-semibold border-b-2 transition-colors ${
+                        activeTab === 'santri'
+                            ? 'border-blue-600 text-blue-600'
+                            : 'border-transparent text-gray-500 hover:text-gray-700'
+                    }`}
+                >
+                    <User className="w-4 h-4 inline mr-1.5 -mt-0.5" />
+                    Rekening Santri
+                </button>
+                <button
+                    onClick={() => { setActiveTab('instansi'); setPage(1); setSearch(''); }}
+                    className={`px-4 py-2 text-sm font-semibold border-b-2 transition-colors ${
+                        activeTab === 'instansi'
+                            ? 'border-blue-600 text-blue-600'
+                            : 'border-transparent text-gray-500 hover:text-gray-700'
+                    }`}
+                >
+                    <ShieldCheck className="w-4 h-4 inline mr-1.5 -mt-0.5" />
+                    Rekening Instansi
+                </button>
             </div>
 
             {/* Table Area */}
