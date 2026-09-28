@@ -18,4 +18,9 @@ class AccountMovement extends Model
     {
         return $this->belongsTo(Account::class, 'account_number', 'account_number');
     }
+
+    public function transaction()
+    {
+        return $this->belongsTo(Transaction::class, 'transaction_id', 'id');
+    }
 }
