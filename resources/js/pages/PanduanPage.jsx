@@ -15,7 +15,8 @@ import {
     FileText,
     Store,
     Database,
-    Settings
+    Settings,
+    ShieldCheck
 } from 'lucide-react';
 
 const PanduanPage = () => {
@@ -76,7 +77,8 @@ const PanduanPage = () => {
         { id: 'rekonsiliasi', title: 'Rekonsiliasi Wadiah', icon: <CheckCircle2 className="w-4 h-4" />, category: 'Akuntansi' },
         { id: 'operasional', title: 'Operasional Teller', icon: <ArrowRightLeft className="w-4 h-4" />, category: 'Teller' },
         { id: 'tagihan', title: 'Manajemen Tagihan', icon: <FileText className="w-4 h-4" />, category: 'Pembayaran' },
-        { id: 'koperasi', title: 'Kasir Koperasi (RFID)', icon: <Store className="w-4 h-4" />, category: 'Eksternal' }
+        { id: 'koperasi', title: 'Kasir Koperasi (RFID)', icon: <Store className="w-4 h-4" />, category: 'Eksternal' },
+        { id: 'keamanan', title: 'Keamanan Sistem', icon: <ShieldCheck className="w-4 h-4" />, category: 'Keamanan' }
     ];
 
     const filteredSections = sections.filter(s => s.title.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -881,6 +883,151 @@ const PanduanPage = () => {
                                         <p className="text-slate-500 mt-0.5">Jika valid, saldo tabungan santri terpotong detik itu juga dan struk belanja tercetak otomatis di kasir kantin.</p>
                                     </li>
                                 </ol>
+                            </div>
+                        </div>
+                    )}
+
+                    {activeSection === 'keamanan' && (
+                        <div className="space-y-5">
+                            <div className="border-b border-slate-200 pb-3">
+                                <h2 className="text-lg font-bold text-slate-900">Panduan Lengkap Keamanan Sistem</h2>
+                                <p className="text-xs text-slate-500">Keterangan kegunaan dan tata cara penggunaan modul keamanan, hak akses, dan audit trail</p>
+                            </div>
+
+                            <p className="text-xs text-slate-600">
+                                Modul Keamanan Sistem dirancang untuk memastikan operasional bank berjalan sesuai prinsip *Separation of Duties* (pemisahan kewenangan), mencegah manipulasi data, dan mencatat seluruh rekam jejak audit forensik perbankan.
+                            </p>
+
+                            <div className="space-y-4">
+                                {/* 1. Manajemen User */}
+                                <div className="p-4 border border-slate-300 bg-white">
+                                    <div className="flex items-center gap-2 border-b border-slate-200 pb-2 mb-3">
+                                        <span className="w-5 h-5 bg-slate-900 text-white flex items-center justify-center font-mono text-xs font-bold">1</span>
+                                        <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wide">Manajemen User (Pengguna Aplikasi)</h4>
+                                    </div>
+
+                                    <div className="mb-3 bg-slate-50 border-l-2 border-blue-600 p-2.5">
+                                        <span className="font-bold text-slate-900 text-[11px] uppercase block mb-1">Kegunaan Fitur:</span>
+                                        <p className="text-xs text-slate-600 leading-relaxed">
+                                            Mengelola akun staf dan petugas operasional bank pesantren. Fitur ini digunakan untuk mendaftarkan akun baru, menonaktifkan akun staf yang telah selesai bertugas, memperbarui profil, dan mereset kata sandi (password).
+                                        </p>
+                                    </div>
+
+                                    <div>
+                                        <span className="font-bold text-slate-900 text-[11px] uppercase block mb-1.5">Langkah-Langkah Penggunaan:</span>
+                                        <ol className="text-xs text-slate-600 list-decimal pl-5 space-y-1.5">
+                                            <li>Buka menu <strong>Keamanan Sistem &gt; Manajemen User</strong>.</li>
+                                            <li>Klik tombol <strong>+ Tambah User</strong> di pojok kanan atas.</li>
+                                            <li>Isi data staf: Nama Lengkap, Alamat Email, Password, serta pilih <strong>Role</strong> (misal: Teller, Admin Bank, atau Pimpinan).</li>
+                                            <li>Klik tombol <strong>Simpan User</strong>. Akun langsung aktif dan siap digunakan untuk login.</li>
+                                            <li><strong>Reset Password / Nonaktifkan:</strong> Jika petugas lupa kata sandi atau mutasi kerja, klik tombol <strong>Edit</strong> pada baris user untuk mengganti password atau mengubah status akun menjadi non-aktif.</li>
+                                        </ol>
+                                    </div>
+                                </div>
+
+                                {/* 2. Manajemen Menu */}
+                                <div className="p-4 border border-slate-300 bg-white">
+                                    <div className="flex items-center gap-2 border-b border-slate-200 pb-2 mb-3">
+                                        <span className="w-5 h-5 bg-slate-900 text-white flex items-center justify-center font-mono text-xs font-bold">2</span>
+                                        <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wide">Manajemen Menu (Navigasi Sidebar)</h4>
+                                    </div>
+
+                                    <div className="mb-3 bg-slate-50 border-l-2 border-blue-600 p-2.5">
+                                        <span className="font-bold text-slate-900 text-[11px] uppercase block mb-1">Kegunaan Fitur:</span>
+                                        <p className="text-xs text-slate-600 leading-relaxed">
+                                            Mengatur struktur menu dan sub-menu yang tampil di bilah navigasi (sidebar) aplikasi secara dinamis dari database tanpa perlu merombak kode program.
+                                        </p>
+                                    </div>
+
+                                    <div>
+                                        <span className="font-bold text-slate-900 text-[11px] uppercase block mb-1.5">Langkah-Langkah Penggunaan:</span>
+                                        <ol className="text-xs text-slate-600 list-decimal pl-5 space-y-1.5">
+                                            <li>Buka menu <strong>Keamanan Sistem &gt; Manajemen Menu</strong>.</li>
+                                            <li>Tinjau daftar hierarki menu utama dan sub-menunya.</li>
+                                            <li>Klik <strong>+ Tambah Menu</strong> untuk mendaftarkan menu baru.</li>
+                                            <li>Isi Nama Menu, Rute URL Path (contoh: <code>/panduan</code>), Icon, dan tentukan apakah menu ini berdiri sendiri atau memiliki Menu Induk (Parent).</li>
+                                            <li>Tentukan nomor urutan (Order) agar posisi menu rapi di sidebar, lalu klik <strong>Simpan Menu</strong>.</li>
+                                        </ol>
+                                    </div>
+                                </div>
+
+                                {/* 3. Role & Hak Akses */}
+                                <div className="p-4 border border-slate-300 bg-white">
+                                    <div className="flex items-center gap-2 border-b border-slate-200 pb-2 mb-3">
+                                        <span className="w-5 h-5 bg-slate-900 text-white flex items-center justify-center font-mono text-xs font-bold">3</span>
+                                        <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wide">Role & Hak Akses (Role-Based Access Control)</h4>
+                                    </div>
+
+                                    <div className="mb-3 bg-slate-50 border-l-2 border-blue-600 p-2.5">
+                                        <span className="font-bold text-slate-900 text-[11px] uppercase block mb-1">Kegunaan Fitur:</span>
+                                        <p className="text-xs text-slate-600 leading-relaxed">
+                                            Menentukan peran kerja (Role) dalam operasional bank dan memetakan hak akses menu serta permission yang diizinkan untuk setiap peran. Ini mencegah teller mengakses laporan laba rugi atau mengubah pengaturan inti sistem.
+                                        </p>
+                                    </div>
+
+                                    <div>
+                                        <span className="font-bold text-slate-900 text-[11px] uppercase block mb-1.5">Langkah-Langkah Penggunaan:</span>
+                                        <ol className="text-xs text-slate-600 list-decimal pl-5 space-y-1.5">
+                                            <li>Buka menu <strong>Keamanan Sistem &gt; Role &amp; Hak Akses</strong>.</li>
+                                            <li>Klik <strong>+ Tambah Role</strong> untuk mendefinisikan peran baru (misal: <code>supervisor_teller</code>), atau klik tombol <strong>Kelola Akses</strong> pada role yang sudah ada (Admin, Teller, Pimpinan).</li>
+                                            <li>Centang menu dan modul apa saja yang boleh dilihat oleh role tersebut.</li>
+                                            <li>Centang izin aksi teknis (Permission) yang diperbolehkan (misal: izinkan <code>reversal</code> hanya untuk Pimpinan/Admin).</li>
+                                            <li>Klik <strong>Simpan Perubahan</strong>. Hak akses langsung berlaku seketika saat user membuka menu.</li>
+                                        </ol>
+                                    </div>
+                                </div>
+
+                                {/* 4. Permission */}
+                                <div className="p-4 border border-slate-300 bg-white">
+                                    <div className="flex items-center gap-2 border-b border-slate-200 pb-2 mb-3">
+                                        <span className="w-5 h-5 bg-slate-900 text-white flex items-center justify-center font-mono text-xs font-bold">4</span>
+                                        <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wide">Permission (Katalog Izin Granular)</h4>
+                                    </div>
+
+                                    <div className="mb-3 bg-slate-50 border-l-2 border-blue-600 p-2.5">
+                                        <span className="font-bold text-slate-900 text-[11px] uppercase block mb-1">Kegunaan Fitur:</span>
+                                        <p className="text-xs text-slate-600 leading-relaxed">
+                                            Daftar izin spesifik tingkat atomik yang mengontrol tindakan tertentu di dalam sistem (misal: <code>transaction.reverse</code>, <code>report.export</code>, <code>account.create</code>). Menjadi fondasi keamanan sebelum dieksekusi di API backend.
+                                        </p>
+                                    </div>
+
+                                    <div>
+                                        <span className="font-bold text-slate-900 text-[11px] uppercase block mb-1.5">Langkah-Langkah Penggunaan:</span>
+                                        <ol className="text-xs text-slate-600 list-decimal pl-5 space-y-1.5">
+                                            <li>Buka menu <strong>Keamanan Sistem &gt; Permission</strong>.</li>
+                                            <li>Gunakan kolom pencarian untuk memeriksa apakah izin aksi tertentu sudah terdaftar di sistem.</li>
+                                            <li>Jika ada pengembangan fitur baru yang butuh izin proteksi khusus, klik <strong>+ Tambah Permission</strong>.</li>
+                                            <li>Gunakan konvensi penamaan standar: <code>nama_modul.nama_aksi</code> (contoh: <code>settings.update_limits</code>).</li>
+                                            <li>Klik <strong>Simpan</strong>. Izin baru ini dapat langsung dipetakan ke role di menu <strong>Role &amp; Hak Akses</strong>.</li>
+                                        </ol>
+                                    </div>
+                                </div>
+
+                                {/* 5. Audit Trail */}
+                                <div className="p-4 border border-slate-300 bg-white">
+                                    <div className="flex items-center gap-2 border-b border-slate-200 pb-2 mb-3">
+                                        <span className="w-5 h-5 bg-slate-900 text-white flex items-center justify-center font-mono text-xs font-bold">5</span>
+                                        <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wide">Audit Trail (Rekam Jejak Aktivitas Forensik)</h4>
+                                    </div>
+
+                                    <div className="mb-3 bg-slate-50 border-l-2 border-blue-600 p-2.5">
+                                        <span className="font-bold text-slate-900 text-[11px] uppercase block mb-1">Kegunaan Fitur:</span>
+                                        <p className="text-xs text-slate-600 leading-relaxed">
+                                            Merekam dan mengarsipkan setiap aktivitas pengguna di dalam aplikasi (siapa yang melakukan, kapan waktunya, tipe aksi, alamat IP, serta rincian data sebelum dan sesudah diedit). Fitur ini mutlak diperlukan untuk kepatuhan audit internal dan investigasi kesalahan/kecurangan.
+                                        </p>
+                                    </div>
+
+                                    <div>
+                                        <span className="font-bold text-slate-900 text-[11px] uppercase block mb-1.5">Langkah-Langkah Penggunaan:</span>
+                                        <ol className="text-xs text-slate-600 list-decimal pl-5 space-y-1.5">
+                                            <li>Buka menu <strong>Keamanan Sistem &gt; Audit Trail</strong>.</li>
+                                            <li>Gunakan filter tanggal atau cari berdasarkan Nama Petugas/Subjek yang ingin diaudit.</li>
+                                            <li>Periksa kolom aksi: <strong>CREATED</strong> (pembuatan data), <strong>UPDATED</strong> (perubahan data), atau <strong>DELETED</strong> (penghapusan).</li>
+                                            <li>Klik tombol <strong>Detail Log</strong> pada baris aktivitas untuk melihat perbandingan mendalam antara <em>Data Lama (Old Attributes)</em> dengan <em>Data Baru (New Attributes)</em>.</li>
+                                            <li>Pimpinan/Supervisor disarankan meninjau log ini secara berkala, terutama saat terjadi pembatalan transaksi (reversal) atau perubahan limit saldo.</li>
+                                        </ol>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     )}
