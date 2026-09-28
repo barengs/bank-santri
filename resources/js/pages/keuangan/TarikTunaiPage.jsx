@@ -70,7 +70,11 @@ const TarikTunaiPage = () => {
     const rawAmount = amount ? Number(amount.replace(/\./g, '')) : 0;
     const minBalance = account?.product?.minimum_balance || 0;
     const maxWithdrawable = account ? Math.max(0, account.balance - minBalance) : 0;
-    const dailyLimit = account?.product?.daily_withdrawal_limit || 0;
+    const customLimit = account?.daily_withdrawal_limit;
+    const dailyLimit = customLimit !== null && customLimit !== undefined && customLimit !== '' 
+        ? Number(customLimit) 
+        : (account?.product?.daily_withdrawal_limit || 0);
+    const isCustomLimit = customLimit !== null && customLimit !== undefined && customLimit !== '';
     const isExceedingBalance = account && rawAmount > maxWithdrawable;
 
     const handleMaxWithdraw = () => {
@@ -313,8 +317,13 @@ const TarikTunaiPage = () => {
                                     {!isInstansi && (
                                         <div className="flex justify-between py-1">
                                             <span className="text-gray-500">Limit Harian:</span>
-                                            <span className="font-semibold">
+                                            <span className="font-semibold flex items-center gap-1">
                                                 {dailyLimit > 0 ? formatIDR(dailyLimit) + ' / hari' : 'Bebas'}
+                                                {isCustomLimit && (
+                                                    <span className="text-[9px] bg-amber-50 text-amber-700 border border-amber-200 px-1 py-0.5 rounded font-semibold leading-none">
+                                                        Khusus
+                                                    </span>
+                                                )}
                                             </span>
                                         </div>
                                     )}

@@ -329,6 +329,7 @@ class AccountController extends Controller
             'product_id' => 'sometimes|exists:products,id',
             'status'     => 'sometimes|in:AKTIF,TIDAK AKTIF,TUTUP,TERBLOKIR,DIBEKUKAN',
             'card_number' => 'sometimes|nullable|string|unique:accounts,card_number,' . $account->account_number . ',account_number',
+            'daily_withdrawal_limit' => 'sometimes|nullable|numeric|min:0',
         ]);
 
         if ($validator->fails()) {
@@ -342,7 +343,7 @@ class AccountController extends Controller
             ], 422);
         }
 
-        $account->update($request->only(['product_id', 'status', 'card_number']));
+        $account->update($request->only(['product_id', 'status', 'card_number', 'daily_withdrawal_limit']));
 
         if ($request->status === 'TUTUP') {
             $account->close_date = now()->toDateString();

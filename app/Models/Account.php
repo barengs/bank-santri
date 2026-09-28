@@ -24,6 +24,7 @@ class Account extends Model
         'akad_type',      // wadiah | mudharabah
         'open_date',
         'close_date',
+        'daily_withdrawal_limit',
     ];
 
     protected $casts = [

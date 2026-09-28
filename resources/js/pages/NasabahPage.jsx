@@ -31,6 +31,7 @@ const NasabahPage = () => {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [editingAccount, setEditingAccount] = useState(null);
     const [editCardNumber, setEditCardNumber] = useState('');
+    const [editDailyLimit, setEditDailyLimit] = useState('');
 
     // Close Account State
     const [isCloseModalOpen, setIsCloseModalOpen] = useState(false);
@@ -86,13 +87,31 @@ const NasabahPage = () => {
         },
         {
             accessorKey: 'product.name',
-            header: 'Produk',
-            cell: ({ row }) => (
-                <div className="flex flex-col">
-                    <span className="text-xs font-bold text-gray-700">{row.original.product?.name || '-'}</span>
-                    <span className="text-[10px] font-bold text-gray-400 uppercase">{row.original.akad_type}</span>
-                </div>
-            )
+            header: 'Produk & Limit',
+            cell: ({ row }) => {
+                const customLimit = row.original.daily_withdrawal_limit;
+                const productLimit = row.original.product?.daily_withdrawal_limit;
+                const effectiveLimit = customLimit ?? productLimit ?? 0;
+                const isCustom = customLimit !== null && customLimit !== undefined && customLimit !== '';
+
+                return (
+                    <div className="flex flex-col">
+                        <span className="text-xs font-bold text-gray-700">{row.original.product?.name || '-'}</span>
+                        <div className="flex items-center gap-1 mt-0.5">
+                            <span className="text-[10px] text-gray-500">
+                                Limit: <strong className={isCustom ? "text-amber-600 font-bold" : "text-gray-600"}>
+                                    {effectiveLimit > 0 ? formatIDR(effectiveLimit) : 'Bebas'}
+                                </strong>
+                            </span>
+                            {isCustom && (
+                                <span className="text-[9px] bg-amber-50 text-amber-700 border border-amber-200 px-1 py-0.5 rounded font-semibold leading-none">
+                                    Khusus
+                                </span>
+                            )}
+                        </div>
+                    </div>
+                );
+            }
         },
         {
             accessorKey: 'card_number',
@@ -149,13 +168,14 @@ const NasabahPage = () => {
                             e.stopPropagation();
                             setEditingAccount(row.original);
                             setEditCardNumber(row.original.card_number || '');
+                            setEditDailyLimit(row.original.daily_withdrawal_limit !== null && row.original.daily_withdrawal_limit !== undefined ? row.original.daily_withdrawal_limit : '');
                             setIsEditModalOpen(true);
                         }}
                         className="px-2 py-0.5 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded text-xs font-medium inline-flex items-center gap-1 transition-colors"
-                        title="Update Nomor Kartu"
+                        title="Pengaturan Kartu & Limit Rekening"
                     >
                         <CreditCard className="w-3 h-3 text-gray-500" />
-                        Kartu
+                        Edit
                     </button>
                     <button 
                         onClick={(e) => {
@@ -222,7 +242,8 @@ const NasabahPage = () => {
         try {
             await updateAccount({
                 accountNumber: editingAccount.account_number,
-                card_number: editCardNumber
+                card_number: editCardNumber,
+                daily_withdrawal_limit: editDailyLimit === '' ? null : Number(editDailyLimit)
             }).unwrap();
             
             setIsEditModalOpen(false);
@@ -472,14 +493,14 @@ const NasabahPage = () => {
                 </div>
             )}
 
-            {/* Edit Card Modal */}
+            {/* Edit Account Modal */}
             {isEditModalOpen && (
                 <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
                     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => !isUpdating && setIsEditModalOpen(false)}></div>
                     
                     <div className="relative w-full max-w-sm bg-white rounded-md shadow-xl overflow-hidden animate-in fade-in zoom-in duration-200 border border-gray-200">
                         <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
-                            <h2 className="text-xs font-bold text-gray-900 uppercase tracking-wider">Update Kartu Santri</h2>
+                            <h2 className="text-xs font-bold text-gray-900 uppercase tracking-wider">Pengaturan Rekening & Limit</h2>
                             <button onClick={() => setIsEditModalOpen(false)} className="text-gray-400 hover:text-gray-600">
                                 <X className="w-4 h-4" />
                             </button>
@@ -503,6 +524,26 @@ const NasabahPage = () => {
                                         onChange={(e) => setEditCardNumber(e.target.value)}
                                         className="w-full pl-9 pr-3 py-1.5 bg-white border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all text-xs font-mono"
                                         autoFocus
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold text-gray-700">
+                                    Limit Harian (Opsional)
+                                    <span className="text-[10px] text-gray-400 font-normal ml-1">
+                                        (Kosongkan = ikut limit produk: {editingAccount?.product?.daily_withdrawal_limit ? formatIDR(editingAccount.product.daily_withdrawal_limit) : 'Bebas'})
+                                    </span>
+                                </label>
+                                <div className="relative">
+                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 font-semibold">Rp</span>
+                                    <input 
+                                        type="number"
+                                        min="0"
+                                        placeholder="0"
+                                        value={editDailyLimit}
+                                        onChange={(e) => setEditDailyLimit(e.target.value)}
+                                        className="w-full pl-9 pr-3 py-1.5 bg-white border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all text-xs font-mono"
                                     />
                                 </div>
                             </div>
