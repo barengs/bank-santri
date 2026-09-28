@@ -13,6 +13,7 @@ import NasabahDetailPage from './pages/NasabahDetailPage';
 import TransaksiPage from './pages/TransaksiPage';
 import MutasiPage from './pages/MutasiPage';
 import LoginPage from './pages/LoginPage';
+import PanduanPage from './pages/PanduanPage';
 
 // Keuangan Pages
 import PaketPembayaranPage from './pages/keuangan/PaketPembayaranPage';
@@ -63,6 +64,7 @@ const App = () => {
                             <Route path="nasabah/:accountNumber" element={<NasabahDetailPage />} />
                             <Route path="transaksi" element={<TransaksiPage />} />
                             <Route path="mutasi" element={<MutasiPage />} />
+                            <Route path="panduan" element={<PanduanPage />} />
                             
                             {/* New Banking Routes */}
                             <Route path="paket-pembayaran" element={<PaketPembayaranPage />} />

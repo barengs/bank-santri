@@ -21,6 +21,7 @@ class RBACSeeder extends Seeder
         // 2. Menus
         $menus = [
             ['name' => 'Dashboard Bank', 'icon' => 'LayoutDashboard', 'path' => '/', 'roles' => ['admin', 'adminbank', 'pimpinan', 'teller']],
+            ['name' => 'Panduan Pengguna', 'icon' => 'BookOpen', 'path' => '/panduan', 'roles' => ['admin', 'adminbank', 'pimpinan', 'teller']],
             
             ['name' => 'Operasional Bank', 'icon' => 'CreditCard', 'path' => null, 'roles' => ['admin', 'adminbank', 'teller'], 'children' => [
                 ['name' => 'Transaksi Bank', 'icon' => 'CreditCard', 'path' => '/transaksi'],
