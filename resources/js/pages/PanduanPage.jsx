@@ -195,113 +195,192 @@ const PanduanPage = () => {
                     {activeSection === 'master-data' && (
                         <div className="space-y-5">
                             <div className="border-b border-slate-200 pb-3">
-                                <h2 className="text-lg font-bold text-slate-900">Panduan Penggunaan Master Data</h2>
-                                <p className="text-xs text-slate-500">Langkah-langkah konfigurasi fondasi utama aplikasi Bank Santri</p>
+                                <h2 className="text-lg font-bold text-slate-900">Panduan Lengkap Master Data</h2>
+                                <p className="text-xs text-slate-500">Keterangan kegunaan dan tata cara penggunaan seluruh konfigurasi fondasi Bank Santri</p>
                             </div>
 
                             <p className="text-xs text-slate-600">
-                                Master Data adalah pusat pengaturan aplikasi. Berikut adalah panduan langkah demi langkah cara menggunakan dan mengonfigurasi setiap fitur di dalam modul Master Data.
+                                Master Data adalah pusat parameter bisnis dan keuangan aplikasi. Berikut adalah penjelasan fungsi/kegunaan setiap fitur diikuti oleh panduan langkah demi langkah cara menggunakannya:
                             </p>
 
-                            <div className="space-y-3.5">
-                                {/* Produk Bank */}
+                            <div className="space-y-4">
+                                {/* 1. Produk Bank */}
                                 <div className="p-4 border border-slate-300 bg-white">
-                                    <div className="flex items-center gap-2 border-b border-slate-200 pb-2 mb-2">
+                                    <div className="flex items-center gap-2 border-b border-slate-200 pb-2 mb-3">
                                         <span className="w-5 h-5 bg-slate-900 text-white flex items-center justify-center font-mono text-xs font-bold">1</span>
-                                        <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wide">Cara Membuat Produk Bank (Tabungan)</h4>
+                                        <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wide">Produk Bank (Tabungan Santri)</h4>
                                     </div>
-                                    <p className="text-xs text-slate-600 mb-2">Produk bank mengikat rekening santri ke aturan saldo dan limit transaksi.</p>
-                                    <ol className="text-xs text-slate-600 list-decimal pl-5 space-y-1.5">
-                                        <li>Buka menu <strong>Master Data &gt; Produk Bank</strong>.</li>
-                                        <li>Klik tombol <strong>+ Tambah Produk</strong> di pojok kanan atas.</li>
-                                        <li>Masukkan <strong>Kode</strong> (contoh: WDH) dan <strong>Nama Produk</strong> (contoh: Tabungan Wadiah).</li>
-                                        <li>Tentukan <strong>Saldo Mengendap</strong> (batas uang yang tidak bisa ditarik, misal Rp 10.000).</li>
-                                        <li>Tentukan <strong>Limit Tarik/Hari</strong> (batas nominal santri jajan atau tarik tunai per hari). Isi 0 untuk tanpa batas.</li>
-                                        <li>Pastikan status <strong>Aktif</strong> tercentang, lalu klik <strong>Simpan Produk</strong>.</li>
-                                    </ol>
+
+                                    {/* Kegunaan Fitur */}
+                                    <div className="mb-3 bg-slate-50 border-l-2 border-blue-600 p-2.5">
+                                        <span className="font-bold text-slate-900 text-[11px] uppercase block mb-1">Kegunaan Fitur:</span>
+                                        <p className="text-xs text-slate-600 leading-relaxed">
+                                            Menetapkan skema dan aturan tabungan yang mengikat ke seluruh rekening santri, mencakup batas <strong>Saldo Mengendap</strong> (agar rekening tidak terkuras habis), <strong>Limit Tarik Harian</strong> (mengendalikan santri agar tidak konsumtif saat jajan di koperasi atau tarik tunai di loket), serta biaya administrasi bulanan.
+                                        </p>
+                                    </div>
+
+                                    {/* Langkah-Langkah Penggunaan */}
+                                    <div>
+                                        <span className="font-bold text-slate-900 text-[11px] uppercase block mb-1.5">Langkah-Langkah Penggunaan:</span>
+                                        <ol className="text-xs text-slate-600 list-decimal pl-5 space-y-1.5">
+                                            <li>Buka menu <strong>Master Data &gt; Produk Bank</strong>.</li>
+                                            <li>Klik tombol <strong>+ Tambah Produk</strong> di pojok kanan atas.</li>
+                                            <li>Isi <strong>Kode Produk</strong> (contoh: <code>WDH</code>) dan <strong>Nama Produk</strong> (contoh: <code>Tabungan Wadiah Reguler</code>).</li>
+                                            <li>Tentukan <strong>Saldo Mengendap</strong> (contoh: Rp 10.000 sebagai saldo minimum yang tidak bisa diambil).</li>
+                                            <li>Tentukan <strong>Limit Tarik/Hari</strong> (contoh: Rp 25.000 untuk membatasi pengeluaran santri per hari, atau isi 0 jika tanpa batasan).</li>
+                                            <li>Pastikan toggle status <strong>Aktif</strong> tercentang, lalu klik <strong>Simpan Produk</strong>.</li>
+                                        </ol>
+                                    </div>
                                 </div>
 
-                                {/* COA Bank */}
+                                {/* 2. COA Bank */}
                                 <div className="p-4 border border-slate-300 bg-white">
-                                    <div className="flex items-center gap-2 border-b border-slate-200 pb-2 mb-2">
+                                    <div className="flex items-center gap-2 border-b border-slate-200 pb-2 mb-3">
                                         <span className="w-5 h-5 bg-slate-900 text-white flex items-center justify-center font-mono text-xs font-bold">2</span>
-                                        <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wide">Cara Menambah COA Bank (Chart of Accounts)</h4>
+                                        <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wide">COA Bank (Chart of Accounts)</h4>
                                     </div>
-                                    <p className="text-xs text-slate-600 mb-2">Menambahkan rekening akuntansi buku besar (General Ledger) baru.</p>
-                                    <ol className="text-xs text-slate-600 list-decimal pl-5 space-y-1.5">
-                                        <li>Buka menu <strong>Master Data &gt; COA Bank</strong>.</li>
-                                        <li>Klik tombol <strong>+ Tambah COA</strong>.</li>
-                                        <li>Pilih <strong>Induk COA</strong> jika akun ini merupakan turunan (contoh: anak dari Kas 1100). Tipe (Aset/Kewajiban/dll) akan otomatis menyesuaikan induknya.</li>
-                                        <li>Masukkan <strong>Kode COA</strong> (misal 1102) dan <strong>Nama Akun</strong> (misal Kas Teller B).</li>
-                                        <li>Pilih Level <strong>DETAIL</strong> dan pastikan status <strong>Postable: Ya</strong> jika akun ini akan digunakan untuk transaksi (menerima jurnal debet/kredit).</li>
-                                        <li>Klik <strong>Simpan COA</strong>.</li>
-                                    </ol>
+
+                                    {/* Kegunaan Fitur */}
+                                    <div className="mb-3 bg-slate-50 border-l-2 border-blue-600 p-2.5">
+                                        <span className="font-bold text-slate-900 text-[11px] uppercase block mb-1">Kegunaan Fitur:</span>
+                                        <p className="text-xs text-slate-600 leading-relaxed">
+                                            Menyusun bagan akun buku besar akuntansi (<em>General Ledger</em>) 4 digit standar perbankan syariah. Akun-akun ini menampung seluruh pencatatan jurnal debet dan kredit otomatis dari transaksi setoran teller, penarikan, pembayaran tagihan, hingga belanja kasir kantin.
+                                        </p>
+                                    </div>
+
+                                    {/* Langkah-Langkah Penggunaan */}
+                                    <div>
+                                        <span className="font-bold text-slate-900 text-[11px] uppercase block mb-1.5">Langkah-Langkah Penggunaan:</span>
+                                        <ol className="text-xs text-slate-600 list-decimal pl-5 space-y-1.5">
+                                            <li>Buka menu <strong>Master Data &gt; COA Bank</strong>.</li>
+                                            <li>Klik tombol <strong>+ Tambah COA</strong> di pojok kanan atas.</li>
+                                            <li>Pilih <strong>Induk COA</strong> jika akun baru ini merupakan sub-rekening (contoh: anak dari <code>1100 Kas</code>). Tipe akun (Aset, Kewajiban, dll) akan otomatis menyesuaikan induknya.</li>
+                                            <li>Masukkan <strong>Kode COA</strong> 4 digit (misal: <code>1102</code>) dan <strong>Nama Akun</strong> (misal: <code>Kas Teller Loket 2</code>).</li>
+                                            <li>Pilih Level <strong>DETAIL</strong> dan pastikan status <strong>Postable: Ya</strong> (hanya akun berstatus Postable yang dapat menerima catatan jurnal transaksi).</li>
+                                            <li>Klik <strong>Simpan COA</strong> untuk menyimpan ke dalam bagan akun.</li>
+                                        </ol>
+                                    </div>
                                 </div>
 
-                                {/* Master Rincian Transaksi */}
+                                {/* 3. Master Rincian Transaksi */}
                                 <div className="p-4 border border-slate-300 bg-white">
-                                    <div className="flex items-center gap-2 border-b border-slate-200 pb-2 mb-2">
+                                    <div className="flex items-center gap-2 border-b border-slate-200 pb-2 mb-3">
                                         <span className="w-5 h-5 bg-slate-900 text-white flex items-center justify-center font-mono text-xs font-bold">3</span>
-                                        <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wide">Cara Membuat Master Rincian Transaksi (Komponen Biaya)</h4>
+                                        <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wide">Master Rincian Transaksi (Komponen Biaya)</h4>
                                     </div>
-                                    <p className="text-xs text-slate-600 mb-2">Menjembatani operasional kasir dengan COA akuntansi untuk komponen seperti SPP, Uang Seragam, atau Kitab.</p>
-                                    <ol className="text-xs text-slate-600 list-decimal pl-5 space-y-1.5">
-                                        <li>Buka menu <strong>Master Data &gt; Rincian Transaksi</strong>.</li>
-                                        <li>Klik <strong>+ Tambah Rincian</strong>.</li>
-                                        <li>Isi <strong>Nama Rincian Biaya</strong> (contoh: Uang Pendaftaran Baru).</li>
-                                        <li>Di kolom <strong>COA Tujuan</strong>, cari dan pilih akun buku besar penampungnya (contoh: 4100 Pendapatan Pendaftaran).</li>
-                                        <li>Tentukan <strong>Posisi Entri</strong>. Jika akun tersebut adalah Pendapatan/Kewajiban, pilih <strong>Kredit</strong>. Jika Aset/Beban, pilih <strong>Debit</strong>.</li>
-                                        <li>Klik <strong>Simpan Rincian</strong>. Rincian ini kini bisa digunakan di kasir atau paket pembayaran.</li>
-                                    </ol>
+
+                                    {/* Kegunaan Fitur */}
+                                    <div className="mb-3 bg-slate-50 border-l-2 border-blue-600 p-2.5">
+                                        <span className="font-bold text-slate-900 text-[11px] uppercase block mb-1">Kegunaan Fitur:</span>
+                                        <p className="text-xs text-slate-600 leading-relaxed">
+                                            Menjadi jembatan antara bahasa transaksi operasional kasir (seperti Uang Seragam, SPP Bulanan, Pembelian Kitab) dengan nomor akun akuntansi COA. Kasir cukup memilih nama pungutan tanpa perlu menghafal kode akun debet-kredit.
+                                        </p>
+                                    </div>
+
+                                    {/* Langkah-Langkah Penggunaan */}
+                                    <div>
+                                        <span className="font-bold text-slate-900 text-[11px] uppercase block mb-1.5">Langkah-Langkah Penggunaan:</span>
+                                        <ol className="text-xs text-slate-600 list-decimal pl-5 space-y-1.5">
+                                            <li>Buka menu <strong>Master Data &gt; Rincian Transaksi</strong>.</li>
+                                            <li>Klik tombol <strong>+ Tambah Rincian</strong>.</li>
+                                            <li>Ketikkan <strong>Nama Rincian Biaya</strong> (contoh: <code>Uang Seragam Putri</code>).</li>
+                                            <li>Tentukan <strong>Nominal Default</strong> (jika pungutan memiliki tarif tetap, misal: Rp 350.000).</li>
+                                            <li>Di kolom <strong>COA Tujuan</strong>, cari dan pilih akun penampungnya (contoh: <code>4200 Pendapatan Operasional Tahunan</code>).</li>
+                                            <li>Tentukan <strong>Posisi Entri</strong>: pilih <strong>Kredit</strong> jika akun tujuan adalah Pendapatan/Kewajiban, atau pilih <strong>Debit</strong> jika akun tujuan adalah Aset/Beban.</li>
+                                            <li>Klik <strong>Simpan Rincian</strong>. Komponen ini langsung siap dipakai di kasir maupun di paket tagihan.</li>
+                                        </ol>
+                                    </div>
                                 </div>
 
-                                {/* Jenis Transaksi Bank */}
+                                {/* 4. Jenis Transaksi Bank */}
                                 <div className="p-4 border border-slate-300 bg-white">
-                                    <div className="flex items-center gap-2 border-b border-slate-200 pb-2 mb-2">
+                                    <div className="flex items-center gap-2 border-b border-slate-200 pb-2 mb-3">
                                         <span className="w-5 h-5 bg-slate-900 text-white flex items-center justify-center font-mono text-xs font-bold">4</span>
-                                        <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wide">Cara Membuat Kategori Transaksi & Aturan Jurnal</h4>
+                                        <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wide">Jenis Transaksi Bank (Event Category & Rules)</h4>
                                     </div>
-                                    <p className="text-xs text-slate-600 mb-2">Mengatur peristiwa transaksi (event) dan memetakan jurnal otomatisnya.</p>
-                                    <ol className="text-xs text-slate-600 list-decimal pl-5 space-y-1.5">
-                                        <li>Buka menu <strong>Master Data &gt; Jenis Transaksi Bank</strong>.</li>
-                                        <li>Klik <strong>+ Tambah Transaksi</strong>.</li>
-                                        <li>Masukkan <strong>Kode</strong> (contoh: BIAYA-REG) dan <strong>Nama Transaksi</strong> (contoh: Pembayaran Registrasi).</li>
-                                        <li>Di bagian bawah form, tambahkan <strong>Aturan Jurnal</strong> dengan menekan tombol Plus (+).</li>
-                                        <li>Anda harus membuat pasangan seimbang. Contoh: Tambah 1 baris Debit (menunjuk ke COA Kas Teller), dan 1 baris Kredit (menunjuk ke Rincian Biaya Pendaftaran).</li>
-                                        <li>Setelah aturan debet-kredit seimbang, klik <strong>Simpan Transaksi</strong>.</li>
-                                    </ol>
+
+                                    {/* Kegunaan Fitur */}
+                                    <div className="mb-3 bg-slate-50 border-l-2 border-blue-600 p-2.5">
+                                        <span className="font-bold text-slate-900 text-[11px] uppercase block mb-1">Kegunaan Fitur:</span>
+                                        <p className="text-xs text-slate-600 leading-relaxed">
+                                            Mengelompokkan kategori peristiwa transaksi sistem (seperti <code>TOPUP-SANTRI</code>, <code>WDR-SANTRI</code>, <code>BIAYA-REG</code>) serta mengonfigurasi aturan pemetaan (<em>Journal Rules</em>) berpasangan agar setiap transaksi otomatis menghasilkan jurnal seimbang.
+                                        </p>
+                                    </div>
+
+                                    {/* Langkah-Langkah Penggunaan */}
+                                    <div>
+                                        <span className="font-bold text-slate-900 text-[11px] uppercase block mb-1.5">Langkah-Langkah Penggunaan:</span>
+                                        <ol className="text-xs text-slate-600 list-decimal pl-5 space-y-1.5">
+                                            <li>Buka menu <strong>Master Data &gt; Jenis Transaksi Bank</strong>.</li>
+                                            <li>Klik <strong>+ Tambah Transaksi</strong>.</li>
+                                            <li>Masukkan <strong>Kode</strong> (contoh: <code>BIAYA-REG</code>) dan <strong>Nama Transaksi</strong> (contoh: <code>Pembayaran Registrasi Santri Baru</code>).</li>
+                                            <li>Pada bagian <strong>Aturan Jurnal</strong>, klik tombol Plus (+) untuk menambahkan baris pemetaan akun.</li>
+                                            <li>Buat pasangan seimbang: 1 baris sisi <strong>Debit</strong> (misal menunjuk ke COA Kas Utama <code>1101</code>) dan 1 baris sisi <strong>Kredit</strong> (menunjuk ke Rincian Biaya Registrasi).</li>
+                                            <li>Setelah aturan debet-kredit seimbang, klik <strong>Simpan Transaksi</strong>.</li>
+                                        </ol>
+                                    </div>
                                 </div>
 
-                                {/* Merchant Koperasi */}
+                                {/* 5. Merchant Koperasi */}
                                 <div className="p-4 border border-slate-300 bg-white">
-                                    <div className="flex items-center gap-2 border-b border-slate-200 pb-2 mb-2">
+                                    <div className="flex items-center gap-2 border-b border-slate-200 pb-2 mb-3">
                                         <span className="w-5 h-5 bg-slate-900 text-white flex items-center justify-center font-mono text-xs font-bold">5</span>
-                                        <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wide">Cara Mendaftarkan Outlet Merchant Koperasi</h4>
+                                        <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wide">Merchant Koperasi (Kasir Eksternal)</h4>
                                     </div>
-                                    <p className="text-xs text-slate-600 mb-2">Mendaftarkan kasir eksternal (Kantin/Koperasi) agar bisa menerima pembayaran tap kartu (RFID) santri.</p>
-                                    <ol className="text-xs text-slate-600 list-decimal pl-5 space-y-1.5">
-                                        <li>Buka menu <strong>Master Data &gt; Merchant Koperasi</strong> (atau di bawah menu Pembayaran & Tagihan).</li>
-                                        <li>Klik <strong>+ Tambah Merchant</strong>.</li>
-                                        <li>Ketikkan nama merchant (contoh: Kantin Putra - Nasi Goreng).</li>
-                                        <li>Klik Simpan. Sistem akan memunculkan popup berisi <strong>API Secret Key (X-Koperasi-Key)</strong>.</li>
-                                        <li>Klik tombol Salin (Copy) dan masukkan kunci tersebut ke sistem kasir/POS di kantin agar terhubung ke server bank santri.</li>
-                                        <li>Gunakan tombol <strong>Rotate Key</strong> jika kunci bocor atau perlu di-reset.</li>
-                                    </ol>
+
+                                    {/* Kegunaan Fitur */}
+                                    <div className="mb-3 bg-slate-50 border-l-2 border-blue-600 p-2.5">
+                                        <span className="font-bold text-slate-900 text-[11px] uppercase block mb-1">Kegunaan Fitur:</span>
+                                        <p className="text-xs text-slate-600 leading-relaxed">
+                                            Mendaftarkan kasir pihak ketiga (Kantin, Dapur, Toko Kitab) dan menerbitkan <strong>API Secret Key (X-Koperasi-Key)</strong> agar perangkat POS kasir dapat memproses transaksi <em>cashless</em> pemotongan saldo tabungan santri via tap kartu RFID tanpa membutuhkan akses login teller perbankan.
+                                        </p>
+                                    </div>
+
+                                    {/* Langkah-Langkah Penggunaan */}
+                                    <div>
+                                        <span className="font-bold text-slate-900 text-[11px] uppercase block mb-1.5">Langkah-Langkah Penggunaan:</span>
+                                        <ol className="text-xs text-slate-600 list-decimal pl-5 space-y-1.5">
+                                            <li>Buka menu <strong>Master Data &gt; Merchant Koperasi</strong> (atau dari menu Koperasi & Eksternal).</li>
+                                            <li>Klik tombol <strong>+ Tambah Merchant</strong>.</li>
+                                            <li>Ketikkan nama merchant (contoh: <code>Kantin Putra - Stand Minuman</code>) dan catatan lokasi.</li>
+                                            <li>Klik Simpan. Sistem akan memunculkan modal berisi <strong>API Secret Key</strong> unik.</li>
+                                            <li>Klik tombol <strong>Salin (Copy)</strong> dan masukkan key tersebut ke software POS kasir kantin.</li>
+                                            <li>Jika mesin kasir diganti atau kunci terindikasi bocor, gunakan tombol <strong>Rotate Key</strong> untuk menerbitkan kunci baru dan menonaktifkan kunci lama.</li>
+                                        </ol>
+                                    </div>
                                 </div>
 
-                                {/* Pengaturan Bank */}
+                                {/* 6. Pengaturan Bank */}
                                 <div className="p-4 border border-slate-300 bg-white">
-                                    <div className="flex items-center gap-2 border-b border-slate-200 pb-2 mb-2">
+                                    <div className="flex items-center gap-2 border-b border-slate-200 pb-2 mb-3">
                                         <span className="w-5 h-5 bg-slate-900 text-white flex items-center justify-center font-mono text-xs font-bold">6</span>
-                                        <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wide">Cara Mengubah Pengaturan Konfigurasi Global</h4>
+                                        <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wide">Pengaturan Bank (Konfigurasi Global)</h4>
                                     </div>
-                                    <p className="text-xs text-slate-600 mb-2">Mengelola variabel sistem yang mempengaruhi operasional bank secara keseluruhan.</p>
-                                    <ol className="text-xs text-slate-600 list-decimal pl-5 space-y-1.5">
-                                        <li>Buka menu <strong>Master Data &gt; Pengaturan Bank</strong>.</li>
-                                        <li>Form terbagi menjadi beberapa grup: <strong>Pesantren</strong> (untuk integrasi sinkronisasi data dengan SMPT), <strong>Midtrans</strong> (gateway), dan <strong>Koperasi</strong> (batasan jam makan).</li>
-                                        <li>Ubah nilai di kolom yang sesuai, contohnya mengedit tarif sekali makan di kantin atau mematikan fitur Anti-Double Tap.</li>
-                                        <li>Klik <strong>Simpan Pengaturan</strong> di pojok kanan atas untuk menerapkan perubahan ke seluruh sistem secara real-time.</li>
-                                    </ol>
+
+                                    {/* Kegunaan Fitur */}
+                                    <div className="mb-3 bg-slate-50 border-l-2 border-blue-600 p-2.5">
+                                        <span className="font-bold text-slate-900 text-[11px] uppercase block mb-1">Kegunaan Fitur:</span>
+                                        <p className="text-xs text-slate-600 leading-relaxed">
+                                            Mengelola variabel dan parameter terpusat sistem, meliputi integrasi auto-provisioning profil santri & kartu RFID dengan server akademik SMPT, integrasi payment gateway Midtrans untuk setoran online, hingga jadwal jam makan dapur dan proteksi Anti-Double Tap.
+                                        </p>
+                                    </div>
+
+                                    {/* Langkah-Langkah Penggunaan */}
+                                    <div>
+                                        <span className="font-bold text-slate-900 text-[11px] uppercase block mb-1.5">Langkah-Langkah Penggunaan:</span>
+                                        <ol className="text-xs text-slate-600 list-decimal pl-5 space-y-1.5">
+                                            <li>Buka menu <strong>Master Data &gt; Pengaturan Bank</strong>.</li>
+                                            <li>Pilih kelompok konfigurasi:
+                                                <ul className="list-disc pl-4 mt-1 space-y-1 text-slate-500">
+                                                    <li><strong>Pesantren:</strong> Mengatur URL server SMPT dan Secret Key untuk sinkronisasi otomatis.</li>
+                                                    <li><strong>Midtrans:</strong> Mengatur Merchant ID, Client Key, dan Server Key untuk pembayaran virtual account online.</li>
+                                                    <li><strong>Koperasi:</strong> Menentukan jam buka sesi makan dapur, tarif per porsi, dan mengaktifkan fitur pencegah dobel tap kartu santri.</li>
+                                                </ul>
+                                            </li>
+                                            <li>Ubah nilai parameter pada kolom input yang dikehendaki.</li>
+                                            <li>Klik tombol <strong>Simpan Pengaturan</strong> di pojok kanan atas untuk menerapkan perubahan seketika ke seluruh sistem.</li>
+                                        </ol>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -370,39 +449,54 @@ const PanduanPage = () => {
                     {activeSection === 'tambah-coa' && (
                         <div className="space-y-5">
                             <div className="border-b border-slate-200 pb-3">
-                                <h2 className="text-lg font-bold text-slate-900">Menambah Pungutan / Tagihan Baru</h2>
-                                <p className="text-xs text-slate-500">Alur yang tepat agar pembukuan tidak berantakan</p>
+                                <h2 className="text-lg font-bold text-slate-900">Panduan Menambah Pungutan / Tagihan Baru</h2>
+                                <p className="text-xs text-slate-500">Keterangan kegunaan dan alur langkah demi langkah agar pembukuan tetap tertib</p>
+                            </div>
+
+                            <div className="bg-slate-50 border-l-2 border-blue-600 p-2.5">
+                                <span className="font-bold text-slate-900 text-[11px] uppercase block mb-1">Kegunaan Fitur:</span>
+                                <p className="text-xs text-slate-600 leading-relaxed">
+                                    Membuat dan mendaftarkan jenis tagihan baru santri (seperti Biaya Ujian, Uang Kitab, Gedung Baru, atau Kajian Ramadhan) ke dalam sistem secara tertib akuntansi, sehingga uang masuk otomatis tercatat sebagai <strong>Pendapatan Pesantren (COA Kepala 4)</strong> tanpa merusak saldo titipan tabungan wadiah santri.
+                                </p>
                             </div>
 
                             <div className="bg-amber-50 border-l-4 border-amber-600 p-3.5 text-xs text-amber-900">
-                                <strong>ATURAN EMAS:</strong> Jangan pernah memetakan jenis pungutan santri langsung ke akun Tabungan (2100) atau Kas (1101) di <i>Master Rincian Transaksi</i>. <br/>
+                                <strong>ATURAN EMAS AKUNTANSI:</strong> Jangan pernah memetakan jenis pungutan santri langsung ke akun Tabungan (2100) atau Kas (1101) di <i>Master Rincian Transaksi</i>. <br/>
                                 Pungutan wajib diarahkan ke <strong>COA PENDAPATAN (Kepala 4)</strong>. Sistem secara otomatis mendebit saldo tabungan santri sebagai akun lawannya saat pembayaran.
                             </div>
 
-                            <h3 className="font-bold text-slate-800 text-sm mt-4">Studi Kasus: Menambahkan "Biaya Kajian Ramadhan"</h3>
-                            
-                            <div className="space-y-3">
-                                <div className="flex gap-3 p-3.5 border border-slate-300 bg-white">
-                                    <div className="w-6 h-6 bg-slate-900 text-white flex items-center justify-center font-bold font-mono text-xs shrink-0">1</div>
-                                    <div>
-                                        <h4 className="font-bold text-xs text-slate-900 uppercase">Tambahkan COA Pendapatan</h4>
-                                        <p className="text-xs text-slate-600 mt-1">Buka menu <b>Master Data &gt; COA Bank</b>. Tambahkan sub-akun pendapatan baru (misal: <code>4205 - Pendapatan Kajian Ramadhan</code>) di bawah parent Pendapatan Operasional. Centang <i>Postable</i>.</p>
+                            <div>
+                                <span className="font-bold text-slate-900 text-xs uppercase block mb-2">Langkah Demi Langkah: Studi Kasus "Biaya Kajian Ramadhan"</span>
+                                
+                                <div className="space-y-3">
+                                    <div className="p-3.5 border border-slate-300 bg-white">
+                                        <div className="flex items-center gap-2 mb-1.5">
+                                            <span className="w-5 h-5 bg-slate-900 text-white flex items-center justify-center font-mono text-xs font-bold">1</span>
+                                            <h4 className="font-bold text-xs text-slate-900 uppercase">Tambahkan COA Pendapatan Baru</h4>
+                                        </div>
+                                        <p className="text-xs text-slate-600 pl-7">
+                                            Buka menu <b>Master Data &gt; COA Bank</b>. Klik <strong>+ Tambah COA</strong>, buat sub-akun pendapatan baru (misal: <code>4205 - Pendapatan Kajian Ramadhan</code>) di bawah parent Pendapatan Operasional. Centang status <strong>Postable: Ya</strong>.
+                                        </p>
                                     </div>
-                                </div>
 
-                                <div className="flex gap-3 p-3.5 border border-slate-300 bg-white">
-                                    <div className="w-6 h-6 bg-slate-900 text-white flex items-center justify-center font-bold font-mono text-xs shrink-0">2</div>
-                                    <div>
-                                        <h4 className="font-bold text-xs text-slate-900 uppercase">Daftarkan di Master Rincian Transaksi</h4>
-                                        <p className="text-xs text-slate-600 mt-1">Buka menu <b>Master Data &gt; Rincian Transaksi</b>. Buat item baru dengan COA Code: <code>4205</code>, Entry Type: <code>Kredit</code>, dan tentukan nominalnya.</p>
+                                    <div className="p-3.5 border border-slate-300 bg-white">
+                                        <div className="flex items-center gap-2 mb-1.5">
+                                            <span className="w-5 h-5 bg-slate-900 text-white flex items-center justify-center font-mono text-xs font-bold">2</span>
+                                            <h4 className="font-bold text-xs text-slate-900 uppercase">Daftarkan di Master Rincian Transaksi</h4>
+                                        </div>
+                                        <p className="text-xs text-slate-600 pl-7">
+                                            Buka menu <b>Master Data &gt; Rincian Transaksi</b>. Klik <strong>+ Tambah Rincian</strong>. Masukkan Nama: <code>Biaya Kajian Ramadhan</code>, pilih COA Tujuan: <code>4205</code>, Posisi Entri: <code>Kredit</code>, dan tentukan tarif defaultnya.
+                                        </p>
                                     </div>
-                                </div>
 
-                                <div className="flex gap-3 p-3.5 border border-slate-300 bg-white">
-                                    <div className="w-6 h-6 bg-slate-900 text-white flex items-center justify-center font-bold font-mono text-xs shrink-0">3</div>
-                                    <div>
-                                        <h4 className="font-bold text-xs text-slate-900 uppercase">Sematkan ke Paket Tagihan</h4>
-                                        <p className="text-xs text-slate-600 mt-1">Buka menu <b>Tagihan &gt; Paket Pembayaran</b>. Edit items pada paket yang bersangkutan, masukkan rincian "Biaya Kajian Ramadhan" tersebut.</p>
+                                    <div className="p-3.5 border border-slate-300 bg-white">
+                                        <div className="flex items-center gap-2 mb-1.5">
+                                            <span className="w-5 h-5 bg-slate-900 text-white flex items-center justify-center font-mono text-xs font-bold">3</span>
+                                            <h4 className="font-bold text-xs text-slate-900 uppercase">Sematkan ke Paket Tagihan</h4>
+                                        </div>
+                                        <p className="text-xs text-slate-600 pl-7">
+                                            Buka menu <b>Pembayaran & Tagihan &gt; Paket Pembayaran</b>. Tambahkan atau edit paket yang bersangkutan, lalu masukkan komponen rincian "Biaya Kajian Ramadhan" tersebut ke dalam item tagihan.
+                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -471,20 +565,24 @@ const PanduanPage = () => {
                         <div className="space-y-5">
                             <div className="border-b border-slate-200 pb-3">
                                 <h2 className="text-lg font-bold text-slate-900">Rekonsiliasi Saldo Wadiah</h2>
-                                <p className="text-xs text-slate-500">Mencegah kebocoran dan selisih buku akuntansi</p>
+                                <p className="text-xs text-slate-500">Audit kepatuhan akuntansi dan pencegahan selisih kas</p>
                             </div>
 
-                            <p className="text-xs text-slate-600">
-                                Fitur audit untuk memastikan Total Saldo riil milik seluruh santri <strong>sama persis</strong> dengan Total Saldo Buku Besar (COA 2100).
-                            </p>
+                            <div className="bg-slate-50 border-l-2 border-blue-600 p-2.5">
+                                <span className="font-bold text-slate-900 text-[11px] uppercase block mb-1">Kegunaan Fitur:</span>
+                                <p className="text-xs text-slate-600 leading-relaxed">
+                                    Memverifikasi dan mencocokkan secara otomatis antara total saldo fisik milik seluruh rekening santri dengan nilai saldo buku besar akuntansi pada akun Titipan Wadiah (COA 2100). Fitur ini menjamin tidak ada kebocoran dana dan mendeteksi jika ada transaksi gantung yang belum terjurnal.
+                                </p>
+                            </div>
 
-                            <div className="bg-slate-50 border border-slate-300 p-4">
-                                <h4 className="font-bold text-slate-900 text-xs uppercase mb-2">Jika Ditemukan Selisih:</h4>
-                                <ol className="text-xs text-slate-700 space-y-1.5 pl-4 list-decimal">
-                                    <li>Buka menu <b>Laporan &gt; Rekonsiliasi Saldo</b>.</li>
-                                    <li>Sistem akan mendeteksi baris transaksi mana yang jurnal ledger-nya hilang atau belum terbentuk.</li>
-                                    <li>Klik tombol <b>Sync / Perbaiki Jurnal Otomatis</b>.</li>
-                                    <li>Sistem akan merekonstruksi ulang pasangan jurnal sesuai mutasi saldo santri.</li>
+                            <div>
+                                <span className="font-bold text-slate-900 text-[11px] uppercase block mb-1.5">Langkah-Langkah Penggunaan:</span>
+                                <ol className="text-xs text-slate-600 list-decimal pl-5 space-y-1.5">
+                                    <li>Buka menu <strong>Laporan &gt; Rekonsiliasi Saldo</strong>.</li>
+                                    <li>Tinjau panel perbandingan: <strong>Total Saldo Riil Rekening Nasabah</strong> vs <strong>Total Saldo Buku Besar COA 2100</strong>.</li>
+                                    <li>Jika kedua nilai bernilai sama (Selisih = Rp 0), status menunjukkan <strong>Balanced / Seimbang</strong>.</li>
+                                    <li>Jika terdapat selisih, tabel di bawah akan memunculkan daftar nomor referensi transaksi yang jurnalnya belum terposting sempurna.</li>
+                                    <li>Klik tombol <strong>Sync / Perbaiki Jurnal Otomatis</strong> untuk merekonstruksi kembali jurnal transaksi yang hilang.</li>
                                 </ol>
                             </div>
                         </div>
@@ -494,105 +592,195 @@ const PanduanPage = () => {
                         <div className="space-y-5">
                             <div className="border-b border-slate-200 pb-3">
                                 <h2 className="text-lg font-bold text-slate-900">Panduan Lengkap Operasional Bank (Teller)</h2>
-                                <p className="text-xs text-slate-500">Prosedur langkah demi langkah 7 fitur operasional loket harian</p>
+                                <p className="text-xs text-slate-500">Keterangan kegunaan dan tata cara penggunaan 7 fitur operasional loket harian</p>
                             </div>
 
-                            <div className="space-y-3.5">
+                            <p className="text-xs text-slate-600">
+                                Modul Operasional Bank adalah area kerja harian teller dan staf keuangan untuk melayani santri dan wali. Berikut adalah keterangan kegunaan setiap fitur diikuti langkah-langkah penggunaannya:
+                            </p>
+
+                            <div className="space-y-4">
                                 {/* 1. Transaksi Bank */}
                                 <div className="p-4 border border-slate-300 bg-white">
-                                    <div className="flex items-center gap-2 border-b border-slate-200 pb-2 mb-2">
+                                    <div className="flex items-center gap-2 border-b border-slate-200 pb-2 mb-3">
                                         <span className="w-5 h-5 bg-slate-900 text-white flex items-center justify-center font-mono text-xs font-bold">1</span>
                                         <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wide">Transaksi Bank (Monitoring & Reversal)</h4>
                                     </div>
-                                    <p className="text-xs text-slate-600 mb-2">Layar pemantauan seluruh riwayat transaksi di sistem secara real-time.</p>
-                                    <ul className="text-xs text-slate-600 list-disc pl-5 space-y-1">
-                                        <li><strong>Pencarian:</strong> Filter data berdasarkan status, channel, atau nomor referensi.</li>
-                                        <li><strong>Cetak Struk:</strong> Buka detail transaksi untuk mencetak kuitansi ulang.</li>
-                                        <li><strong>Reversal (Pembatalan):</strong> Buka detail transaksi lalu klik <strong>Reverse</strong> untuk membatalkan kesalahan input dengan Jurnal Balik otomatis.</li>
-                                    </ul>
+
+                                    <div className="mb-3 bg-slate-50 border-l-2 border-blue-600 p-2.5">
+                                        <span className="font-bold text-slate-900 text-[11px] uppercase block mb-1">Kegunaan Fitur:</span>
+                                        <p className="text-xs text-slate-600 leading-relaxed">
+                                            Memantau seluruh transaksi yang terjadi di seluruh loket teller, kasir kantin, dan transfer online secara real-time, mencetak ulang kuitansi transaksi lama, serta melakukan pembatalan resmi (<em>Reversal</em>) jika petugas salah menginput nominal/santri tanpa menghapus jejak audit.
+                                        </p>
+                                    </div>
+
+                                    <div>
+                                        <span className="font-bold text-slate-900 text-[11px] uppercase block mb-1.5">Langkah-Langkah Penggunaan:</span>
+                                        <ol className="text-xs text-slate-600 list-decimal pl-5 space-y-1.5">
+                                            <li>Buka menu <strong>Operasional Bank &gt; Transaksi Bank</strong>.</li>
+                                            <li>Gunakan kolom pencarian atau filter status (Success/Pending/Failed) untuk menemukan transaksi yang dicari.</li>
+                                            <li>Klik tombol <strong>Detail</strong> pada baris transaksi untuk melihat informasi akun debet-kredit, channel, dan mencetak ulang kuitansi.</li>
+                                            <li><strong>Cara Membatalkan (Reversal):</strong> Jika transaksi salah input, klik tombol <strong>Reverse</strong> di halaman detail, ketikkan alasan pembatalan (misal: "Salah input nominal"), lalu konfirmasi. Sistem otomatis mengembalikan saldo santri dan membuat jurnal pembalik.</li>
+                                        </ol>
+                                    </div>
                                 </div>
 
                                 {/* 2. Entri Transaksi */}
                                 <div className="p-4 border border-slate-300 bg-white">
-                                    <div className="flex items-center gap-2 border-b border-slate-200 pb-2 mb-2">
+                                    <div className="flex items-center gap-2 border-b border-slate-200 pb-2 mb-3">
                                         <span className="w-5 h-5 bg-slate-900 text-white flex items-center justify-center font-mono text-xs font-bold">2</span>
                                         <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wide">Entri Transaksi Manual</h4>
                                     </div>
-                                    <p className="text-xs text-slate-600 mb-2">Formulir pemindahbukuan manual yang diatur oleh Jenis Transaksi.</p>
-                                    <ol className="text-xs text-slate-600 list-decimal pl-5 space-y-1">
-                                        <li>Pilih <strong>Jenis Transaksi</strong>.</li>
-                                        <li>Pilih Rekening Sumber dan Rekening Tujuan jika berlaku.</li>
-                                        <li>Input nominal dan deskripsi, lalu klik <strong>Simpan Transaksi</strong>.</li>
-                                    </ol>
+
+                                    <div className="mb-3 bg-slate-50 border-l-2 border-blue-600 p-2.5">
+                                        <span className="font-bold text-slate-900 text-[11px] uppercase block mb-1">Kegunaan Fitur:</span>
+                                        <p className="text-xs text-slate-600 leading-relaxed">
+                                            Mencatat transaksi pembukuan khusus atau pemindahbukuan dana internal yang tidak melalui loket setor/tarik tunai umum, seperti koreksi saldo, penyaluran subsidi/beasiswa yayasan, atau dropping kas antar loket.
+                                        </p>
+                                    </div>
+
+                                    <div>
+                                        <span className="font-bold text-slate-900 text-[11px] uppercase block mb-1.5">Langkah-Langkah Penggunaan:</span>
+                                        <ol className="text-xs text-slate-600 list-decimal pl-5 space-y-1.5">
+                                            <li>Buka menu <strong>Operasional Bank &gt; Entri Transaksi</strong>.</li>
+                                            <li>Pilih <strong>Jenis Transaksi</strong> dari daftar dropdown sesuai peruntukan transaksi.</li>
+                                            <li>Pilih <strong>Rekening Sumber</strong> (rekening yang dananya ditarik/berkurang) dan <strong>Rekening Tujuan</strong> (rekening penerima dana).</li>
+                                            <li>Masukkan <strong>Nominal Transaksi</strong> dan tuliskan keterangan lengkap di kolom <strong>Deskripsi</strong>.</li>
+                                            <li>Klik <strong>Simpan Transaksi</strong>. Sistem otomatis membukukan transaksi dan membentuk jurnal double-entry.</li>
+                                        </ol>
+                                    </div>
                                 </div>
 
                                 {/* 3. Rekening Bank */}
                                 <div className="p-4 border border-slate-300 bg-white">
-                                    <div className="flex items-center gap-2 border-b border-slate-200 pb-2 mb-2">
+                                    <div className="flex items-center gap-2 border-b border-slate-200 pb-2 mb-3">
                                         <span className="w-5 h-5 bg-slate-900 text-white flex items-center justify-center font-mono text-xs font-bold">3</span>
-                                        <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wide">Daftar Rekening Bank</h4>
+                                        <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wide">Rekening Bank & Auto-Provisioning</h4>
                                     </div>
-                                    <p className="text-xs text-slate-600 mb-2">Pengelolaan data seluruh rekening tabungan santri.</p>
-                                    <ul className="text-xs text-slate-600 list-disc pl-5 space-y-1">
-                                        <li><strong>Auto-Provisioning:</strong> Jika mencari NIS santri dan rekening belum ada, sistem langsung menarik profil & kartu RFID dari server SMPT dan membuatkan rekening baru.</li>
-                                        <li><strong>Blokir Rekening:</strong> Ubah status menjadi "DIBLOKIR" jika kartu santri hilang.</li>
-                                    </ul>
+
+                                    <div className="mb-3 bg-slate-50 border-l-2 border-blue-600 p-2.5">
+                                        <span className="font-bold text-slate-900 text-[11px] uppercase block mb-1">Kegunaan Fitur:</span>
+                                        <p className="text-xs text-slate-600 leading-relaxed">
+                                            Menampilkan dan mengelola seluruh buku tabungan santri (nomor rekening = NIS), memantau saldo aktif, memblokir rekening jika kartu fisik hilang, serta secara otomatis membuat rekening baru (<em>Auto-Provisioning</em>) tersinkronisasi dengan server SMPT.
+                                        </p>
+                                    </div>
+
+                                    <div>
+                                        <span className="font-bold text-slate-900 text-[11px] uppercase block mb-1.5">Langkah-Langkah Penggunaan:</span>
+                                        <ol className="text-xs text-slate-600 list-decimal pl-5 space-y-1.5">
+                                            <li>Buka menu <strong>Operasional Bank &gt; Rekening Bank</strong>.</li>
+                                            <li>Ketikkan NIS atau Nama santri di kolom pencarian.</li>
+                                            <li><strong>Proses Auto-Provisioning:</strong> Jika santri baru belum pernah membuka rekening, ketikkan NIS santri. Sistem otomatis menarik biodata santri dan nomor UID RFID dari SMPT, lalu langsung membuatkan rekening tabungan baru tanpa perlu pendaftaran manual.</li>
+                                            <li>Klik baris santri untuk melihat rincian produk tabungan, limit harian, dan kontak wali santri.</li>
+                                            <li><strong>Cara Memblokir Rekening:</strong> Jika kartu santri hilang atau santri telah mutasi/lulus, klik <strong>Edit Status</strong> dan ubah status rekening menjadi <strong>DIBLOKIR</strong> atau <strong>TUTUP</strong>.</li>
+                                        </ol>
+                                    </div>
                                 </div>
 
                                 {/* 4. Top-Up / Setor Tunai */}
                                 <div className="p-4 border border-slate-300 bg-white">
-                                    <div className="flex items-center gap-2 border-b border-slate-200 pb-2 mb-2">
+                                    <div className="flex items-center gap-2 border-b border-slate-200 pb-2 mb-3">
                                         <span className="w-5 h-5 bg-slate-900 text-white flex items-center justify-center font-mono text-xs font-bold">4</span>
                                         <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wide">Top-Up / Setor Tunai</h4>
                                     </div>
-                                    <p className="text-xs text-slate-600 mb-2">Prosedur penerimaan setoran uang tunai di loket teller.</p>
-                                    <ol className="text-xs text-slate-600 list-decimal pl-5 space-y-1">
-                                        <li>Scan kartu RFID atau cari santri berdasarkan NIS/Nama.</li>
-                                        <li>Input nominal fisik uang yang diterima.</li>
-                                        <li>Jika bertujuan melunasi tagihan (Syahriyah), <strong>pilih Dropdown Paket Pembayaran</strong> agar langsung lunas otomatis.</li>
-                                        <li>Klik <strong>Proses Setoran</strong> dan cetak bukti transaksi.</li>
-                                    </ol>
+
+                                    <div className="mb-3 bg-slate-50 border-l-2 border-blue-600 p-2.5">
+                                        <span className="font-bold text-slate-900 text-[11px] uppercase block mb-1">Kegunaan Fitur:</span>
+                                        <p className="text-xs text-slate-600 leading-relaxed">
+                                            Menerima setoran uang tunai di loket teller dari santri atau wali untuk mengisi saldo tabungan uang saku santri, atau sekaligus langsung melunasi tagihan pesantren (seperti SPP/Syahriyah) dalam satu kali transaksi terpadu.
+                                        </p>
+                                    </div>
+
+                                    <div>
+                                        <span className="font-bold text-slate-900 text-[11px] uppercase block mb-1.5">Langkah-Langkah Penggunaan:</span>
+                                        <ol className="text-xs text-slate-600 list-decimal pl-5 space-y-1.5">
+                                            <li>Buka menu <strong>Operasional Bank &gt; Top-Up / Setor Tunai</strong>.</li>
+                                            <li>Tempelkan kartu RFID santri ke reader atau cari berdasarkan NIS/Nama santri.</li>
+                                            <li>Hitung uang fisik yang diserahkan dan masukkan nominalnya di kolom <strong>Jumlah Setoran</strong>.</li>
+                                            <li><strong>Setoran Plus Pelunasan Tagihan:</strong> Jika uang setoran ditujukan untuk melunasi tagihan (misal Syahriyah), pilih nama tagihan pada dropdown <strong>Paket Pembayaran</strong>. Sistem akan otomatis memotong tagihan dan memasukkan sisanya ke saldo uang saku santri.</li>
+                                            <li>Klik tombol <strong>Proses Setoran Tunai</strong>.</li>
+                                            <li>Serahkan kuitansi/struk bukti setoran kepada wali atau santri.</li>
+                                        </ol>
+                                    </div>
                                 </div>
 
                                 {/* 5. Tarik Tunai */}
                                 <div className="p-4 border border-slate-300 bg-white">
-                                    <div className="flex items-center gap-2 border-b border-slate-200 pb-2 mb-2">
+                                    <div className="flex items-center gap-2 border-b border-slate-200 pb-2 mb-3">
                                         <span className="w-5 h-5 bg-slate-900 text-white flex items-center justify-center font-mono text-xs font-bold">5</span>
-                                        <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wide">Tarik Tunai</h4>
+                                        <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wide">Tarik Tunai (Pencairan Uang Saku)</h4>
                                     </div>
-                                    <p className="text-xs text-slate-600 mb-2">Pencairan uang saku santri dengan kontrol proteksi.</p>
-                                    <ul className="text-xs text-slate-600 list-disc pl-5 space-y-1">
-                                        <li><strong>Saldo Minimum:</strong> Saldo mengendap tidak bisa ditarik.</li>
-                                        <li><strong>Limit Tarik Harian:</strong> Sistem memeriksa total tarikan & jajan hari ini. Menolak otomatis jika melewati batas.</li>
-                                        <li>Serahkan uang fisik kepada santri dan cetak kuitansi.</li>
-                                    </ul>
+
+                                    <div className="mb-3 bg-slate-50 border-l-2 border-blue-600 p-2.5">
+                                        <span className="font-bold text-slate-900 text-[11px] uppercase block mb-1">Kegunaan Fitur:</span>
+                                        <p className="text-xs text-slate-600 leading-relaxed">
+                                            Melayani santri yang ingin mencairkan uang saku tunai di loket teller dengan proteksi otomatis terhadap <strong>Saldo Mengendap</strong> (agar saldo tidak habis) dan <strong>Limit Tarik Harian</strong> (sistem menghitung total tarik tunai + jajan santri hari ini agar tidak melebihi kuota).
+                                        </p>
+                                    </div>
+
+                                    <div>
+                                        <span className="font-bold text-slate-900 text-[11px] uppercase block mb-1.5">Langkah-Langkah Penggunaan:</span>
+                                        <ol className="text-xs text-slate-600 list-decimal pl-5 space-y-1.5">
+                                            <li>Buka menu <strong>Operasional Bank &gt; Tarik Tunai</strong>.</li>
+                                            <li>Scan kartu RFID atau ketikkan NIS santri.</li>
+                                            <li>Periksa ringkasan yang muncul: Saldo Aktif, Total Belanja Hari Ini, dan <strong>Maksimal Penarikan yang Diizinkan</strong>.</li>
+                                            <li>Masukkan nominal penarikan yang diminta santri (sistem otomatis menolak jika melebihi sisa limit hari ini atau melanggar saldo mengendap).</li>
+                                            <li>Klik tombol <strong>Proses Penarikan</strong>.</li>
+                                            <li>Ambil uang tunai dari laci kas, serahkan ke santri, dan mintakan tanda tangan santri pada slip penarikan.</li>
+                                        </ol>
+                                    </div>
                                 </div>
 
                                 {/* 6. Transfer Bank */}
                                 <div className="p-4 border border-slate-300 bg-white">
-                                    <div className="flex items-center gap-2 border-b border-slate-200 pb-2 mb-2">
+                                    <div className="flex items-center gap-2 border-b border-slate-200 pb-2 mb-3">
                                         <span className="w-5 h-5 bg-slate-900 text-white flex items-center justify-center font-mono text-xs font-bold">6</span>
                                         <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wide">Transfer Bank Antar Santri</h4>
                                     </div>
-                                    <p className="text-xs text-slate-600 mb-2">Pemindahan saldo instan antar santri tanpa biaya.</p>
-                                    <ol className="text-xs text-slate-600 list-decimal pl-5 space-y-1">
-                                        <li>Pilih Rekening Pengirim (sistem memverifikasi saldo).</li>
-                                        <li>Pilih Rekening Tujuan.</li>
-                                        <li>Input nominal dan keterangan, lalu klik <strong>Proses Transfer</strong>.</li>
-                                    </ol>
+
+                                    <div className="mb-3 bg-slate-50 border-l-2 border-blue-600 p-2.5">
+                                        <span className="font-bold text-slate-900 text-[11px] uppercase block mb-1">Kegunaan Fitur:</span>
+                                        <p className="text-xs text-slate-600 leading-relaxed">
+                                            Memindahkan saldo tabungan dari satu rekening santri ke rekening santri lain (contoh: kiriman dari kakak ke adik atau antar santri) secara instan, tanpa biaya admin, dan tercatat rapi di mutasi kedua santri tanpa melibatkan uang tunai fisik.
+                                        </p>
+                                    </div>
+
+                                    <div>
+                                        <span className="font-bold text-slate-900 text-[11px] uppercase block mb-1.5">Langkah-Langkah Penggunaan:</span>
+                                        <ol className="text-xs text-slate-600 list-decimal pl-5 space-y-1.5">
+                                            <li>Buka menu <strong>Operasional Bank &gt; Transfer Bank</strong>.</li>
+                                            <li>Pilih atau cari rekening <strong>Santri Pengirim</strong> (sistem akan langsung memverifikasi saldo cukup).</li>
+                                            <li>Pilih atau cari rekening <strong>Santri Penerima</strong>.</li>
+                                            <li>Masukkan nominal transfer dan isi kolom <strong>Keterangan / Berita</strong> (misal: "Uang saku adik").</li>
+                                            <li>Klik tombol <strong>Proses Transfer</strong>. Saldo rekening pengirim berkurang dan saldo rekening penerima bertambah detik itu juga.</li>
+                                        </ol>
+                                    </div>
                                 </div>
 
                                 {/* 7. Mutasi Rekening */}
                                 <div className="p-4 border border-slate-300 bg-white">
-                                    <div className="flex items-center gap-2 border-b border-slate-200 pb-2 mb-2">
+                                    <div className="flex items-center gap-2 border-b border-slate-200 pb-2 mb-3">
                                         <span className="w-5 h-5 bg-slate-900 text-white flex items-center justify-center font-mono text-xs font-bold">7</span>
                                         <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wide">Mutasi Rekening (Rekening Koran)</h4>
                                     </div>
-                                    <p className="text-xs text-slate-600 mb-2">Buku tabungan elektronik untuk 1 santri spesifik.</p>
-                                    <ul className="text-xs text-slate-600 list-disc pl-5 space-y-1">
-                                        <li>Menampilkan riwayat debit, kredit, dan saldo berjalan per santri.</li>
-                                        <li>Tersedia tombol <strong>Cetak Rekening Koran</strong> untuk pelaporan ke wali santri.</li>
-                                    </ul>
+
+                                    <div className="mb-3 bg-slate-50 border-l-2 border-blue-600 p-2.5">
+                                        <span className="font-bold text-slate-900 text-[11px] uppercase block mb-1">Kegunaan Fitur:</span>
+                                        <p className="text-xs text-slate-600 leading-relaxed">
+                                            Buku tabungan digital untuk satu santri spesifik. Menampilkan catatan kronologis keluar-masuk dana (setoran, tarikan, belanja kantin, transfer) beserta saldo berjalan, dan dapat dicetak menjadi Rekening Koran resmi untuk wali santri.
+                                        </p>
+                                    </div>
+
+                                    <div>
+                                        <span className="font-bold text-slate-900 text-[11px] uppercase block mb-1.5">Langkah-Langkah Penggunaan:</span>
+                                        <ol className="text-xs text-slate-600 list-decimal pl-5 space-y-1.5">
+                                            <li>Buka menu <strong>Operasional Bank &gt; Mutasi Rekening</strong>.</li>
+                                            <li>Cari nomor rekening atau NIS santri yang ingin dicetak mutasinya.</li>
+                                            <li>Tentukan filter rentang tanggal (misal: 1 bulan terakhir atau semester berjalan).</li>
+                                            <li>Tinjau rincian mutasi: Saldo Awal, kolom Debet (uang keluar), Kredit (uang masuk), dan Saldo Akhir.</li>
+                                            <li>Klik tombol <strong>Cetak Rekening Koran</strong> di bagian atas untuk mencetak lembar kuitansi resmi atau menyimpannya dalam format PDF.</li>
+                                        </ol>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -605,27 +793,48 @@ const PanduanPage = () => {
                                 <p className="text-xs text-slate-500">Pemisahan otomatis antara biaya institusi dan hak uang saku santri</p>
                             </div>
 
-                            <p className="text-xs text-slate-600">Dalam paket bulanan seringkali terdiri dari biaya makan, SPP, dan uang saku. Sistem memisahkannya secara otomatis:</p>
+                            <div className="bg-slate-50 border-l-2 border-blue-600 p-2.5">
+                                <span className="font-bold text-slate-900 text-[11px] uppercase block mb-1">Kegunaan Fitur:</span>
+                                <p className="text-xs text-slate-600 leading-relaxed">
+                                    Menyusun paket tagihan bulanan (Syahriyah) atau pendaftaran dengan kemampuan memisahkan antara biaya operasional milik pesantren (seperti SPP dan uang makan) dengan uang saku murni santri. Sistem menjamin uang saku tidak dipotong untuk biaya lain dan tetap aman mengendap di kartu RFID santri.
+                                </p>
+                            </div>
 
-                            <div className="border border-slate-300 overflow-x-auto">
+                            <div>
+                                <span className="font-bold text-slate-900 text-[11px] uppercase block mb-1.5">Langkah-Langkah Penggunaan:</span>
+                                <ol className="text-xs text-slate-600 list-decimal pl-5 space-y-1.5">
+                                    <li>Buka menu <strong>Pembayaran & Tagihan &gt; Paket Pembayaran</strong>.</li>
+                                    <li>Klik tombol <strong>+ Tambah Paket Pembayaran</strong>.</li>
+                                    <li>Beri nama paket (misal: <code>Tagihan Bulanan Santri Reguler</code>) dan pilih periode tagihan.</li>
+                                    <li>Tambahkan rincian komponen biaya:
+                                        <ul className="list-disc pl-4 mt-1 space-y-1 text-slate-500">
+                                            <li>Untuk komponen SPP/Makan: Biarkan toggle <strong>Is Saku</strong> MATI. (Dana akan dipotong menjadi pendapatan pesantren).</li>
+                                            <li>Untuk komponen Uang Saku: Aktifkan toggle <strong>Is Saku</strong> MENYALA. (Dana tidak dipotong, melainkan dikreditkan ke saldo kartu santri).</li>
+                                        </ul>
+                                    </li>
+                                    <li>Klik <strong>Simpan Paket</strong>. Saat wali santri membayar paket ini melalui teller atau Virtual Account, sistem langsung mengeksekusi pemisahan dana tersebut secara otomatis.</li>
+                                </ol>
+                            </div>
+
+                            <div className="border border-slate-300 overflow-x-auto mt-3">
                                 <table className="w-full text-xs text-left">
                                     <thead className="bg-slate-100 text-slate-800 border-b border-slate-300 uppercase font-semibold text-[11px]">
                                         <tr>
                                             <th className="px-3 py-2.5">Komponen Tagihan</th>
-                                            <th className="px-3 py-2.5">Status</th>
-                                            <th className="px-3 py-2.5">Perlakuan Sistem</th>
+                                            <th className="px-3 py-2.5">Status Pengaturan</th>
+                                            <th className="px-3 py-2.5">Perlakuan Akuntansi Sistem</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-200">
                                         <tr className="hover:bg-slate-50">
-                                            <td className="px-3 py-2.5 font-medium text-slate-900">Uang Makan Dapur</td>
+                                            <td className="px-3 py-2.5 font-medium text-slate-900">Uang Makan & SPP</td>
                                             <td className="px-3 py-2.5"><span className="bg-slate-200 text-slate-800 font-mono text-[10px] font-bold px-1.5 py-0.5">BUKAN SAKU</span></td>
-                                            <td className="px-3 py-2.5 text-slate-600">Dipotong dari saldo tabungan dan diakui sebagai Pendapatan Pesantren (COA 4).</td>
+                                            <td className="px-3 py-2.5 text-slate-600">Dipotong dari saldo dan diakui sah sebagai Pendapatan Pesantren (COA Kepala 4).</td>
                                         </tr>
                                         <tr className="hover:bg-slate-50">
                                             <td className="px-3 py-2.5 font-medium text-slate-900">Uang Saku Pegangan</td>
                                             <td className="px-3 py-2.5"><span className="bg-blue-100 text-blue-800 font-mono text-[10px] font-bold px-1.5 py-0.5">UANG SAKU</span></td>
-                                            <td className="px-3 py-2.5 text-slate-600"><strong>TIDAK DIPOTONG</strong>. Dana tetap berada di saldo rekening santri agar dapat dijajankan via RFID.</td>
+                                            <td className="px-3 py-2.5 text-slate-600"><strong>TIDAK DIPOTONG</strong>. Dana tetap mengendap di rekening santri dan siap dibelanjakan via kartu RFID.</td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -637,18 +846,41 @@ const PanduanPage = () => {
                         <div className="space-y-5">
                             <div className="border-b border-slate-200 pb-3">
                                 <h2 className="text-lg font-bold text-slate-900">Integrasi Eksternal (Kasir Koperasi RFID)</h2>
-                                <p className="text-xs text-slate-500">Konektivitas mesin POS kasir kantin dengan API Bank</p>
+                                <p className="text-xs text-slate-500">Tata cara operasional transaksi belanja non-tunai di kantin dan koperasi</p>
                             </div>
 
-                            <p className="text-xs text-slate-600">
-                                Mesin POS Kasir Koperasi tidak memerlukan login akun Teller. Sistem menggunakan <b>API Key (X-Koperasi-Key)</b> untuk menjembatani komunikasi.
-                            </p>
+                            <div className="bg-slate-50 border-l-2 border-blue-600 p-2.5">
+                                <span className="font-bold text-slate-900 text-[11px] uppercase block mb-1">Kegunaan Fitur:</span>
+                                <p className="text-xs text-slate-600 leading-relaxed">
+                                    Menghubungkan mesin kasir toko/kantin pihak ketiga dengan server Bank Santri. Santri dapat jajan cukup dengan menempelkan kartu identitas RFID tanpa menggunakan uang tunai fisik yang rawan hilang atau dicuri, dengan validasi kuota batas belanja harian yang diawasi otomatis oleh sistem.
+                                </p>
+                            </div>
 
-                            <ol className="list-decimal pl-5 text-xs text-slate-700 space-y-2 mt-2">
-                                <li><strong>Pendaftaran Outlet:</strong> Masuk ke menu <b>Master Data &gt; Merchant Koperasi</b>. Tambahkan outlet dan salin Secret Key yang dihasilkan.</li>
-                                <li><strong>Implementasi di Kasir:</strong> Petugas kantin memasukkan Secret Key ke perangkat kasir POS.</li>
-                                <li><strong>Validasi Real-Time:</strong> Saat kartu santri ditempelkan, Bank Santri langsung memverifikasi status aktif, saldo minimum, dan kuota limit harian santri sebelum mendebit saldo.</li>
-                            </ol>
+                            <div>
+                                <span className="font-bold text-slate-900 text-[11px] uppercase block mb-1.5">Langkah-Langkah Penggunaan:</span>
+                                <ol className="text-xs text-slate-600 list-decimal pl-5 space-y-2">
+                                    <li>
+                                        <strong>Pendaftaran Outlet Kasir:</strong>
+                                        <p className="text-slate-500 mt-0.5">Admin bank membuka menu <strong>Master Data &gt; Merchant Koperasi</strong>, menambahkan outlet kantin baru, dan menyalin <strong>API Secret Key (X-Koperasi-Key)</strong>.</p>
+                                    </li>
+                                    <li>
+                                        <strong>Pemasangan di Mesin POS Kasir:</strong>
+                                        <p className="text-slate-500 mt-0.5">Petugas kantin membuka aplikasi kasir POS dan memasukkan API Secret Key tersebut di pengaturan koneksi tanpa perlu login akun teller.</p>
+                                    </li>
+                                    <li>
+                                        <strong>Pelayanan Transaksi Jajan:</strong>
+                                        <p className="text-slate-500 mt-0.5">Kasir menginput barang-barang yang dibeli santri hingga total belanja terhitung.</p>
+                                    </li>
+                                    <li>
+                                        <strong>Verifikasi Tap Kartu RFID:</strong>
+                                        <p className="text-slate-500 mt-0.5">Santri menempelkan kartu ke RFID reader. Server Bank Santri langsung memverifikasi secara real-time: status rekening aktif, sisa saldo mencukupi di atas saldo mengendap, dan total belanja belum melebihi limit tarik harian.</p>
+                                    </li>
+                                    <li>
+                                        <strong>Struk & Pencatatan:</strong>
+                                        <p className="text-slate-500 mt-0.5">Jika valid, saldo tabungan santri terpotong detik itu juga dan struk belanja tercetak otomatis di kasir kantin.</p>
+                                    </li>
+                                </ol>
+                            </div>
                         </div>
                     )}
                 </div>

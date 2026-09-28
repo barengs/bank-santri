@@ -643,94 +643,113 @@
     <!-- Section: Panduan Master Data -->
     <section id="master-data" class="section-card">
       <div class="section-title">
-        <span>⚙️</span> Panduan Penggunaan Master Data
+        <span>⚙️</span> Panduan Lengkap Master Data
       </div>
-      <div class="section-subtitle">Langkah-langkah praktis konfigurasi fondasi utama aplikasi Bank Santri.</div>
+      <div class="section-subtitle">Keterangan kegunaan dan tata cara penggunaan seluruh konfigurasi fondasi Bank Santri.</div>
 
       <p style="margin-bottom: 20px; font-size: 0.9rem; color: #475569;">
-        Menu Master Data mengendalikan seluruh parameter bisnis bank santri. Berikut adalah panduan langkah demi langkah cara menggunakan dan mengonfigurasi setiap fitur di dalam modul Master Data:
+        Menu Master Data mengendalikan seluruh parameter bisnis dan keuangan aplikasi. Berikut adalah penjelasan fungsi/kegunaan setiap fitur diikuti oleh panduan langkah demi langkah cara menggunakannya:
       </p>
 
       <div style="display: flex; flex-direction: column; gap: 16px;">
         <!-- 1. Produk Bank -->
         <div style="border: 1px solid var(--border); border-radius: 2px; padding: 18px; background: white;">
-          <h4 style="font-size: 1rem; font-weight: 700; color: #0284c7; margin-bottom: 6px;">1. Cara Membuat Produk Bank (Tabungan)</h4>
-          <p style="font-size: 0.85rem; color: #475569; margin-bottom: 10px;">Menentukan batasan tabungan yang mengikat rekening santri.</p>
+          <h4 style="font-size: 1rem; font-weight: 700; color: #0284c7; margin-bottom: 8px;">1. Produk Bank (Tabungan Santri)</h4>
+          <div style="background: #f8fafc; border-left: 3px solid #0284c7; padding: 10px 12px; margin-bottom: 12px; font-size: 0.85rem; color: #334155;">
+            <strong>Kegunaan Fitur:</strong> Menetapkan skema dan aturan tabungan yang mengikat ke seluruh rekening santri, mencakup batas <strong>Saldo Mengendap</strong> (agar rekening tidak terkuras habis), <strong>Limit Tarik Harian</strong> (mengendalikan santri agar tidak konsumtif saat jajan di koperasi atau tarik tunai di loket), serta biaya administrasi bulanan.
+          </div>
+          <strong style="font-size: 0.82rem; text-transform: uppercase; color: #0f172a; display: block; margin-bottom: 6px;">Langkah-Langkah Penggunaan:</strong>
           <ol style="font-size: 0.83rem; color: #64748b; line-height: 1.7; padding-left: 20px;">
             <li>Buka menu <strong>Master Data &gt; Produk Bank</strong>.</li>
             <li>Klik tombol <strong>+ Tambah Produk</strong> di pojok kanan atas.</li>
-            <li>Masukkan <strong>Kode Produk</strong> (contoh: WDH) dan <strong>Nama Produk</strong> (contoh: Tabungan Wadiah).</li>
-            <li>Tentukan <strong>Saldo Mengendap</strong> (batas uang yang tidak bisa ditarik, misal Rp 10.000).</li>
-            <li>Tentukan <strong>Limit Tarik/Hari</strong> (batas nominal santri jajan atau tarik tunai per hari). Isi 0 jika tanpa batas.</li>
+            <li>Isi <strong>Kode Produk</strong> (contoh: <code>WDH</code>) dan <strong>Nama Produk</strong> (contoh: <code>Tabungan Wadiah Reguler</code>).</li>
+            <li>Tentukan <strong>Saldo Mengendap</strong> (contoh: Rp 10.000 sebagai saldo minimum yang tidak bisa ditarik).</li>
+            <li>Tentukan <strong>Limit Tarik/Hari</strong> (contoh: Rp 25.000 untuk membatasi pengeluaran santri per hari, atau isi 0 jika tanpa batasan).</li>
             <li>Pastikan status <strong>Aktif</strong> tercentang, lalu klik <strong>Simpan Produk</strong>.</li>
           </ol>
         </div>
 
         <!-- 2. COA Bank -->
         <div style="border: 1px solid var(--border); border-radius: 2px; padding: 18px; background: white;">
-          <h4 style="font-size: 1rem; font-weight: 700; color: #059669; margin-bottom: 6px;">2. Cara Menambah COA Bank (Chart of Accounts)</h4>
-          <p style="font-size: 0.85rem; color: #475569; margin-bottom: 10px;">Menambahkan rekening akuntansi buku besar (General Ledger) baru.</p>
+          <h4 style="font-size: 1rem; font-weight: 700; color: #059669; margin-bottom: 8px;">2. COA Bank (Chart of Accounts)</h4>
+          <div style="background: #f8fafc; border-left: 3px solid #059669; padding: 10px 12px; margin-bottom: 12px; font-size: 0.85rem; color: #334155;">
+            <strong>Kegunaan Fitur:</strong> Menyusun bagan akun buku besar akuntansi (<em>General Ledger</em>) 4 digit standar perbankan syariah. Akun-akun ini menampung seluruh pencatatan jurnal debet dan kredit otomatis dari transaksi setoran teller, penarikan, pembayaran tagihan, hingga belanja kasir kantin.
+          </div>
+          <strong style="font-size: 0.82rem; text-transform: uppercase; color: #0f172a; display: block; margin-bottom: 6px;">Langkah-Langkah Penggunaan:</strong>
           <ol style="font-size: 0.83rem; color: #64748b; line-height: 1.7; padding-left: 20px;">
             <li>Buka menu <strong>Master Data &gt; COA Bank</strong>.</li>
-            <li>Klik tombol <strong>+ Tambah COA</strong>.</li>
-            <li>Pilih <strong>Induk COA</strong> jika akun ini merupakan anak rekening (contoh: di bawah Kas 1100). Tipe akun akan otomatis mengikuti induknya.</li>
-            <li>Masukkan <strong>Kode COA</strong> (misal 1102) dan <strong>Nama Akun</strong> (misal Kas Teller B).</li>
-            <li>Pilih Level <strong>DETAIL</strong> dan pastikan status <strong>Postable: Ya</strong> jika akun ini digunakan untuk transaksi (menerima jurnal debet/kredit).</li>
-            <li>Klik <strong>Simpan COA</strong>.</li>
+            <li>Klik tombol <strong>+ Tambah COA</strong> di pojok kanan atas.</li>
+            <li>Pilih <strong>Induk COA</strong> jika akun baru ini merupakan sub-rekening (contoh: anak dari <code>1100 Kas</code>). Tipe akun akan otomatis menyesuaikan induknya.</li>
+            <li>Masukkan <strong>Kode COA</strong> 4 digit (misal: <code>1102</code>) dan <strong>Nama Akun</strong> (misal: <code>Kas Teller Loket 2</code>).</li>
+            <li>Pilih Level <strong>DETAIL</strong> dan pastikan status <strong>Postable: Ya</strong> agar dapat menerima catatan jurnal transaksi.</li>
+            <li>Klik <strong>Simpan COA</strong> untuk menyimpan ke dalam bagan akun.</li>
           </ol>
         </div>
 
         <!-- 3. Master Rincian Transaksi -->
         <div style="border: 1px solid var(--border); border-radius: 2px; padding: 18px; background: white;">
-          <h4 style="font-size: 1rem; font-weight: 700; color: #7c3aed; margin-bottom: 6px;">3. Cara Membuat Master Rincian Transaksi (Komponen Biaya)</h4>
-          <p style="font-size: 0.85rem; color: #475569; margin-bottom: 10px;">Menjembatani operasional kasir dengan COA akuntansi untuk pungutan seperti SPP, Uang Seragam, atau Kitab.</p>
+          <h4 style="font-size: 1rem; font-weight: 700; color: #7c3aed; margin-bottom: 8px;">3. Master Rincian Transaksi (Komponen Biaya)</h4>
+          <div style="background: #f8fafc; border-left: 3px solid #7c3aed; padding: 10px 12px; margin-bottom: 12px; font-size: 0.85rem; color: #334155;">
+            <strong>Kegunaan Fitur:</strong> Menjadi jembatan antara bahasa transaksi operasional kasir (seperti Uang Seragam, SPP Bulanan, Pembelian Kitab) dengan nomor akun akuntansi COA. Kasir cukup memilih nama pungutan tanpa perlu menghafal kode akun debet-kredit.
+          </div>
+          <strong style="font-size: 0.82rem; text-transform: uppercase; color: #0f172a; display: block; margin-bottom: 6px;">Langkah-Langkah Penggunaan:</strong>
           <ol style="font-size: 0.83rem; color: #64748b; line-height: 1.7; padding-left: 20px;">
             <li>Buka menu <strong>Master Data &gt; Rincian Transaksi</strong>.</li>
-            <li>Klik <strong>+ Tambah Rincian</strong>.</li>
-            <li>Isi <strong>Nama Rincian Biaya</strong> (contoh: Uang Pendaftaran Baru).</li>
-            <li>Di kolom <strong>COA Tujuan</strong>, cari dan pilih akun buku besar penampungnya (contoh: 4100 Pendapatan Pendaftaran).</li>
-            <li>Tentukan <strong>Posisi Entri</strong>. Jika akun tersebut adalah Pendapatan/Kewajiban, pilih <strong>Kredit</strong>. Jika Aset/Beban, pilih <strong>Debit</strong>.</li>
-            <li>Klik <strong>Simpan Rincian</strong>. Rincian ini kini bisa dipilih di kasir atau paket pembayaran.</li>
+            <li>Klik tombol <strong>+ Tambah Rincian</strong>.</li>
+            <li>Ketikkan <strong>Nama Rincian Biaya</strong> (contoh: <code>Uang Seragam Putri</code>).</li>
+            <li>Tentukan <strong>Nominal Default</strong> (jika pungutan memiliki tarif tetap, misal: Rp 350.000).</li>
+            <li>Di kolom <strong>COA Tujuan</strong>, cari dan pilih akun penampungnya (contoh: <code>4200 Pendapatan Operasional Tahunan</code>).</li>
+            <li>Tentukan <strong>Posisi Entri</strong>: pilih <strong>Kredit</strong> jika akun tujuan adalah Pendapatan/Kewajiban, atau pilih <strong>Debit</strong> jika akun tujuan adalah Aset/Beban.</li>
+            <li>Klik <strong>Simpan Rincian</strong>. Komponen ini langsung siap dipakai di kasir maupun di paket tagihan.</li>
           </ol>
         </div>
 
         <!-- 4. Jenis Transaksi Bank -->
         <div style="border: 1px solid var(--border); border-radius: 2px; padding: 18px; background: white;">
-          <h4 style="font-size: 1rem; font-weight: 700; color: #d97706; margin-bottom: 6px;">4. Cara Membuat Kategori Transaksi & Aturan Jurnal</h4>
-          <p style="font-size: 0.85rem; color: #475569; margin-bottom: 10px;">Mengatur peristiwa transaksi (event) dan memetakan jurnal otomatisnya.</p>
+          <h4 style="font-size: 1rem; font-weight: 700; color: #d97706; margin-bottom: 8px;">4. Jenis Transaksi Bank (Event Category & Rules)</h4>
+          <div style="background: #f8fafc; border-left: 3px solid #d97706; padding: 10px 12px; margin-bottom: 12px; font-size: 0.85rem; color: #334155;">
+            <strong>Kegunaan Fitur:</strong> Mengelompokkan kategori peristiwa transaksi sistem (seperti <code>TOPUP-SANTRI</code>, <code>WDR-SANTRI</code>, <code>BIAYA-REG</code>) serta mengonfigurasi aturan pemetaan (<em>Journal Rules</em>) berpasangan agar setiap transaksi otomatis menghasilkan jurnal seimbang.
+          </div>
+          <strong style="font-size: 0.82rem; text-transform: uppercase; color: #0f172a; display: block; margin-bottom: 6px;">Langkah-Langkah Penggunaan:</strong>
           <ol style="font-size: 0.83rem; color: #64748b; line-height: 1.7; padding-left: 20px;">
             <li>Buka menu <strong>Master Data &gt; Jenis Transaksi Bank</strong>.</li>
             <li>Klik <strong>+ Tambah Transaksi</strong>.</li>
-            <li>Masukkan <strong>Kode</strong> (contoh: BIAYA-REG) dan <strong>Nama Transaksi</strong> (contoh: Pembayaran Registrasi).</li>
-            <li>Di bagian bawah form, tambahkan <strong>Aturan Jurnal</strong> dengan menekan tombol Plus (+).</li>
-            <li>Buat aturan berpasangan yang seimbang. Contoh: 1 baris Debit (COA Kas Teller), dan 1 baris Kredit (Rincian Biaya Pendaftaran).</li>
+            <li>Masukkan <strong>Kode</strong> (contoh: <code>BIAYA-REG</code>) dan <strong>Nama Transaksi</strong> (contoh: <code>Pembayaran Registrasi Santri Baru</code>).</li>
+            <li>Pada bagian <strong>Aturan Jurnal</strong>, klik tombol Plus (+) untuk menambahkan baris pemetaan akun.</li>
+            <li>Buat pasangan seimbang: 1 baris sisi <strong>Debit</strong> (misal menunjuk ke COA Kas Utama <code>1101</code>) dan 1 baris sisi <strong>Kredit</strong> (menunjuk ke Rincian Biaya Registrasi).</li>
             <li>Setelah aturan debet-kredit seimbang, klik <strong>Simpan Transaksi</strong>.</li>
           </ol>
         </div>
 
         <!-- 5. Merchant Koperasi -->
         <div style="border: 1px solid var(--border); border-radius: 2px; padding: 18px; background: white;">
-          <h4 style="font-size: 1rem; font-weight: 700; color: #e11d48; margin-bottom: 6px;">5. Cara Mendaftarkan Outlet Merchant Koperasi</h4>
-          <p style="font-size: 0.85rem; color: #475569; margin-bottom: 10px;">Mendaftarkan kasir eksternal (Kantin/Koperasi) agar bisa menerima pembayaran tap kartu (RFID) santri.</p>
+          <h4 style="font-size: 1rem; font-weight: 700; color: #e11d48; margin-bottom: 8px;">5. Merchant Koperasi (Kasir Eksternal)</h4>
+          <div style="background: #f8fafc; border-left: 3px solid #e11d48; padding: 10px 12px; margin-bottom: 12px; font-size: 0.85rem; color: #334155;">
+            <strong>Kegunaan Fitur:</strong> Mendaftarkan kasir pihak ketiga (Kantin, Dapur, Toko Kitab) dan menerbitkan <strong>API Secret Key (X-Koperasi-Key)</strong> agar perangkat POS kasir dapat memproses transaksi <em>cashless</em> pemotongan saldo tabungan santri via tap kartu RFID tanpa membutuhkan akses login teller perbankan.
+          </div>
+          <strong style="font-size: 0.82rem; text-transform: uppercase; color: #0f172a; display: block; margin-bottom: 6px;">Langkah-Langkah Penggunaan:</strong>
           <ol style="font-size: 0.83rem; color: #64748b; line-height: 1.7; padding-left: 20px;">
-            <li>Buka menu <strong>Master Data &gt; Merchant Koperasi</strong> (atau di bawah menu Pembayaran & Tagihan).</li>
-            <li>Klik <strong>+ Tambah Merchant</strong>.</li>
-            <li>Ketikkan nama merchant (contoh: Kantin Putra - Nasi Goreng).</li>
-            <li>Klik Simpan. Sistem akan memunculkan popup berisi <strong>API Secret Key (X-Koperasi-Key)</strong>.</li>
-            <li>Klik tombol Salin (Copy) dan masukkan kunci tersebut ke sistem kasir/POS di kantin agar terhubung ke server bank santri.</li>
-            <li>Gunakan tombol <strong>Rotate Key</strong> jika kunci bocor atau perlu di-reset.</li>
+            <li>Buka menu <strong>Master Data &gt; Merchant Koperasi</strong> (atau dari menu Koperasi & Eksternal).</li>
+            <li>Klik tombol <strong>+ Tambah Merchant</strong>.</li>
+            <li>Ketikkan nama merchant (contoh: <code>Kantin Putra - Stand Minuman</code>) dan catatan lokasi.</li>
+            <li>Klik Simpan. Sistem akan memunculkan modal berisi <strong>API Secret Key</strong> unik.</li>
+            <li>Klik tombol <strong>Salin (Copy)</strong> dan masukkan key tersebut ke software POS kasir kantin.</li>
+            <li>Jika mesin kasir diganti atau kunci terindikasi bocor, gunakan tombol <strong>Rotate Key</strong> untuk menerbitkan kunci baru.</li>
           </ol>
         </div>
 
         <!-- 6. Pengaturan Bank -->
         <div style="border: 1px solid var(--border); border-radius: 2px; padding: 18px; background: white;">
-          <h4 style="font-size: 1rem; font-weight: 700; color: #334155; margin-bottom: 6px;">6. Cara Mengubah Pengaturan Konfigurasi Global</h4>
-          <p style="font-size: 0.85rem; color: #475569; margin-bottom: 10px;">Mengelola variabel sistem yang mempengaruhi operasional bank secara keseluruhan.</p>
+          <h4 style="font-size: 1rem; font-weight: 700; color: #334155; margin-bottom: 8px;">6. Pengaturan Bank (Konfigurasi Global)</h4>
+          <div style="background: #f8fafc; border-left: 3px solid #334155; padding: 10px 12px; margin-bottom: 12px; font-size: 0.85rem; color: #334155;">
+            <strong>Kegunaan Fitur:</strong> Mengelola variabel dan parameter terpusat sistem, meliputi integrasi auto-provisioning profil santri & kartu RFID dengan server akademik SMPT, integrasi payment gateway Midtrans untuk setoran online, hingga jadwal jam makan dapur dan proteksi Anti-Double Tap.
+          </div>
+          <strong style="font-size: 0.82rem; text-transform: uppercase; color: #0f172a; display: block; margin-bottom: 6px;">Langkah-Langkah Penggunaan:</strong>
           <ol style="font-size: 0.83rem; color: #64748b; line-height: 1.7; padding-left: 20px;">
             <li>Buka menu <strong>Master Data &gt; Pengaturan Bank</strong>.</li>
-            <li>Form terbagi menjadi beberapa grup: <strong>Pesantren</strong> (sinkronisasi data SMPT), <strong>Midtrans</strong> (gateway), dan <strong>Koperasi</strong> (batasan jam makan).</li>
-            <li>Ubah nilai di kolom yang sesuai, contohnya mengedit tarif sekali makan di kantin atau mematikan fitur Anti-Double Tap.</li>
-            <li>Klik <strong>Simpan Pengaturan</strong> di pojok kanan atas untuk menerapkan perubahan secara real-time.</li>
+            <li>Pilih kelompok konfigurasi yang ingin diedit (Pesantren, Midtrans, atau Koperasi).</li>
+            <li>Ubah nilai parameter pada kolom input yang dikehendaki.</li>
+            <li>Klik tombol <strong>Simpan Pengaturan</strong> di pojok kanan atas untuk menerapkan perubahan seketika ke seluruh sistem.</li>
           </ol>
         </div>
       </div>
