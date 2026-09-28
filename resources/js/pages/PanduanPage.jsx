@@ -673,6 +673,7 @@ const PanduanPage = () => {
                                             <li><strong>Proses Auto-Provisioning:</strong> Jika santri baru belum pernah membuka rekening, ketikkan NIS santri. Sistem otomatis menarik biodata santri dan nomor UID RFID dari SMPT, lalu langsung membuatkan rekening tabungan baru tanpa perlu pendaftaran manual.</li>
                                             <li>Klik baris santri untuk melihat rincian produk tabungan, limit harian, dan kontak wali santri.</li>
                                             <li><strong>Cara Memblokir Rekening:</strong> Jika kartu santri hilang atau santri telah mutasi/lulus, klik <strong>Edit Status</strong> dan ubah status rekening menjadi <strong>DIBLOKIR</strong> atau <strong>TUTUP</strong>.</li>
+                                            <li><strong>Cetak Rekening Koran:</strong> Jika wali santri meminta rekapan transaksi, klik tombol <strong>Koran</strong> pada baris santri. Di jendela modal yang muncul, pilih rentang tanggal atau bulan yang diinginkan, lalu klik <strong>Cetak / Unduh PDF</strong>. Sistem akan menghasilkan dokumen resmi berisi saldo awal, mutasi debit-kredit, dan saldo akhir.</li>
                                         </ol>
                                     </div>
                                 </div>
