@@ -27,7 +27,7 @@
       --border: #e2e8f0;
       --border-dark: #cbd5e1;
       --sidebar-w: 300px;
-      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      --shadow-sm: none;
       --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
       --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
     }
@@ -78,14 +78,14 @@
       width: 40px;
       height: 40px;
       background: linear-gradient(135deg, #0284c7, #38bdf8);
-      border-radius: 10px;
+      border-radius: 2px;
       display: flex;
       align-items: center;
       justify-content: center;
       color: white;
       font-weight: 800;
       font-size: 1.2rem;
-      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.4);
+      
     }
 
     .brand-info h1 {
@@ -109,7 +109,7 @@
       width: 100%;
       background-color: #1e293b;
       border: 1px solid #334155;
-      border-radius: 8px;
+      border-radius: 2px;
       padding: 10px 14px;
       color: #f8fafc;
       font-size: 0.85rem;
@@ -119,7 +119,7 @@
 
     .search-input:focus {
       border-color: var(--primary);
-      box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.2);
+      
     }
 
     .nav-menu {
@@ -146,7 +146,7 @@
       text-decoration: none;
       font-size: 0.85rem;
       font-weight: 500;
-      border-radius: 8px;
+      border-radius: 2px;
       transition: all 0.2s;
       cursor: pointer;
       margin-bottom: 2px;
@@ -167,7 +167,7 @@
       margin-left: auto;
       font-size: 0.65rem;
       padding: 2px 6px;
-      border-radius: 4px;
+      border-radius: 2px;
       font-weight: 600;
     }
 
@@ -185,7 +185,7 @@
 
     .hero-header {
       background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-      border-radius: 16px;
+      border-radius: 2px;
       padding: 36px 40px;
       color: white;
       margin-bottom: 36px;
@@ -220,11 +220,11 @@
 
     .section-card {
       background: var(--surface);
-      border-radius: 14px;
+      border-radius: 2px;
       border: 1px solid var(--border);
       padding: 32px;
       margin-bottom: 32px;
-      box-shadow: var(--shadow-sm);
+      
     }
 
     .section-title {
@@ -256,21 +256,21 @@
       gap: 18px;
       background: #f8fafc;
       border: 1px solid var(--border);
-      border-radius: 10px;
+      border-radius: 2px;
       padding: 20px;
       transition: all 0.2s;
     }
 
     .step-item:hover {
       border-color: var(--primary);
-      box-shadow: var(--shadow-sm);
+      
       background: white;
     }
 
     .step-number {
       width: 34px;
       height: 34px;
-      border-radius: 50%;
+      border-radius: 2px;
       background: var(--primary);
       color: white;
       display: flex;
@@ -296,7 +296,7 @@
 
     /* Alerts / Callouts */
     .callout {
-      border-radius: 8px;
+      border-radius: 2px;
       padding: 16px 18px;
       margin: 16px 0;
       display: flex;
@@ -326,7 +326,7 @@
     .data-table-container {
       overflow-x: auto;
       border: 1px solid var(--border);
-      border-radius: 8px;
+      border-radius: 2px;
       margin: 18px 0;
     }
 
@@ -362,7 +362,7 @@
     .badge {
       display: inline-block;
       padding: 2px 8px;
-      border-radius: 9999px;
+      border-radius: 2px;
       font-size: 0.75rem;
       font-weight: 600;
     }
@@ -377,7 +377,7 @@
     /* Interactive Simulator */
     .simulator-card {
       background: #0f172a;
-      border-radius: 12px;
+      border-radius: 2px;
       padding: 24px;
       color: white;
       margin: 24px 0;
@@ -422,7 +422,7 @@
       border: 1px solid #334155;
       color: white;
       padding: 10px 12px;
-      border-radius: 6px;
+      border-radius: 2px;
       font-size: 0.85rem;
     }
 
@@ -431,7 +431,7 @@
       color: white;
       border: none;
       padding: 10px 18px;
-      border-radius: 6px;
+      border-radius: 2px;
       font-weight: 600;
       font-size: 0.85rem;
       cursor: pointer;
@@ -446,7 +446,7 @@
     .sim-result-box {
       background: #1e293b;
       border: 1px solid #334155;
-      border-radius: 8px;
+      border-radius: 2px;
       padding: 16px;
       font-family: 'JetBrains Mono', monospace;
       font-size: 0.8rem;
@@ -491,6 +491,12 @@
         <span>🔄</span> Diagram Alur Dana Santri
       </a>
 
+      <div class="nav-section-title">Master Data</div>
+      <a class="nav-item" href="#master-data">
+        <span>⚙️</span> Manajemen Master Data
+        <span class="nav-item-badge badge-core">Wajib</span>
+      </a>
+
       <div class="nav-section-title">Panduan Akuntansi & COA</div>
       <a class="nav-item" href="#memahami-coa">
         <span>📊</span> Panduan Memahami COA
@@ -507,20 +513,10 @@
         <span>⚖️</span> Rekonsiliasi Saldo Wadiah
       </a>
 
-      <div class="nav-section-title">Operasional Loket (Teller)</div>
-      <a class="nav-item" href="#operasional-setor">
-        <span>📥</span> Setor Tunai / Top-Up Kasir
+      <div class="nav-section-title">Operasional Bank</div>
+      <a class="nav-item" href="#operasional-bank">
+        <span>💳</span> Panduan Operasional Bank
         <span class="nav-item-badge badge-core">Teller</span>
-      </a>
-      <a class="nav-item" href="#operasional-tarik">
-        <span>📤</span> Tarik Tunai & Limit Harian
-        <span class="nav-item-badge badge-core">Teller</span>
-      </a>
-      <a class="nav-item" href="#operasional-transfer">
-        <span>🔁</span> Transfer Antar Santri
-      </a>
-      <a class="nav-item" href="#operasional-reversal">
-        <span>🔙</span> Koreksi / Reversal Transaksi
       </a>
 
       <div class="nav-section-title">Tagihan & Kasir Eksternal</div>
@@ -609,10 +605,10 @@
       </div>
       <div class="section-subtitle">Visualisasi bagaimana uang mengalir masuk, berputar, dan keluar dari sistem Bank Santri.</div>
 
-      <div style="background: #0f172a; border-radius: 12px; padding: 24px; color: #f8fafc; font-size: 0.88rem; line-height: 1.8;">
+      <div style="background: #0f172a; border-radius: 2px; padding: 24px; color: #f8fafc; font-size: 0.88rem; line-height: 1.8;">
         <div style="display: flex; justify-content: space-around; text-align: center; flex-wrap: wrap; gap: 16px;">
           
-          <div style="background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 14px; width: 220px;">
+          <div style="background: #1e293b; border: 1px solid #334155; border-radius: 2px; padding: 14px; width: 220px;">
             <div style="font-size: 1.5rem;">👨‍👩‍👦</div>
             <strong style="color: #38bdf8;">1. Wali / Santri</strong>
             <p style="font-size: 0.78rem; color: #94a3b8; margin-top: 6px;">Setor tunai ke loket atau Transfer Bank</p>
@@ -620,7 +616,7 @@
 
           <div style="display: flex; align-items: center; color: #0284c7; font-size: 1.4rem;">➔</div>
 
-          <div style="background: #1e293b; border: 1px solid #0284c7; border-radius: 8px; padding: 14px; width: 240px;">
+          <div style="background: #1e293b; border: 1px solid #0284c7; border-radius: 2px; padding: 14px; width: 240px;">
             <div style="font-size: 1.5rem;">🏦</div>
             <strong style="color: #38bdf8;">2. Bank Santri</strong>
             <p style="font-size: 0.78rem; color: #94a3b8; margin-top: 6px;">
@@ -631,7 +627,7 @@
 
           <div style="display: flex; align-items: center; color: #0284c7; font-size: 1.4rem;">➔</div>
 
-          <div style="background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 14px; width: 240px;">
+          <div style="background: #1e293b; border: 1px solid #334155; border-radius: 2px; padding: 14px; width: 240px;">
             <div style="font-size: 1.5rem;">🛒 / 🏫</div>
             <strong style="color: #38bdf8;">3. Penggunaan Dana</strong>
             <p style="font-size: 0.78rem; color: #94a3b8; margin-top: 6px;">
@@ -640,6 +636,75 @@
               • Tarik Tunai Uang Saku
             </p>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section: Panduan Master Data -->
+    <section id="master-data" class="section-card">
+      <div class="section-title">
+        <span>⚙️</span> Panduan Komprehensif Master Data
+      </div>
+      <div class="section-subtitle">Fondasi konfigurasi perbankan, batasan saldo, dan integrasi sistem.</div>
+
+      <p style="margin-bottom: 20px; font-size: 0.9rem; color: #475569;">
+        Menu Master Data mengendalikan seluruh parameter bisnis bank santri. Berikut rincian dan panduan penggunaan setiap submenunya:
+      </p>
+
+      <div style="display: flex; flex-direction: column; gap: 16px;">
+        <div style="border: 1px solid var(--border); border-radius: 2px; padding: 18px; background: white;">
+          <h4 style="font-size: 1rem; font-weight: 700; color: #0284c7; margin-bottom: 6px;">1. Produk Bank</h4>
+          <p style="font-size: 0.85rem; color: #475569; margin-bottom: 10px;">Menentukan aturan dan batasan tabungan yang mengikat rekening santri.</p>
+          <ul style="font-size: 0.83rem; color: #64748b; line-height: 1.7; padding-left: 20px;">
+            <li><strong>Saldo Minimum:</strong> Batas saldo yang mengendap (tidak dapat ditarik tunai/dibelanjakan). Contoh: Rp 10.000.</li>
+            <li><strong>Limit Tarik Harian:</strong> Batas maksimal penarikan atau jajan santri per hari. Mengontrol santri agar tidak konsumtif.</li>
+            <li><strong>Biaya Admin Bulanan:</strong> Biaya pengelolaan bulanan jika diberlakukan.</li>
+          </ul>
+        </div>
+
+        <div style="border: 1px solid var(--border); border-radius: 2px; padding: 18px; background: white;">
+          <h4 style="font-size: 1rem; font-weight: 700; color: #059669; margin-bottom: 6px;">2. COA Bank (Chart of Accounts)</h4>
+          <p style="font-size: 0.85rem; color: #475569; margin-bottom: 10px;">Struktur bagan akun akuntansi 4 digit (*Double-Entry*).</p>
+          <ul style="font-size: 0.83rem; color: #64748b; line-height: 1.7; padding-left: 20px;">
+            <li>Terbagi menjadi Aset (1000), Kewajiban (2000), Ekuitas (3000), Pendapatan (4000), dan Beban (5000).</li>
+            <li>Hanya akun dengan tanda <strong>Postable = Ya</strong> yang dapat menerima pencatatan jurnal transaksi.</li>
+          </ul>
+        </div>
+
+        <div style="border: 1px solid var(--border); border-radius: 2px; padding: 18px; background: white;">
+          <h4 style="font-size: 1rem; font-weight: 700; color: #7c3aed; margin-bottom: 6px;">3. Master Rincian Transaksi (MTI)</h4>
+          <p style="font-size: 0.85rem; color: #475569; margin-bottom: 10px;">Katalog komponen biaya/pungutan (seperti Seragam, SPP, Kitab, dsb) yang dipetakan ke akun COA.</p>
+          <ul style="font-size: 0.83rem; color: #64748b; line-height: 1.7; padding-left: 20px;">
+            <li><strong>Akun COA:</strong> Menentukan akun penerima (misal Pendaftaran diarahkan ke <code>4100 Pendapatan Pendaftaran</code>).</li>
+            <li><strong>Entry Type:</strong> Posisi normal akun. Pendapatan bertambah di <strong>Kredit</strong>, Beban bertambah di <strong>Debit</strong>.</li>
+          </ul>
+        </div>
+
+        <div style="border: 1px solid var(--border); border-radius: 2px; padding: 18px; background: white;">
+          <h4 style="font-size: 1rem; font-weight: 700; color: #d97706; margin-bottom: 6px;">4. Jenis Transaksi Bank</h4>
+          <p style="font-size: 0.85rem; color: #475569; margin-bottom: 10px;">Kategori peristiwa sistem (misal: <code>TOPUP-SANTRI</code>, <code>WDR-SANTRI</code>, <code>BIAYA-REG</code>).</p>
+          <ul style="font-size: 0.83rem; color: #64748b; line-height: 1.7; padding-left: 20px;">
+            <li>Mengikat aturan pemetaan otomatis (Rules) antara akun Debit dan Kredit saat kasir melakukan transaksi.</li>
+          </ul>
+        </div>
+
+        <div style="border: 1px solid var(--border); border-radius: 2px; padding: 18px; background: white;">
+          <h4 style="font-size: 1rem; font-weight: 700; color: #e11d48; margin-bottom: 6px;">5. Merchant Koperasi</h4>
+          <p style="font-size: 0.85rem; color: #475569; margin-bottom: 10px;">Manajemen kasir outlet pihak ketiga (Kantin, Dapur, Toko Kitab).</p>
+          <ul style="font-size: 0.83rem; color: #64748b; line-height: 1.7; padding-left: 20px;">
+            <li>Menghasilkan <strong>API Secret Key (X-Koperasi-Key)</strong> untuk dipasang pada mesin POS kasir koperasi.</li>
+            <li>Dilengkapi fitur <strong>Rotate Key</strong> jika kunci dicurigai bocor atau diganti perangkat baru.</li>
+          </ul>
+        </div>
+
+        <div style="border: 1px solid var(--border); border-radius: 2px; padding: 18px; background: white;">
+          <h4 style="font-size: 1rem; font-weight: 700; color: #334155; margin-bottom: 6px;">6. Pengaturan Bank</h4>
+          <p style="font-size: 0.85rem; color: #475569; margin-bottom: 10px;">Konfigurasi parameter global aplikasi.</p>
+          <ul style="font-size: 0.83rem; color: #64748b; line-height: 1.7; padding-left: 20px;">
+            <li><strong>Integrasi SMPT:</strong> URL pusat akademik dan Internal Secret Key untuk sinkronisasi NIS & RFID.</li>
+            <li><strong>Sesi Dapur Makan:</strong> Jam aktif sarapan, makan siang, dan makan malam serta tarif per sesi.</li>
+            <li><strong>Anti-Double Tap:</strong> Mencegah kartu santri di-tap 2x pada sesi makan yang sama.</li>
+          </ul>
         </div>
       </div>
     </section>
@@ -656,7 +721,7 @@
       </p>
 
       <div style="margin: 20px 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px;">
-        <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 16px;">
+        <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 2px; padding: 16px;">
           <strong style="color: #15803d; font-size: 1rem;">1000 - ASET (Aktiva)</strong>
           <p style="font-size: 0.8rem; color: #166534; margin-top: 4px;">Uang fisik di brankas kasir, saldo bank riil.</p>
           <ul style="font-size: 0.8rem; color: #14532d; margin-top: 8px; padding-left: 18px;">
@@ -666,7 +731,7 @@
           <span class="badge badge-debit" style="margin-top: 8px;">Saldo Normal: DEBIT</span>
         </div>
 
-        <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 16px;">
+        <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 2px; padding: 16px;">
           <strong style="color: #b45309; font-size: 1rem;">2000 - KEWAJIBAN (Pasiva)</strong>
           <p style="font-size: 0.8rem; color: #92400e; margin-top: 4px;">Uang yang dititipkan santri kepada bank pesantren.</p>
           <ul style="font-size: 0.8rem; color: #78350f; margin-top: 8px; padding-left: 18px;">
@@ -675,7 +740,7 @@
           <span class="badge badge-credit" style="margin-top: 8px;">Saldo Normal: KREDIT</span>
         </div>
 
-        <div style="background: #f5f3ff; border: 1px solid #ddd6fe; border-radius: 8px; padding: 16px;">
+        <div style="background: #f5f3ff; border: 1px solid #ddd6fe; border-radius: 2px; padding: 16px;">
           <strong style="color: #6d28d9; font-size: 1rem;">4000 - PENDAPATAN</strong>
           <p style="font-size: 0.8rem; color: #5b21b6; margin-top: 4px;">Hak milik pesantren yang berasal dari pembayaran biaya.</p>
           <ul style="font-size: 0.8rem; color: #4c1d95; margin-top: 8px; padding-left: 18px;">
@@ -687,7 +752,7 @@
           <span class="badge badge-credit" style="margin-top: 8px;">Saldo Normal: KREDIT</span>
         </div>
 
-        <div style="background: #fff1f2; border: 1px solid #fecdd3; border-radius: 8px; padding: 16px;">
+        <div style="background: #fff1f2; border: 1px solid #fecdd3; border-radius: 2px; padding: 16px;">
           <strong style="color: #be123c; font-size: 1rem;">5000 - BEBAN / BIAYA</strong>
           <p style="font-size: 0.8rem; color: #9f1239; margin-top: 4px;">Pengeluaran operasional bank atau pesantren.</p>
           <ul style="font-size: 0.8rem; color: #881337; margin-top: 8px; padding-left: 18px;">
@@ -727,7 +792,7 @@
             <p>
               Tentukan akun pendapatan mana yang paling sesuai. Apakah masuk <strong>4200 (Pendapatan Operasional/Tahunan)</strong> atau butuh sub-akun baru seperti <strong>4205 (Pendapatan Kegiatan Insidental)</strong>.
             </p>
-            <div style="background: white; border: 1px dashed #cbd5e1; border-radius: 6px; padding: 10px; font-size: 0.8rem;">
+            <div style="background: white; border: 1px dashed #cbd5e1; border-radius: 2px; padding: 10px; font-size: 0.8rem;">
               • <strong>Kode Akun:</strong> <code>4205</code><br>
               • <strong>Nama Akun:</strong> Pendapatan Kegiatan Insidental & Ramadhan<br>
               • <strong>Tipe Akun:</strong> <code>revenue</code> (Pendapatan)<br>
@@ -744,7 +809,7 @@
             <p>
               Data ini adalah katalog item yang bisa dimasukkan ke dalam paket pembayaran maupun transaksi kasir.
             </p>
-            <div style="background: white; border: 1px dashed #cbd5e1; border-radius: 6px; padding: 10px; font-size: 0.8rem;">
+            <div style="background: white; border: 1px dashed #cbd5e1; border-radius: 2px; padding: 10px; font-size: 0.8rem;">
               • <strong>Nama Rincian:</strong> BIAYA KAJIAN RAMADHAN<br>
               • <strong>Nominal Default:</strong> Rp 75.000<br>
               • <strong>Akun COA:</strong> Pilih <code>4205 - Pendapatan Kegiatan Insidental</code><br>
@@ -761,7 +826,7 @@
             <p>
               Masukkan rincian item ini ke paket yang sedang aktif (misalnya Paket Bulan Ramadhan 1447H).
             </p>
-            <div style="background: white; border: 1px dashed #cbd5e1; border-radius: 6px; padding: 10px; font-size: 0.8rem;">
+            <div style="background: white; border: 1px dashed #cbd5e1; border-radius: 2px; padding: 10px; font-size: 0.8rem;">
               • Klik <strong>Edit Items</strong> pada paket yang diinginkan.<br>
               • Tambahkan item: Pilih "BIAYA KAJIAN RAMADHAN".<br>
               • Pastikan opsi <strong>"Apakah ini Uang Saku?" = JANGAN CENTANG (False)</strong>.<br>
@@ -775,7 +840,7 @@
           <div class="step-content">
             <h4>Bagaimana Sistem Menjurnal Saat Santri Membayar?</h4>
             <p>Ketika santri melunasi paket tersebut dari saldo tabungannya, sistem akuntansi otomatis membuat jurnal seimbang:</p>
-            <div style="background: #0f172a; color: #38bdf8; border-radius: 6px; padding: 12px; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem;">
+            <div style="background: #0f172a; color: #38bdf8; border-radius: 2px; padding: 12px; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem;">
               [DEBIT]  2100 - Tabungan Santri             Rp 75.000<br>
               [KREDIT] 4205 - Pendapatan Kegiatan Insidental Rp 75.000<br>
               <em>(Keterangan: Saldo tabungan santri berkurang Rp 75rb, Pendapatan pesantren bertambah Rp 75rb. Jurnal Balance!)</em>
@@ -861,90 +926,90 @@
       </ul>
     </section>
 
-    <!-- Section 6: Operasional Loket (Teller) -->
-    <section id="operasional-setor" class="section-card">
+    <!-- Section 6: Panduan Lengkap Operasional Bank -->
+    <section id="operasional-bank" class="section-card">
       <div class="section-title">
-        <span>📥</span> Panduan Operasional: Setor Tunai (Top-Up Kasir)
+        <span>💳</span> Panduan Lengkap Operasional Bank (Teller & Kasir)
       </div>
-      <div class="section-subtitle">Prosedur menerima uang tunai dari santri atau wali di loket bank.</div>
+      <div class="section-subtitle">Panduan langkah demi langkah untuk 7 fitur inti di menu Operasional Bank.</div>
 
-      <div class="step-list">
-        <div class="step-item">
-          <div class="step-number">1</div>
-          <div class="step-content">
-            <h4>Buka Menu: Operasional Bank > Top-Up / Setor Tunai</h4>
-            <p>Halaman ini khusus digunakan oleh Teller untuk menerima setoran uang tunai secara langsung.</p>
-          </div>
+      <div style="display: flex; flex-direction: column; gap: 20px;">
+        <!-- 1. Transaksi Bank -->
+        <div style="border: 1px solid var(--border); border-radius: 2px; padding: 20px; background: white;">
+          <h4 style="font-size: 1rem; font-weight: 700; color: #0284c7; margin-bottom: 8px;">1. Transaksi Bank (Monitoring & Reversal)</h4>
+          <p style="font-size: 0.85rem; color: #475569; margin-bottom: 10px;">Layar pemantauan seluruh riwayat transaksi di sistem secara real-time.</p>
+          <ul style="font-size: 0.83rem; color: #64748b; line-height: 1.7; padding-left: 20px;">
+            <li><strong>Pencarian Cepat:</strong> Filter data berdasarkan status (success, failed, reversed), channel (teller, midtrans, koperasi), atau nomor referensi.</li>
+            <li><strong>Cetak Struk:</strong> Klik ikon mata (detail) pada baris transaksi untuk mencetak ulang kuitansi transaksi santri.</li>
+            <li><strong>Reversal (Pembatalan/Koreksi):</strong> Jika kasir salah input nominal, buka detail transaksi lalu klik tombol <strong>Reverse</strong>. Sistem otomatis membentuk <em>Jurnal Balik</em> dan mengembalikan saldo santri tanpa merusak jejak audit.</li>
+          </ul>
         </div>
-        <div class="step-item">
-          <div class="step-number">2</div>
-          <div class="step-content">
-            <h4>Cari Rekening Santri</h4>
-            <p>Ketikkan <strong>NIS</strong> atau <strong>Nama Santri</strong> pada kolom pencarian. Sistem akan menampilkan nama lengkap dan saldo santri saat ini.</p>
-          </div>
-        </div>
-        <div class="step-item">
-          <div class="step-number">3</div>
-          <div class="step-content">
-            <h4>Masukkan Nominal & Pilih Paket (Jika untuk bayar tagihan)</h4>
-            <p>
-              • Masukkan jumlah uang tunai yang diserahkan.<br>
-              • Jika setoran ini bertujuan langsung melunasi tagihan (misal Syahriyah), pilih dropdown <strong>"Paket Pembayaran"</strong>.<br>
-              • Jika hanya untuk mengisi saldo tabungan uang saku biasa, kosongkan pilihan paket pembayaran.
-            </p>
-          </div>
-        </div>
-        <div class="step-item">
-          <div class="step-number">4</div>
-          <div class="step-content">
-            <h4>Konfirmasi & Cetak Bukti Setor</h4>
-            <p>Klik tombol <strong>"Proses Setoran"</strong>. Saldo santri langsung bertambah detik itu juga, dan struk setoran dapat dicetak untuk santri.</p>
-          </div>
-        </div>
-      </div>
-    </section>
 
-    <!-- Section 7: Tarik Tunai & Limit Harian -->
-    <section id="operasional-tarik" class="section-card">
-      <div class="section-title">
-        <span>📤</span> Panduan Operasional: Tarik Tunai & Limit Harian
-      </div>
-      <div class="section-subtitle">Prosedur penarikan uang tabungan oleh santri dan kontrol batas harian.</div>
-
-      <p style="font-size: 0.88rem; color: #475569; margin-bottom: 16px;">
-        Untuk mencegah santri boros atau kehilangan uang saku dalam jumlah besar, sistem Bank Santri dilengkapi <strong>Daily Withdrawal Limit (Batas Limit Tarik Harian)</strong> dan <strong>Minimum Balance (Saldo Mengendap)</strong>.
-      </p>
-
-      <div class="callout callout-warning">
-        <div>🛑</div>
-        <div>
-          <strong>Validasi Otomatis Sistem:</strong><br>
-          1. <strong>Batas Limit Harian:</strong> Jika limit santri Rp 20.000/hari dan santri sudah jajan di koperasi Rp 15.000, maka santri hanya bisa menarik tunai maksimal Rp 5.000 lagi pada hari tersebut.<br>
-          2. <strong>Saldo Mengendap:</strong> Jika saldo tabungan santri Rp 30.000 dan saldo minimum produk adalah Rp 10.000, santri hanya bisa menarik maksimal Rp 20.000.
+        <!-- 2. Entri Transaksi -->
+        <div style="border: 1px solid var(--border); border-radius: 2px; padding: 20px; background: white;">
+          <h4 style="font-size: 1rem; font-weight: 700; color: #6366f1; margin-bottom: 8px;">2. Entri Transaksi Manual</h4>
+          <p style="font-size: 0.85rem; color: #475569; margin-bottom: 10px;">Formulir pemindahbukuan manual non-kasir yang dipandu oleh aturan Master Jenis Transaksi.</p>
+          <ol style="font-size: 0.83rem; color: #64748b; line-height: 1.7; padding-left: 20px;">
+            <li>Pilih <strong>Jenis Transaksi</strong> yang sudah dipetakan aturannya oleh akuntan.</li>
+            <li>Pilih Rekening Sumber (jika melibatkan penarikan) dan Rekening Tujuan (jika melibatkan penambahan saldo).</li>
+            <li>Input nominal dan deskripsi, lalu klik <strong>Simpan Transaksi</strong>.</li>
+          </ol>
         </div>
-      </div>
 
-      <div class="step-list">
-        <div class="step-item">
-          <div class="step-number">1</div>
-          <div class="step-content">
-            <h4>Buka Menu: Operasional Bank > Tarik Tunai</h4>
-            <p>Ketikkan NIS santri atau scan barcode kartu santri.</p>
-          </div>
+        <!-- 3. Rekening Bank -->
+        <div style="border: 1px solid var(--border); border-radius: 2px; padding: 20px; background: white;">
+          <h4 style="font-size: 1rem; font-weight: 700; color: #10b981; margin-bottom: 8px;">3. Rekening Bank (Nasabah)</h4>
+          <p style="font-size: 0.85rem; color: #475569; margin-bottom: 10px;">Pengelolaan seluruh data rekening tabungan santri.</p>
+          <ul style="font-size: 0.83rem; color: #64748b; line-height: 1.7; padding-left: 20px;">
+            <li><strong>Sinkronisasi Otomatis (Auto-Provisioning):</strong> Cukup cari NIS santri di kolom pencarian. Bila rekening belum pernah dibuat, sistem otomatis mengambil data santri & nomor kartu RFID dari server SMPT dan membuatkan rekening baru.</li>
+            <li><strong>Blokir / Tutup Rekening:</strong> Klik tombol Edit untuk mengubah status rekening menjadi "DIBLOKIR" atau "TUTUP" bila santri kehilangan kartu atau telah lulus.</li>
+          </ul>
         </div>
-        <div class="step-item">
-          <div class="step-number">2</div>
-          <div class="step-content">
-            <h4>Periksa Sisa Kuota Harian</h4>
-            <p>Sistem akan menampilkan saldo aktif, nominal yang sudah dibelanjakan hari ini, dan sisa limit penarikan yang diperbolehkan.</p>
-          </div>
+
+        <!-- 4. Top-Up / Setor Tunai -->
+        <div style="border: 1px solid var(--border); border-radius: 2px; padding: 20px; background: white;">
+          <h4 style="font-size: 1rem; font-weight: 700; color: #15803d; margin-bottom: 8px;">4. Top-Up / Setor Tunai</h4>
+          <p style="font-size: 0.85rem; color: #475569; margin-bottom: 10px;">Prosedur penerimaan uang tunai di loket teller.</p>
+          <ol style="font-size: 0.83rem; color: #64748b; line-height: 1.7; padding-left: 20px;">
+            <li>Scan kartu RFID atau cari santri berdasarkan NIS/Nama.</li>
+            <li>Masukkan jumlah uang fisik yang diterima kasir.</li>
+            <li><strong>PENTING:</strong> Jika uang setoran ditujukan untuk langsung melunasi tagihan (misal Syahriyah), pilih dropdown <strong>"Paket Pembayaran"</strong>. Sistem otomatis memproses pelunasan tanpa perlu entri terpisah.</li>
+            <li>Klik <strong>Proses Setoran</strong> dan cetak bukti transaksi.</li>
+          </ol>
         </div>
-        <div class="step-item">
-          <div class="step-number">3</div>
-          <div class="step-content">
-            <h4>Eksekusi Penarikan</h4>
-            <p>Input nominal penarikan, lalu klik <strong>"Proses Penarikan"</strong>. Serahkan uang fisik kepada santri.</p>
-          </div>
+
+        <!-- 5. Tarik Tunai -->
+        <div style="border: 1px solid var(--border); border-radius: 2px; padding: 20px; background: white;">
+          <h4 style="font-size: 1rem; font-weight: 700; color: #e11d48; margin-bottom: 8px;">5. Tarik Tunai</h4>
+          <p style="font-size: 0.85rem; color: #475569; margin-bottom: 10px;">Pencairan tabungan santri dengan kontrol batas penarikan.</p>
+          <ul style="font-size: 0.83rem; color: #64748b; line-height: 1.7; padding-left: 20px;">
+            <li><strong>Validasi Saldo Minimum:</strong> Saldo rekening tidak boleh ditarik hingga nol jika produk mewajibkan saldo mengendap.</li>
+            <li><strong>Validasi Limit Harian:</strong> Sistem memeriksa total pengeluaran santri hari ini (tarik tunai + jajan koperasi). Jika melebihi kuota harian, sistem otomatis menolak penarikan.</li>
+            <li>Serahkan uang tunai dan minta tanda tangan santri pada bukti penarikan.</li>
+          </ul>
+        </div>
+
+        <!-- 6. Transfer Bank -->
+        <div style="border: 1px solid var(--border); border-radius: 2px; padding: 20px; background: white;">
+          <h4 style="font-size: 1rem; font-weight: 700; color: #c026d3; margin-bottom: 8px;">6. Transfer Bank Antar Santri</h4>
+          <p style="font-size: 0.85rem; color: #475569; margin-bottom: 10px;">Pemindahan saldo antar santri secara instan tanpa biaya dan tanpa uang tunai.</p>
+          <ol style="font-size: 0.83rem; color: #64748b; line-height: 1.7; padding-left: 20px;">
+            <li>Pilih rekening santri pengirim (sistem memverifikasi kecukupan saldo).</li>
+            <li>Pilih rekening santri penerima.</li>
+            <li>Masukkan nominal transfer dan keterangan.</li>
+            <li>Klik <strong>Proses Transfer</strong>. Saldo berpindah detik itu juga secara akuntansi.</li>
+          </ol>
+        </div>
+
+        <!-- 7. Mutasi Rekening -->
+        <div style="border: 1px solid var(--border); border-radius: 2px; padding: 20px; background: white;">
+          <h4 style="font-size: 1rem; font-weight: 700; color: #d97706; margin-bottom: 8px;">7. Mutasi Rekening (Rekening Koran)</h4>
+          <p style="font-size: 0.85rem; color: #475569; margin-bottom: 10px;">Pencetakan lembar mutasi debit-kredit per santri.</p>
+          <ul style="font-size: 0.83rem; color: #64748b; line-height: 1.7; padding-left: 20px;">
+            <li>Pilih nomor rekening santri dan rentang tanggal yang ingin diperiksa.</li>
+            <li>Sistem menampilkan saldo awal, pergerakan debit, pergerakan kredit, dan saldo akhir.</li>
+            <li>Klik tombol <strong>Cetak Rekening Koran</strong> jika wali santri meminta rekapan transaksi berkala.</li>
+          </ul>
         </div>
       </div>
     </section>
@@ -1039,19 +1104,19 @@
       <div class="section-subtitle">Membaca dan mencetak laporan keuangan standar bank pesantren.</div>
 
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px;">
-        <div style="border: 1px solid var(--border); border-radius: 8px; padding: 18px;">
+        <div style="border: 1px solid var(--border); border-radius: 2px; padding: 18px;">
           <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--primary);">Jurnal Umum (General Journal)</h4>
           <p style="font-size: 0.8rem; color: #64748b; margin-top: 6px;">Menampilkan kronologi setiap transaksi secara berurutan beserta akun debet-kreditnya.</p>
         </div>
-        <div style="border: 1px solid var(--border); border-radius: 8px; padding: 18px;">
+        <div style="border: 1px solid var(--border); border-radius: 2px; padding: 18px;">
           <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--primary);">Buku Besar (General Ledger)</h4>
           <p style="font-size: 0.8rem; color: #64748b; margin-top: 6px;">Menyaring mutasi per akun COA (misal ingin melihat seluruh mutasi Kas 1101 atau Tabungan 2100 saja).</p>
         </div>
-        <div style="border: 1px solid var(--border); border-radius: 8px; padding: 18px;">
+        <div style="border: 1px solid var(--border); border-radius: 2px; padding: 18px;">
           <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--primary);">Laporan Laba Rugi</h4>
           <p style="font-size: 0.8rem; color: #64748b; margin-top: 6px;">Menghitung Total Pendapatan Operasional Pesantren dikurangi Total Beban pada periode tertentu.</p>
         </div>
-        <div style="border: 1px solid var(--border); border-radius: 8px; padding: 18px;">
+        <div style="border: 1px solid var(--border); border-radius: 2px; padding: 18px;">
           <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--primary);">Neraca Keuangan (Balance Sheet)</h4>
           <p style="font-size: 0.8rem; color: #64748b; margin-top: 6px;">Menampilkan posisi Aset Pesantren = Kewajiban (Tabungan Santri) + Ekuitas.</p>
         </div>

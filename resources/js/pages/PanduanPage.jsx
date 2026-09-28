@@ -13,7 +13,9 @@ import {
     CreditCard,
     ArrowRightLeft,
     FileText,
-    Store
+    Store,
+    Database,
+    Settings
 } from 'lucide-react';
 
 const PanduanPage = () => {
@@ -67,6 +69,7 @@ const PanduanPage = () => {
 
     const sections = [
         { id: 'pengantar', title: 'Konsep & Alur Dana', icon: <BookOpen className="w-4 h-4" />, category: 'Core' },
+        { id: 'master-data', title: 'Manajemen Master Data', icon: <Database className="w-4 h-4" />, category: 'Core' },
         { id: 'coa', title: 'Panduan COA', icon: <PieChart className="w-4 h-4" />, category: 'Akuntansi' },
         { id: 'tambah-coa', title: 'Tambah Data Baru', icon: <PlusCircle className="w-4 h-4" />, category: 'Akuntansi' },
         { id: 'simulator', title: 'Simulator Jurnal', icon: <Calculator className="w-4 h-4" />, category: 'Akuntansi' },
@@ -79,35 +82,35 @@ const PanduanPage = () => {
     const filteredSections = sections.filter(s => s.title.toLowerCase().includes(searchQuery.toLowerCase()));
 
     return (
-        <div className="flex flex-col lg:flex-row gap-6 pb-12">
+        <div className="flex flex-col lg:flex-row gap-5 pb-12">
             {/* Sidebar In-Page */}
             <div className="w-full lg:w-64 shrink-0">
-                <div className="bg-white rounded-xl border border-gray-200 p-4 sticky top-4 shadow-sm">
-                    <h3 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                        <BookOpen className="w-5 h-5 text-blue-600" />
+                <div className="bg-white border border-slate-300 p-3.5 sticky top-4">
+                    <h3 className="text-xs uppercase font-bold tracking-wider text-slate-500 mb-3 flex items-center gap-2">
+                        <BookOpen className="w-4 h-4 text-blue-600" />
                         Menu Panduan
                     </h3>
                     
-                    <div className="relative mb-4">
-                        <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <div className="relative mb-3">
+                        <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
                         <input 
                             type="text" 
-                            placeholder="Cari panduan..."
+                            placeholder="Cari fitur..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                            className="w-full pl-8 pr-2.5 py-1.5 bg-slate-50 border border-slate-300 text-xs focus:outline-none focus:border-blue-600 focus:bg-white"
                         />
                     </div>
 
-                    <div className="space-y-1">
+                    <div className="space-y-0.5 border-t border-slate-200 pt-2">
                         {filteredSections.map((section) => (
                             <button
                                 key={section.id}
                                 onClick={() => setActiveSection(section.id)}
-                                className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-left ${
+                                className={`w-full flex items-center gap-2 px-2.5 py-2 text-xs font-medium transition-colors text-left border-l-2 ${
                                     activeSection === section.id 
-                                        ? 'bg-blue-50 text-blue-700' 
-                                        : 'text-gray-600 hover:bg-gray-50'
+                                        ? 'bg-blue-50 text-blue-800 border-blue-600 font-semibold' 
+                                        : 'text-slate-600 hover:bg-slate-50 border-transparent hover:text-slate-900'
                                 }`}
                             >
                                 {section.icon}
@@ -115,7 +118,7 @@ const PanduanPage = () => {
                             </button>
                         ))}
                         {filteredSections.length === 0 && (
-                            <div className="text-sm text-gray-400 text-center py-4">Tidak ditemukan</div>
+                            <div className="text-xs text-slate-400 text-center py-4">Tidak ditemukan</div>
                         )}
                     </div>
                 </div>
@@ -123,65 +126,65 @@ const PanduanPage = () => {
 
             {/* Main Content Area */}
             <div className="flex-1 min-w-0">
-                <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-8 text-white mb-6 relative overflow-hidden shadow-lg">
-                    <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 bg-blue-500/20 rounded-full blur-3xl"></div>
-                    <div className="relative z-10">
-                        <h1 className="text-2xl md:text-3xl font-bold mb-3 tracking-tight">Panduan Sistem Bank Santri</h1>
-                        <p className="text-slate-300 text-sm md:text-base max-w-2xl leading-relaxed">
-                            Panduan operasional komprehensif untuk memahami sistem pembukuan 
-                            <i> Double-Entry </i> syariah, penggunaan Chart of Accounts (COA), 
-                            serta operasi teller dan kasir.
-                        </p>
+                {/* Flat Professional Header */}
+                <div className="bg-slate-900 border-l-4 border-blue-600 p-6 text-white mb-5">
+                    <div className="flex items-center gap-2 text-xs text-blue-400 font-mono uppercase tracking-wider mb-1">
+                        <span>Dokumentasi Sistem</span>
+                        <span>/</span>
+                        <span>Panduan Operasional</span>
                     </div>
+                    <h1 className="text-xl md:text-2xl font-bold tracking-tight text-white mb-1.5">
+                        Buku Panduan & Akuntansi Bank Santri
+                    </h1>
+                    <p className="text-slate-300 text-xs md:text-sm max-w-3xl leading-relaxed">
+                        Standar Prosedur Operasional (SOP) core banking pesantren: tata cara penggunaan rekening wadiah, aturan debet-kredit Chart of Accounts (COA), serta panduan langkah demi langkah seluruh modul.
+                    </p>
                 </div>
 
                 {/* Section Content Rendering */}
-                <div className="bg-white rounded-2xl border border-gray-200 p-6 md:p-8 shadow-sm">
+                <div className="bg-white border border-slate-300 p-6 md:p-7">
                     {activeSection === 'pengantar' && (
-                        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                            <div className="flex items-center gap-3 border-b border-gray-100 pb-4">
-                                <div className="p-2.5 bg-blue-100 text-blue-700 rounded-lg"><BookOpen className="w-5 h-5" /></div>
-                                <div>
-                                    <h2 className="text-xl font-bold text-gray-800">Pengantar & Konsep Tabungan</h2>
-                                    <p className="text-sm text-gray-500">Memahami hakikat rekening santri dan akad syariah</p>
-                                </div>
+                        <div className="space-y-5">
+                            <div className="border-b border-slate-200 pb-3">
+                                <h2 className="text-lg font-bold text-slate-900">Pengantar & Konsep Tabungan Santri</h2>
+                                <p className="text-xs text-slate-500">Prinsip dasar akad syariah dan arsitektur tabungan santri</p>
                             </div>
                             
-                            <div className="bg-blue-50 border-l-4 border-blue-600 p-4 rounded-r-lg">
-                                <h4 className="font-semibold text-blue-900 mb-1 flex items-center gap-2">
-                                    <AlertCircle className="w-4 h-4" /> Prinsip Kunci
+                            <div className="bg-slate-50 border-l-4 border-blue-600 p-3.5">
+                                <h4 className="text-xs font-bold uppercase tracking-wider text-blue-900 mb-1 flex items-center gap-1.5">
+                                    <AlertCircle className="w-3.5 h-3.5 text-blue-700" /> Prinsip Kunci Akuntansi
                                 </h4>
-                                <p className="text-sm text-blue-800 leading-relaxed">
+                                <p className="text-xs text-slate-700 leading-relaxed">
                                     Uang tabungan santri yang disetor ke loket teller <strong>BUKAN PENDAPATAN</strong> bagi pesantren, 
-                                    melainkan <strong>TITIPAN / KEWAJIBAN (Akad Wadiah Yad Dhamanah)</strong>. Pesantren berkewajiban mengembalikan atau menyalurkan uang tersebut sesuai instruksi santri/wali.
+                                    melainkan <strong>TITIPAN / KEWAJIBAN (Akad Wadiah Yad Dhamanah)</strong>. Pesantren berkewajiban mengembalikan atau menyalurkan uang tersebut sesuai instruksi santri atau wali.
                                 </p>
                             </div>
 
-                            <h3 className="font-bold text-gray-800 mt-6 mb-3">Istilah dalam Sistem</h3>
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-sm text-left border border-gray-200 rounded-lg overflow-hidden">
-                                    <thead className="bg-gray-50 text-gray-700 border-b border-gray-200">
+                            <h3 className="font-bold text-slate-800 text-sm mt-5 mb-2">Glosarium Istilah Sistem</h3>
+                            <div className="border border-slate-300 overflow-x-auto">
+                                <table className="w-full text-xs text-left">
+                                    <thead className="bg-slate-100 text-slate-800 border-b border-slate-300 uppercase font-semibold text-[11px]">
                                         <tr>
-                                            <th className="px-4 py-3 font-semibold">Istilah Sistem</th>
-                                            <th className="px-4 py-3 font-semibold">Padanan Bank Umum</th>
-                                            <th className="px-4 py-3 font-semibold">Keterangan</th>
+                                            <th className="px-3 py-2.5">Istilah Sistem</th>
+                                            <th className="px-3 py-2.5">Padanan Bank Umum</th>
+                                            <th className="px-3 py-2.5">Keterangan</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-gray-200">
-                                        <tr className="hover:bg-gray-50">
-                                            <td className="px-4 py-3 font-medium text-gray-900">Account Number</td>
-                                            <td className="px-4 py-3 text-gray-600">No. Rekening</td>
-                                            <td className="px-4 py-3 text-gray-600">Otomatis menggunakan <strong>NIS (Nomor Induk Santri)</strong>.</td>
+                                    <tbody className="divide-y divide-slate-200">
+                                        <tr className="hover:bg-slate-50">
+                                            <td className="px-3 py-2.5 font-mono font-semibold text-slate-900">Account Number</td>
+                                            <td className="px-3 py-2.5 text-slate-700">No. Rekening</td>
+                                            <td className="px-3 py-2.5 text-slate-600">Otomatis menggunakan <strong>NIS (Nomor Induk Santri)</strong>.</td>
                                         </tr>
-                                        <tr className="hover:bg-gray-50">
-                                            <td className="px-4 py-3 font-medium text-gray-900">Card Number</td>
-                                            <td className="px-4 py-3 text-gray-600">Kartu Debit</td>
-                                            <td className="px-4 py-3 text-gray-600">UID RFID / NFC untuk tap jajan di koperasi.</td>
+                                        <tr className="hover:bg-slate-50">
+                                            <td className="px-3 py-2.5 font-mono font-semibold text-slate-900">Card Number</td>
+                                            <td className="px-3 py-2.5 text-slate-700">Kartu Debit</td>
+                                            <td className="px-3 py-2.5 text-slate-600">UID RFID / NFC untuk tap transaksi di kasir koperasi.</td>
                                         </tr>
-                                        <tr className="hover:bg-gray-50">
-                                            <td className="px-4 py-3 font-medium text-gray-900">COA 2100</td>
-                                            <td className="px-4 py-3 text-gray-600">DPK (Dana Pihak Ke-3)</td>
-                                            <td className="px-4 py-3 text-gray-600">Akun "Kewajiban" bertumpuknya saldo seluruh santri.</td>
+                                        <tr className="hover:bg-slate-50">
+                                            <td className="px-3 py-2.5 font-mono font-semibold text-slate-900">COA 2100</td>
+                                            <td className="px-3 py-2.5 text-slate-700">Dana Pihak Ketiga (DPK)</td>
+                                            <td className="px-3 py-2.5 text-slate-600">Akun Kewajiban tempat bertumpuknya saldo seluruh santri.</td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -189,63 +192,156 @@ const PanduanPage = () => {
                         </div>
                     )}
 
-                    {activeSection === 'coa' && (
-                        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                            <div className="flex items-center gap-3 border-b border-gray-100 pb-4">
-                                <div className="p-2.5 bg-emerald-100 text-emerald-700 rounded-lg"><PieChart className="w-5 h-5" /></div>
-                                <div>
-                                    <h2 className="text-xl font-bold text-gray-800">Panduan Memahami COA</h2>
-                                    <p className="text-sm text-gray-500">Standarisasi penomoran Chart of Account (Akuntansi)</p>
-                                </div>
+                    {activeSection === 'master-data' && (
+                        <div className="space-y-5">
+                            <div className="border-b border-slate-200 pb-3">
+                                <h2 className="text-lg font-bold text-slate-900">Panduan Komprehensif Master Data</h2>
+                                <p className="text-xs text-slate-500">Konfigurasi fondasi utama aplikasi Bank Santri</p>
                             </div>
 
-                            <p className="text-sm text-gray-600">Setiap akun keuangan memiliki kode 4 digit dengan aturan hierarki level. Penempatan akun yang salah akan berakibat fatal pada Neraca dan Laba Rugi.</p>
+                            <p className="text-xs text-slate-600">
+                                Master Data adalah jantung dari Bank Santri. Segala sesuatu mulai dari pembukaan rekening hingga pencatatan jurnal akuntansi bergantung pada pengaturan di menu ini.
+                            </p>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                                <div className="bg-blue-50 border border-blue-200 rounded-xl p-5">
-                                    <div className="flex items-center justify-between mb-2">
-                                        <strong className="text-blue-800 font-bold">1000 - ASET (Aktiva)</strong>
-                                        <span className="text-[10px] font-bold bg-blue-200 text-blue-800 px-2 py-1 rounded">NORMAL: DEBIT</span>
+                            <div className="space-y-3.5">
+                                {/* Produk Bank */}
+                                <div className="p-4 border border-slate-300 bg-white">
+                                    <div className="flex items-center gap-2 border-b border-slate-200 pb-2 mb-2">
+                                        <span className="w-5 h-5 bg-slate-900 text-white flex items-center justify-center font-mono text-xs font-bold">1</span>
+                                        <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wide">Produk Bank</h4>
                                     </div>
-                                    <p className="text-xs text-blue-600 mb-3">Uang fisik riil milik pesantren/bank.</p>
-                                    <ul className="text-sm text-blue-900 space-y-1 pl-4 list-disc">
-                                        <li><span className="font-mono bg-white px-1 rounded">1101</span> Kas Utama (Loket)</li>
-                                        <li><span className="font-mono bg-white px-1 rounded">1102</span> Rekening Bank</li>
+                                    <p className="text-xs text-slate-600 mb-2">Mendefinisikan jenis layanan tabungan (Wadiah/Mudharabah) yang mengikat ke Rekening Santri.</p>
+                                    <ul className="text-xs text-slate-600 list-disc pl-5 space-y-1">
+                                        <li><strong>Saldo Minimum:</strong> Batas saldo yang mengendap (tidak bisa ditarik). Contoh: Rp 10.000.</li>
+                                        <li><strong>Limit Tarik Harian:</strong> Batas nominal maksimal santri menarik uang saku per hari (loket & koperasi). Set 0 untuk tanpa batas.</li>
+                                        <li><strong>Biaya Admin Bulanan:</strong> Biaya pengelolaan rekening berkala.</li>
                                     </ul>
                                 </div>
 
-                                <div className="bg-amber-50 border border-amber-200 rounded-xl p-5">
-                                    <div className="flex items-center justify-between mb-2">
-                                        <strong className="text-amber-800 font-bold">2000 - KEWAJIBAN (Pasiva)</strong>
-                                        <span className="text-[10px] font-bold bg-amber-200 text-amber-800 px-2 py-1 rounded">NORMAL: KREDIT</span>
+                                {/* COA Bank */}
+                                <div className="p-4 border border-slate-300 bg-white">
+                                    <div className="flex items-center gap-2 border-b border-slate-200 pb-2 mb-2">
+                                        <span className="w-5 h-5 bg-slate-900 text-white flex items-center justify-center font-mono text-xs font-bold">2</span>
+                                        <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wide">COA Bank (Chart of Accounts)</h4>
                                     </div>
-                                    <p className="text-xs text-amber-600 mb-3">Uang titipan pihak lain (Santri).</p>
-                                    <ul className="text-sm text-amber-900 space-y-1 pl-4 list-disc">
-                                        <li><span className="font-mono bg-white px-1 rounded">2100</span> Tabungan Santri (Wadiah)</li>
+                                    <p className="text-xs text-slate-600 mb-2">Daftar buku besar akuntansi (*General Ledger*) yang menampung seluruh perputaran nilai nominal.</p>
+                                    <ul className="text-xs text-slate-600 list-disc pl-5 space-y-1">
+                                        <li>Hierarki baku: Kepala 1 (Aset), 2 (Kewajiban), 3 (Ekuitas), 4 (Pendapatan), 5 (Beban).</li>
+                                        <li>Pastikan akun yang ditransaksikan diatur sebagai <strong>Postable: Ya</strong> agar dapat menerima jurnal.</li>
                                     </ul>
                                 </div>
 
-                                <div className="bg-purple-50 border border-purple-200 rounded-xl p-5">
-                                    <div className="flex items-center justify-between mb-2">
-                                        <strong className="text-purple-800 font-bold">4000 - PENDAPATAN</strong>
-                                        <span className="text-[10px] font-bold bg-purple-200 text-purple-800 px-2 py-1 rounded">NORMAL: KREDIT</span>
+                                {/* Master Rincian Transaksi */}
+                                <div className="p-4 border border-slate-300 bg-white">
+                                    <div className="flex items-center gap-2 border-b border-slate-200 pb-2 mb-2">
+                                        <span className="w-5 h-5 bg-slate-900 text-white flex items-center justify-center font-mono text-xs font-bold">3</span>
+                                        <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wide">Master Rincian Transaksi (MTI)</h4>
                                     </div>
-                                    <p className="text-xs text-purple-600 mb-3">Penerimaan atas jasa/tagihan murni milik pesantren.</p>
-                                    <ul className="text-sm text-purple-900 space-y-1 pl-4 list-disc">
-                                        <li><span className="font-mono bg-white px-1 rounded">4100</span> Pendapatan Pendaftaran</li>
-                                        <li><span className="font-mono bg-white px-1 rounded">4200</span> Pdp. Operasional Tahunan</li>
-                                        <li><span className="font-mono bg-white px-1 rounded">4300</span> Pdp. Bulanan/Syahriyah</li>
+                                    <p className="text-xs text-slate-600 mb-2">Katalog daftar komponen biaya (misal: Uang Seragam, SPP, Kitab) yang menjembatani operasional kasir dengan COA akuntansi.</p>
+                                    <div className="bg-slate-50 p-2.5 text-xs text-slate-700 border border-slate-200">
+                                        <ul className="list-disc pl-4 space-y-1">
+                                            <li><strong>Akun COA:</strong> Menentukan akun penerima (Contoh: Pendaftaran diarahkan ke <code>4100 Pendapatan Pendaftaran</code>).</li>
+                                            <li><strong>Posisi Entri:</strong> Jika akun COA adalah Pendapatan, pilih <strong>Kredit</strong>. Jika Aset/Beban, pilih <strong>Debit</strong>.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                {/* Jenis Transaksi Bank */}
+                                <div className="p-4 border border-slate-300 bg-white">
+                                    <div className="flex items-center gap-2 border-b border-slate-200 pb-2 mb-2">
+                                        <span className="w-5 h-5 bg-slate-900 text-white flex items-center justify-center font-mono text-xs font-bold">4</span>
+                                        <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wide">Jenis Transaksi Bank (Event Category)</h4>
+                                    </div>
+                                    <p className="text-xs text-slate-600 mb-2">Kelompok besar peristiwa transaksi sistem, misalnya <code>BIAYA-REG</code>, <code>TOPUP-SANTRI</code>, <code>WDR-SANTRI</code>.</p>
+                                    <ul className="text-xs text-slate-600 list-disc pl-5 space-y-1">
+                                        <li>Setiap kategori dihubungkan dengan <em>Rules</em> pemetaan jurnal otomatis.</li>
                                     </ul>
                                 </div>
 
-                                <div className="bg-rose-50 border border-rose-200 rounded-xl p-5">
-                                    <div className="flex items-center justify-between mb-2">
-                                        <strong className="text-rose-800 font-bold">5000 - BEBAN / BIAYA</strong>
-                                        <span className="text-[10px] font-bold bg-rose-200 text-rose-800 px-2 py-1 rounded">NORMAL: DEBIT</span>
+                                {/* Merchant Koperasi */}
+                                <div className="p-4 border border-slate-300 bg-white">
+                                    <div className="flex items-center gap-2 border-b border-slate-200 pb-2 mb-2">
+                                        <span className="w-5 h-5 bg-slate-900 text-white flex items-center justify-center font-mono text-xs font-bold">5</span>
+                                        <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wide">Merchant Koperasi</h4>
                                     </div>
-                                    <p className="text-xs text-rose-600 mb-3">Pengeluaran yang menjadi beban institusi.</p>
-                                    <ul className="text-sm text-rose-900 space-y-1 pl-4 list-disc">
-                                        <li><span className="font-mono bg-white px-1 rounded">5100</span> Beban Operasional Bank</li>
+                                    <p className="text-xs text-slate-600 mb-2">Pendaftaran outlet kasir eksternal (Kantin, Dapur, Koperasi) untuk transaksi *cashless* via kartu RFID santri.</p>
+                                    <ul className="text-xs text-slate-600 list-disc pl-5 space-y-1">
+                                        <li>Menghasilkan <strong>API Secret Key (X-Koperasi-Key)</strong> untuk dipasang di mesin POS kasir.</li>
+                                        <li>Tersedia tombol <strong>Rotate Key</strong> jika kunci perlu diganti.</li>
+                                    </ul>
+                                </div>
+
+                                {/* Pengaturan Bank */}
+                                <div className="p-4 border border-slate-300 bg-white">
+                                    <div className="flex items-center gap-2 border-b border-slate-200 pb-2 mb-2">
+                                        <span className="w-5 h-5 bg-slate-900 text-white flex items-center justify-center font-mono text-xs font-bold">6</span>
+                                        <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wide">Pengaturan Bank</h4>
+                                    </div>
+                                    <p className="text-xs text-slate-600 mb-2">Variabel konfigurasi global aplikasi.</p>
+                                    <ul className="text-xs text-slate-600 list-disc pl-5 space-y-1">
+                                        <li><strong>Integrasi SMPT:</strong> URL pusat akademik dan Internal Secret Key untuk auto-provisioning santri.</li>
+                                        <li><strong>Sesi Dapur Makan:</strong> Jam aktif makan pagi, siang, malam, serta tarif per sesi.</li>
+                                        <li><strong>Anti-Double Tap:</strong> Mencegah kartu santri di-tap 2x dalam satu sesi makan yang sama.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {activeSection === 'coa' && (
+                        <div className="space-y-5">
+                            <div className="border-b border-slate-200 pb-3">
+                                <h2 className="text-lg font-bold text-slate-900">Panduan Memahami COA (Chart of Accounts)</h2>
+                                <p className="text-xs text-slate-500">Standarisasi penomoran rekening akuntansi dan posisi normal</p>
+                            </div>
+
+                            <p className="text-xs text-slate-600">Setiap akun keuangan memiliki kode 4 digit dengan aturan hierarki level baku:</p>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 mt-2">
+                                <div className="bg-slate-50 border border-slate-300 p-4">
+                                    <div className="flex items-center justify-between mb-1.5">
+                                        <strong className="text-slate-900 font-bold text-xs uppercase">1000 - ASET (Aktiva)</strong>
+                                        <span className="text-[10px] font-mono font-bold bg-slate-200 text-slate-800 px-1.5 py-0.5">NORMAL: DEBIT</span>
+                                    </div>
+                                    <p className="text-[11px] text-slate-500 mb-2">Uang fisik riil milik pesantren/bank.</p>
+                                    <ul className="text-xs text-slate-700 space-y-1 pl-4 list-disc font-mono">
+                                        <li>1101 Kas Utama (Loket)</li>
+                                        <li>1102 Rekening Bank</li>
+                                    </ul>
+                                </div>
+
+                                <div className="bg-slate-50 border border-slate-300 p-4">
+                                    <div className="flex items-center justify-between mb-1.5">
+                                        <strong className="text-slate-900 font-bold text-xs uppercase">2000 - KEWAJIBAN (Pasiva)</strong>
+                                        <span className="text-[10px] font-mono font-bold bg-slate-200 text-slate-800 px-1.5 py-0.5">NORMAL: KREDIT</span>
+                                    </div>
+                                    <p className="text-[11px] text-slate-500 mb-2">Uang titipan pihak ketiga (Santri).</p>
+                                    <ul className="text-xs text-slate-700 space-y-1 pl-4 list-disc font-mono">
+                                        <li>2100 Tabungan Santri (Wadiah)</li>
+                                    </ul>
+                                </div>
+
+                                <div className="bg-slate-50 border border-slate-300 p-4">
+                                    <div className="flex items-center justify-between mb-1.5">
+                                        <strong className="text-slate-900 font-bold text-xs uppercase">4000 - PENDAPATAN</strong>
+                                        <span className="text-[10px] font-mono font-bold bg-slate-200 text-slate-800 px-1.5 py-0.5">NORMAL: KREDIT</span>
+                                    </div>
+                                    <p className="text-[11px] text-slate-500 mb-2">Penerimaan atas jasa/tagihan murni milik pesantren.</p>
+                                    <ul className="text-xs text-slate-700 space-y-1 pl-4 list-disc font-mono">
+                                        <li>4100 Pendapatan Pendaftaran</li>
+                                        <li>4200 Pendapatan Operasional Tahunan</li>
+                                        <li>4300 Pendapatan Bulanan/Syahriyah</li>
+                                    </ul>
+                                </div>
+
+                                <div className="bg-slate-50 border border-slate-300 p-4">
+                                    <div className="flex items-center justify-between mb-1.5">
+                                        <strong className="text-slate-900 font-bold text-xs uppercase">5000 - BEBAN / BIAYA</strong>
+                                        <span className="text-[10px] font-mono font-bold bg-slate-200 text-slate-800 px-1.5 py-0.5">NORMAL: DEBIT</span>
+                                    </div>
+                                    <p className="text-[11px] text-slate-500 mb-2">Pengeluaran operasional.</p>
+                                    <ul className="text-xs text-slate-700 space-y-1 pl-4 list-disc font-mono">
+                                        <li>5100 Beban Operasional Bank</li>
                                     </ul>
                                 </div>
                             </div>
@@ -253,47 +349,41 @@ const PanduanPage = () => {
                     )}
 
                     {activeSection === 'tambah-coa' && (
-                        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                            <div className="flex items-center gap-3 border-b border-gray-100 pb-4">
-                                <div className="p-2.5 bg-indigo-100 text-indigo-700 rounded-lg"><PlusCircle className="w-5 h-5" /></div>
-                                <div>
-                                    <h2 className="text-xl font-bold text-gray-800">Menambah Pungutan / Tagihan Baru</h2>
-                                    <p className="text-sm text-gray-500">Alur yang tepat agar pembukuan tidak berantakan</p>
-                                </div>
+                        <div className="space-y-5">
+                            <div className="border-b border-slate-200 pb-3">
+                                <h2 className="text-lg font-bold text-slate-900">Menambah Pungutan / Tagihan Baru</h2>
+                                <p className="text-xs text-slate-500">Alur yang tepat agar pembukuan tidak berantakan</p>
                             </div>
 
-                            <div className="bg-amber-50 border border-amber-200 p-4 rounded-lg flex gap-3 text-sm">
-                                <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-                                <div className="text-amber-900">
-                                    <strong>ATURAN EMAS:</strong> Jangan pernah memetakan jenis pungutan (seperti uang seragam, asrama, dsb) langsung ke akun Tabungan (2100) atau Kas (1101) di <i>Master Rincian Transaksi</i>. <br/>
-                                    <strong>Pungutan wajib diarahkan ke COA PENDAPATAN (Kepala 4).</strong> Sistem secara otomatis akan mendebit saldo tabungan santri sebagai akun lawannya.
-                                </div>
+                            <div className="bg-amber-50 border-l-4 border-amber-600 p-3.5 text-xs text-amber-900">
+                                <strong>ATURAN EMAS:</strong> Jangan pernah memetakan jenis pungutan santri langsung ke akun Tabungan (2100) atau Kas (1101) di <i>Master Rincian Transaksi</i>. <br/>
+                                Pungutan wajib diarahkan ke <strong>COA PENDAPATAN (Kepala 4)</strong>. Sistem secara otomatis mendebit saldo tabungan santri sebagai akun lawannya saat pembayaran.
                             </div>
 
-                            <h3 className="font-bold text-gray-800 text-lg mt-6">Skenario: Menambahkan "Biaya Kajian Ramadhan"</h3>
+                            <h3 className="font-bold text-slate-800 text-sm mt-4">Studi Kasus: Menambahkan "Biaya Kajian Ramadhan"</h3>
                             
-                            <div className="space-y-4">
-                                <div className="flex gap-4 p-4 rounded-xl border border-gray-100 bg-gray-50">
-                                    <div className="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold shrink-0">1</div>
+                            <div className="space-y-3">
+                                <div className="flex gap-3 p-3.5 border border-slate-300 bg-white">
+                                    <div className="w-6 h-6 bg-slate-900 text-white flex items-center justify-center font-bold font-mono text-xs shrink-0">1</div>
                                     <div>
-                                        <h4 className="font-semibold text-gray-800">Tambahkan COA Pendapatan</h4>
-                                        <p className="text-sm text-gray-600 mt-1">Buka menu <b>Master Data &gt; COA Bank</b>. Tambahkan sub-akun pendapatan baru (misal: <code>4205 - Pendapatan Kajian Ramadhan</code>) di bawah parent Pendapatan Operasional. Centang opsi <i>Postable</i>.</p>
+                                        <h4 className="font-bold text-xs text-slate-900 uppercase">Tambahkan COA Pendapatan</h4>
+                                        <p className="text-xs text-slate-600 mt-1">Buka menu <b>Master Data &gt; COA Bank</b>. Tambahkan sub-akun pendapatan baru (misal: <code>4205 - Pendapatan Kajian Ramadhan</code>) di bawah parent Pendapatan Operasional. Centang <i>Postable</i>.</p>
                                     </div>
                                 </div>
 
-                                <div className="flex gap-4 p-4 rounded-xl border border-gray-100 bg-gray-50">
-                                    <div className="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold shrink-0">2</div>
+                                <div className="flex gap-3 p-3.5 border border-slate-300 bg-white">
+                                    <div className="w-6 h-6 bg-slate-900 text-white flex items-center justify-center font-bold font-mono text-xs shrink-0">2</div>
                                     <div>
-                                        <h4 className="font-semibold text-gray-800">Daftarkan di Master Rincian Transaksi</h4>
-                                        <p className="text-sm text-gray-600 mt-1">Buka menu <b>Master Data &gt; Rincian Transaksi</b>. Buat baru dengan COA Code: <code>4205</code>, Posisi/Entry Type: <code>Kredit</code>, dan set nominalnya.</p>
+                                        <h4 className="font-bold text-xs text-slate-900 uppercase">Daftarkan di Master Rincian Transaksi</h4>
+                                        <p className="text-xs text-slate-600 mt-1">Buka menu <b>Master Data &gt; Rincian Transaksi</b>. Buat item baru dengan COA Code: <code>4205</code>, Entry Type: <code>Kredit</code>, dan tentukan nominalnya.</p>
                                     </div>
                                 </div>
 
-                                <div className="flex gap-4 p-4 rounded-xl border border-gray-100 bg-gray-50">
-                                    <div className="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold shrink-0">3</div>
+                                <div className="flex gap-3 p-3.5 border border-slate-300 bg-white">
+                                    <div className="w-6 h-6 bg-slate-900 text-white flex items-center justify-center font-bold font-mono text-xs shrink-0">3</div>
                                     <div>
-                                        <h4 className="font-semibold text-gray-800">Masukkan ke Paket Tagihan</h4>
-                                        <p className="text-sm text-gray-600 mt-1">Buka menu <b>Tagihan &gt; Paket Pembayaran</b>. Edit items pada paket bersangkutan, tambahkan rincian "Biaya Kajian Ramadhan" tersebut.</p>
+                                        <h4 className="font-bold text-xs text-slate-900 uppercase">Sematkan ke Paket Tagihan</h4>
+                                        <p className="text-xs text-slate-600 mt-1">Buka menu <b>Tagihan &gt; Paket Pembayaran</b>. Edit items pada paket yang bersangkutan, masukkan rincian "Biaya Kajian Ramadhan" tersebut.</p>
                                     </div>
                                 </div>
                             </div>
@@ -301,21 +391,18 @@ const PanduanPage = () => {
                     )}
 
                     {activeSection === 'simulator' && (
-                        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                            <div className="flex items-center gap-3 border-b border-gray-100 pb-4">
-                                <div className="p-2.5 bg-slate-800 text-white rounded-lg"><Calculator className="w-5 h-5" /></div>
-                                <div>
-                                    <h2 className="text-xl font-bold text-gray-800">Simulator Jurnal Otomatis</h2>
-                                    <p className="text-sm text-gray-500">Cari tahu bagaimana sistem mencatat Ledger secara real-time</p>
-                                </div>
+                        <div className="space-y-5">
+                            <div className="border-b border-slate-200 pb-3">
+                                <h2 className="text-lg font-bold text-slate-900">Simulator Jurnal Otomatis</h2>
+                                <p className="text-xs text-slate-500">Pratinjau pembentukan Double-Entry Ledger secara real-time</p>
                             </div>
 
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                                <div className="space-y-4">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                <div className="space-y-3.5">
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1.5">Skenario Transaksi</label>
+                                        <label className="block text-xs font-bold uppercase text-slate-600 mb-1">Skenario Transaksi</label>
                                         <select 
-                                            className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm py-2 px-3 border bg-white"
+                                            className="w-full border border-slate-300 text-xs py-2 px-2.5 bg-white focus:outline-none focus:border-blue-600"
                                             value={simState.type}
                                             onChange={(e) => setSimState({...simState, type: e.target.value})}
                                         >
@@ -327,33 +414,33 @@ const PanduanPage = () => {
                                         </select>
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1.5">Nominal (Rp)</label>
+                                        <label className="block text-xs font-bold uppercase text-slate-600 mb-1">Nominal (Rp)</label>
                                         <input 
                                             type="number" 
-                                            className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm py-2 px-3 border bg-white"
+                                            className="w-full border border-slate-300 text-xs py-2 px-2.5 bg-white focus:outline-none focus:border-blue-600 font-mono"
                                             value={simState.amount}
                                             onChange={(e) => setSimState({...simState, amount: parseFloat(e.target.value) || 0})}
                                         />
                                     </div>
                                 </div>
 
-                                <div className="bg-[#0f172a] rounded-xl p-5 text-gray-300 font-mono text-xs md:text-sm shadow-inner border border-slate-700">
-                                    <div className="text-emerald-400 font-semibold mb-3 pb-2 border-b border-slate-700 flex items-center gap-2">
-                                        <CheckCircle2 className="w-4 h-4" /> DOUBLE ENTRY GENERATED
+                                <div className="bg-slate-900 p-4 text-slate-200 font-mono text-xs border border-slate-800">
+                                    <div className="text-emerald-400 font-bold mb-3 pb-2 border-b border-slate-800 flex items-center gap-1.5 uppercase text-[11px]">
+                                        <CheckCircle2 className="w-3.5 h-3.5" /> Double-Entry Jurnal Terbentuk
                                     </div>
                                     
-                                    <div className="space-y-2 mb-4">
+                                    <div className="space-y-2 mb-3">
                                         <div className="flex justify-between items-center text-blue-300">
                                             <span>[DEBIT] {simResult.debitCoa} - {simResult.debitName}</span>
                                             <span className="font-semibold">{formatRp(simState.amount)}</span>
                                         </div>
-                                        <div className="flex justify-between items-center text-rose-300 pl-4 md:pl-8">
+                                        <div className="flex justify-between items-center text-rose-300 pl-4 md:pl-6">
                                             <span>[KREDIT] {simResult.creditCoa} - {simResult.creditName}</span>
                                             <span className="font-semibold">{formatRp(simState.amount)}</span>
                                         </div>
                                     </div>
 
-                                    <div className="bg-slate-800/50 p-3 rounded-lg border border-slate-700/50 text-slate-400 mt-4 leading-relaxed font-sans text-xs">
+                                    <div className="bg-slate-800 p-2.5 border-t border-slate-700 text-slate-400 font-sans text-xs leading-relaxed">
                                         <strong>Logika: </strong>{simResult.notes}
                                     </div>
                                 </div>
@@ -362,95 +449,164 @@ const PanduanPage = () => {
                     )}
 
                     {activeSection === 'rekonsiliasi' && (
-                        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                            <div className="flex items-center gap-3 border-b border-gray-100 pb-4">
-                                <div className="p-2.5 bg-teal-100 text-teal-700 rounded-lg"><CheckCircle2 className="w-5 h-5" /></div>
-                                <div>
-                                    <h2 className="text-xl font-bold text-gray-800">Rekonsiliasi Saldo Wadiah</h2>
-                                    <p className="text-sm text-gray-500">Mencegah kebocoran dan selisih buku akuntansi</p>
-                                </div>
+                        <div className="space-y-5">
+                            <div className="border-b border-slate-200 pb-3">
+                                <h2 className="text-lg font-bold text-slate-900">Rekonsiliasi Saldo Wadiah</h2>
+                                <p className="text-xs text-slate-500">Mencegah kebocoran dan selisih buku akuntansi</p>
                             </div>
 
-                            <p className="text-sm text-gray-600">
-                                Fitur keamanan tertinggi dalam akuntansi Bank Santri. Digunakan untuk memastikan Total Saldo riil milik seluruh santri <strong>sama persis</strong> dengan Total Saldo Buku Besar (COA 2100).
+                            <p className="text-xs text-slate-600">
+                                Fitur audit untuk memastikan Total Saldo riil milik seluruh santri <strong>sama persis</strong> dengan Total Saldo Buku Besar (COA 2100).
                             </p>
 
-                            <div className="bg-white border-2 border-teal-100 rounded-xl p-5 mt-4">
-                                <h4 className="font-bold text-teal-800 mb-2">Jika Ditemukan Selisih:</h4>
-                                <ul className="text-sm text-gray-600 space-y-2 pl-4 list-decimal">
+                            <div className="bg-slate-50 border border-slate-300 p-4">
+                                <h4 className="font-bold text-slate-900 text-xs uppercase mb-2">Jika Ditemukan Selisih:</h4>
+                                <ol className="text-xs text-slate-700 space-y-1.5 pl-4 list-decimal">
                                     <li>Buka menu <b>Laporan &gt; Rekonsiliasi Saldo</b>.</li>
-                                    <li>Sistem akan mendeteksi baris transaksi mana yang jurnal <i>ledger</i>-nya hilang atau terhapus.</li>
-                                    <li>Klik tombol <b className="text-teal-700">Sync / Perbaiki Jurnal Otomatis</b>.</li>
-                                    <li>Sistem akan merekonstruksi ulang pasangan jurnal sesuai riwayat <i>mutasi saldo</i> santri.</li>
-                                </ul>
+                                    <li>Sistem akan mendeteksi baris transaksi mana yang jurnal ledger-nya hilang atau belum terbentuk.</li>
+                                    <li>Klik tombol <b>Sync / Perbaiki Jurnal Otomatis</b>.</li>
+                                    <li>Sistem akan merekonstruksi ulang pasangan jurnal sesuai mutasi saldo santri.</li>
+                                </ol>
                             </div>
                         </div>
                     )}
 
                     {activeSection === 'operasional' && (
-                        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                            <div className="flex items-center gap-3 border-b border-gray-100 pb-4">
-                                <div className="p-2.5 bg-orange-100 text-orange-700 rounded-lg"><ArrowRightLeft className="w-5 h-5" /></div>
-                                <div>
-                                    <h2 className="text-xl font-bold text-gray-800">Panduan Operasional Teller</h2>
-                                    <p className="text-sm text-gray-500">Setor, Tarik, dan Limit Harian</p>
-                                </div>
+                        <div className="space-y-5">
+                            <div className="border-b border-slate-200 pb-3">
+                                <h2 className="text-lg font-bold text-slate-900">Panduan Lengkap Operasional Bank (Teller)</h2>
+                                <p className="text-xs text-slate-500">Prosedur langkah demi langkah 7 fitur operasional loket harian</p>
                             </div>
 
-                            <div className="space-y-5">
-                                <div>
-                                    <h4 className="font-bold text-gray-800 flex items-center gap-2 mb-2"><PlusCircle className="w-4 h-4 text-green-600" /> Setor Tunai (Top-Up)</h4>
-                                    <p className="text-sm text-gray-600 pl-6 border-l-2 border-gray-100">Dilakukan melalui menu <b>Top-Up / Setor Tunai</b>. Anda dapat mencari santri berdasarkan NIS atau Nama. Masukkan nominal fisik uang yang diterima. Jika uang ini bertujuan langsung melunasi Tagihan Syahriyah, <strong>wajib pilih Dropdown Paket Pembayaran</strong> pada saat top-up agar tagihan otomatis lunas.</p>
-                                </div>
-                                
-                                <div>
-                                    <h4 className="font-bold text-gray-800 flex items-center gap-2 mb-2"><CreditCard className="w-4 h-4 text-rose-600" /> Tarik Tunai & Limit Harian</h4>
-                                    <p className="text-sm text-gray-600 pl-6 border-l-2 border-gray-100">
-                                        Penarikan tunai dijaga ketat oleh dua batasan:<br/>
-                                        1. <b>Saldo Mengendap</b>: Batas uang minimal yang tidak bisa ditarik.<br/>
-                                        2. <b>Limit Tarik Harian</b>: Mencegah santri menghabiskan uang secara masif dalam 1 hari. Jika limitnya Rp 20.000 dan ia sudah jajan di Koperasi Rp 15.000, maka di loket ia hanya bisa menarik Rp 5.000 hari itu.
-                                    </p>
+                            <div className="space-y-3.5">
+                                {/* 1. Transaksi Bank */}
+                                <div className="p-4 border border-slate-300 bg-white">
+                                    <div className="flex items-center gap-2 border-b border-slate-200 pb-2 mb-2">
+                                        <span className="w-5 h-5 bg-slate-900 text-white flex items-center justify-center font-mono text-xs font-bold">1</span>
+                                        <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wide">Transaksi Bank (Monitoring & Reversal)</h4>
+                                    </div>
+                                    <p className="text-xs text-slate-600 mb-2">Layar pemantauan seluruh riwayat transaksi di sistem secara real-time.</p>
+                                    <ul className="text-xs text-slate-600 list-disc pl-5 space-y-1">
+                                        <li><strong>Pencarian:</strong> Filter data berdasarkan status, channel, atau nomor referensi.</li>
+                                        <li><strong>Cetak Struk:</strong> Buka detail transaksi untuk mencetak kuitansi ulang.</li>
+                                        <li><strong>Reversal (Pembatalan):</strong> Buka detail transaksi lalu klik <strong>Reverse</strong> untuk membatalkan kesalahan input dengan Jurnal Balik otomatis.</li>
+                                    </ul>
                                 </div>
 
-                                <div>
-                                    <h4 className="font-bold text-gray-800 flex items-center gap-2 mb-2"><RefreshCcw className="w-4 h-4 text-purple-600" /> Reversal (Koreksi)</h4>
-                                    <p className="text-sm text-gray-600 pl-6 border-l-2 border-gray-100">Jika kasir salah menginput nominal (misal 100.000 ditulis 1.000.000), <strong>jangan hapus transaksi dari database!</strong> Gunakan tombol <b>Reverse</b> pada detail transaksi. Sistem akan membuat Jurnal Balik secara otomatis agar jejak audit tetap terjaga 100%.</p>
+                                {/* 2. Entri Transaksi */}
+                                <div className="p-4 border border-slate-300 bg-white">
+                                    <div className="flex items-center gap-2 border-b border-slate-200 pb-2 mb-2">
+                                        <span className="w-5 h-5 bg-slate-900 text-white flex items-center justify-center font-mono text-xs font-bold">2</span>
+                                        <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wide">Entri Transaksi Manual</h4>
+                                    </div>
+                                    <p className="text-xs text-slate-600 mb-2">Formulir pemindahbukuan manual yang diatur oleh Jenis Transaksi.</p>
+                                    <ol className="text-xs text-slate-600 list-decimal pl-5 space-y-1">
+                                        <li>Pilih <strong>Jenis Transaksi</strong>.</li>
+                                        <li>Pilih Rekening Sumber dan Rekening Tujuan jika berlaku.</li>
+                                        <li>Input nominal dan deskripsi, lalu klik <strong>Simpan Transaksi</strong>.</li>
+                                    </ol>
+                                </div>
+
+                                {/* 3. Rekening Bank */}
+                                <div className="p-4 border border-slate-300 bg-white">
+                                    <div className="flex items-center gap-2 border-b border-slate-200 pb-2 mb-2">
+                                        <span className="w-5 h-5 bg-slate-900 text-white flex items-center justify-center font-mono text-xs font-bold">3</span>
+                                        <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wide">Daftar Rekening Bank</h4>
+                                    </div>
+                                    <p className="text-xs text-slate-600 mb-2">Pengelolaan data seluruh rekening tabungan santri.</p>
+                                    <ul className="text-xs text-slate-600 list-disc pl-5 space-y-1">
+                                        <li><strong>Auto-Provisioning:</strong> Jika mencari NIS santri dan rekening belum ada, sistem langsung menarik profil & kartu RFID dari server SMPT dan membuatkan rekening baru.</li>
+                                        <li><strong>Blokir Rekening:</strong> Ubah status menjadi "DIBLOKIR" jika kartu santri hilang.</li>
+                                    </ul>
+                                </div>
+
+                                {/* 4. Top-Up / Setor Tunai */}
+                                <div className="p-4 border border-slate-300 bg-white">
+                                    <div className="flex items-center gap-2 border-b border-slate-200 pb-2 mb-2">
+                                        <span className="w-5 h-5 bg-slate-900 text-white flex items-center justify-center font-mono text-xs font-bold">4</span>
+                                        <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wide">Top-Up / Setor Tunai</h4>
+                                    </div>
+                                    <p className="text-xs text-slate-600 mb-2">Prosedur penerimaan setoran uang tunai di loket teller.</p>
+                                    <ol className="text-xs text-slate-600 list-decimal pl-5 space-y-1">
+                                        <li>Scan kartu RFID atau cari santri berdasarkan NIS/Nama.</li>
+                                        <li>Input nominal fisik uang yang diterima.</li>
+                                        <li>Jika bertujuan melunasi tagihan (Syahriyah), <strong>pilih Dropdown Paket Pembayaran</strong> agar langsung lunas otomatis.</li>
+                                        <li>Klik <strong>Proses Setoran</strong> dan cetak bukti transaksi.</li>
+                                    </ol>
+                                </div>
+
+                                {/* 5. Tarik Tunai */}
+                                <div className="p-4 border border-slate-300 bg-white">
+                                    <div className="flex items-center gap-2 border-b border-slate-200 pb-2 mb-2">
+                                        <span className="w-5 h-5 bg-slate-900 text-white flex items-center justify-center font-mono text-xs font-bold">5</span>
+                                        <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wide">Tarik Tunai</h4>
+                                    </div>
+                                    <p className="text-xs text-slate-600 mb-2">Pencairan uang saku santri dengan kontrol proteksi.</p>
+                                    <ul className="text-xs text-slate-600 list-disc pl-5 space-y-1">
+                                        <li><strong>Saldo Minimum:</strong> Saldo mengendap tidak bisa ditarik.</li>
+                                        <li><strong>Limit Tarik Harian:</strong> Sistem memeriksa total tarikan & jajan hari ini. Menolak otomatis jika melewati batas.</li>
+                                        <li>Serahkan uang fisik kepada santri dan cetak kuitansi.</li>
+                                    </ul>
+                                </div>
+
+                                {/* 6. Transfer Bank */}
+                                <div className="p-4 border border-slate-300 bg-white">
+                                    <div className="flex items-center gap-2 border-b border-slate-200 pb-2 mb-2">
+                                        <span className="w-5 h-5 bg-slate-900 text-white flex items-center justify-center font-mono text-xs font-bold">6</span>
+                                        <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wide">Transfer Bank Antar Santri</h4>
+                                    </div>
+                                    <p className="text-xs text-slate-600 mb-2">Pemindahan saldo instan antar santri tanpa biaya.</p>
+                                    <ol className="text-xs text-slate-600 list-decimal pl-5 space-y-1">
+                                        <li>Pilih Rekening Pengirim (sistem memverifikasi saldo).</li>
+                                        <li>Pilih Rekening Tujuan.</li>
+                                        <li>Input nominal dan keterangan, lalu klik <strong>Proses Transfer</strong>.</li>
+                                    </ol>
+                                </div>
+
+                                {/* 7. Mutasi Rekening */}
+                                <div className="p-4 border border-slate-300 bg-white">
+                                    <div className="flex items-center gap-2 border-b border-slate-200 pb-2 mb-2">
+                                        <span className="w-5 h-5 bg-slate-900 text-white flex items-center justify-center font-mono text-xs font-bold">7</span>
+                                        <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wide">Mutasi Rekening (Rekening Koran)</h4>
+                                    </div>
+                                    <p className="text-xs text-slate-600 mb-2">Buku tabungan elektronik untuk 1 santri spesifik.</p>
+                                    <ul className="text-xs text-slate-600 list-disc pl-5 space-y-1">
+                                        <li>Menampilkan riwayat debit, kredit, dan saldo berjalan per santri.</li>
+                                        <li>Tersedia tombol <strong>Cetak Rekening Koran</strong> untuk pelaporan ke wali santri.</li>
+                                    </ul>
                                 </div>
                             </div>
                         </div>
                     )}
 
                     {activeSection === 'tagihan' && (
-                        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                            <div className="flex items-center gap-3 border-b border-gray-100 pb-4">
-                                <div className="p-2.5 bg-fuchsia-100 text-fuchsia-700 rounded-lg"><FileText className="w-5 h-5" /></div>
-                                <div>
-                                    <h2 className="text-xl font-bold text-gray-800">Manajemen Tagihan & Uang Saku</h2>
-                                    <p className="text-sm text-gray-500">Pemisahan cerdas antara biaya institusi dan hak santri</p>
-                                </div>
+                        <div className="space-y-5">
+                            <div className="border-b border-slate-200 pb-3">
+                                <h2 className="text-lg font-bold text-slate-900">Manajemen Tagihan & Uang Saku</h2>
+                                <p className="text-xs text-slate-500">Pemisahan otomatis antara biaya institusi dan hak uang saku santri</p>
                             </div>
 
-                            <p className="text-sm text-gray-600 mb-4">Dalam pesantren, Wali sering mengirimkan uang Rp 1.000.000 per bulan secara utuh (Gelondongan). Padahal di dalamnya ada hak Pesantren (SPP, Makan) dan hak Santri (Uang Jajan). Fitur Paket Pembayaran memisahkan ini secara otomatis.</p>
+                            <p className="text-xs text-slate-600">Dalam paket bulanan seringkali terdiri dari biaya makan, SPP, dan uang saku. Sistem memisahkannya secara otomatis:</p>
 
-                            <div className="bg-gray-50 border border-gray-200 rounded-xl overflow-hidden">
-                                <table className="w-full text-sm">
-                                    <thead className="bg-gray-100">
+                            <div className="border border-slate-300 overflow-x-auto">
+                                <table className="w-full text-xs text-left">
+                                    <thead className="bg-slate-100 text-slate-800 border-b border-slate-300 uppercase font-semibold text-[11px]">
                                         <tr>
-                                            <th className="px-4 py-3 text-left font-semibold text-gray-700">Isi Paket Tagihan</th>
-                                            <th className="px-4 py-3 text-left font-semibold text-gray-700">Status</th>
-                                            <th className="px-4 py-3 text-left font-semibold text-gray-700">Logika Sistem</th>
+                                            <th className="px-3 py-2.5">Komponen Tagihan</th>
+                                            <th className="px-3 py-2.5">Status</th>
+                                            <th className="px-3 py-2.5">Perlakuan Sistem</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-gray-200">
-                                        <tr className="bg-white">
-                                            <td className="px-4 py-3">Uang Makan Dapur</td>
-                                            <td className="px-4 py-3"><span className="bg-rose-100 text-rose-700 px-2 py-1 rounded text-xs font-bold">BUKAN SAKU</span></td>
-                                            <td className="px-4 py-3 text-gray-600">Diproses memotong saldo tabungan, lalu dijurnalkan masuk ke Pendapatan Pesantren (COA 4).</td>
+                                    <tbody className="divide-y divide-slate-200">
+                                        <tr className="hover:bg-slate-50">
+                                            <td className="px-3 py-2.5 font-medium text-slate-900">Uang Makan Dapur</td>
+                                            <td className="px-3 py-2.5"><span className="bg-slate-200 text-slate-800 font-mono text-[10px] font-bold px-1.5 py-0.5">BUKAN SAKU</span></td>
+                                            <td className="px-3 py-2.5 text-slate-600">Dipotong dari saldo tabungan dan diakui sebagai Pendapatan Pesantren (COA 4).</td>
                                         </tr>
-                                        <tr className="bg-white">
-                                            <td className="px-4 py-3">Uang Jajan / Saku</td>
-                                            <td className="px-4 py-3"><span className="bg-emerald-100 text-emerald-700 px-2 py-1 rounded text-xs font-bold">UANG SAKU</span></td>
-                                            <td className="px-4 py-3 text-gray-600"><strong>TIDAK DIPOTONG</strong>. Dana dibiarkan tertinggal di saldo rekening Santri agar bisa dijajankan via RFID Koperasi.</td>
+                                        <tr className="hover:bg-slate-50">
+                                            <td className="px-3 py-2.5 font-medium text-slate-900">Uang Saku Pegangan</td>
+                                            <td className="px-3 py-2.5"><span className="bg-blue-100 text-blue-800 font-mono text-[10px] font-bold px-1.5 py-0.5">UANG SAKU</span></td>
+                                            <td className="px-3 py-2.5 text-slate-600"><strong>TIDAK DIPOTONG</strong>. Dana tetap berada di saldo rekening santri agar dapat dijajankan via RFID.</td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -459,30 +615,20 @@ const PanduanPage = () => {
                     )}
 
                     {activeSection === 'koperasi' && (
-                        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                            <div className="flex items-center gap-3 border-b border-gray-100 pb-4">
-                                <div className="p-2.5 bg-yellow-100 text-yellow-700 rounded-lg"><Store className="w-5 h-5" /></div>
-                                <div>
-                                    <h2 className="text-xl font-bold text-gray-800">Integrasi Eksternal (Kasir Koperasi)</h2>
-                                    <p className="text-sm text-gray-500">Menghubungkan API Bank dengan Kantin / Koperasi</p>
-                                </div>
+                        <div className="space-y-5">
+                            <div className="border-b border-slate-200 pb-3">
+                                <h2 className="text-lg font-bold text-slate-900">Integrasi Eksternal (Kasir Koperasi RFID)</h2>
+                                <p className="text-xs text-slate-500">Konektivitas mesin POS kasir kantin dengan API Bank</p>
                             </div>
 
-                            <p className="text-sm text-gray-600">
-                                Mesin POS Kasir di Koperasi tidak memerlukan login akun Teller. Sistem menggunakan <b>API Key (X-Koperasi-Key)</b> untuk menjembatani komunikasi.
+                            <p className="text-xs text-slate-600">
+                                Mesin POS Kasir Koperasi tidak memerlukan login akun Teller. Sistem menggunakan <b>API Key (X-Koperasi-Key)</b> untuk menjembatani komunikasi.
                             </p>
 
-                            <ol className="list-decimal pl-5 text-sm text-gray-700 space-y-3 mt-4">
-                                <li><strong>Pendaftaran Outlet:</strong> Admin Bank masuk ke menu <b>Master Data &gt; Merchant Koperasi</b>. Tambahkan outlet (misal: "Kantin Putra"). Salin <i>Secret Key</i> yang diberikan.</li>
-                                <li><strong>Implementasi di Kasir:</strong> Petugas kantin memasukkan Secret Key ke aplikasinya.</li>
-                                <li><strong>Sistem Real-Time:</strong> Saat santri men-tap ID Card (RFID), Kasir Kantin akan mengirim request Debit. Bank Santri secara langsung akan:
-                                    <ul className="list-disc pl-5 mt-1 text-gray-500">
-                                        <li>Memeriksa status aktif rekening.</li>
-                                        <li>Mengecek Saldo Minimum.</li>
-                                        <li>Mengecek sisa Limit Harian belanja.</li>
-                                        <li>Mengurangi saldo tabungan.</li>
-                                    </ul>
-                                </li>
+                            <ol className="list-decimal pl-5 text-xs text-slate-700 space-y-2 mt-2">
+                                <li><strong>Pendaftaran Outlet:</strong> Masuk ke menu <b>Master Data &gt; Merchant Koperasi</b>. Tambahkan outlet dan salin Secret Key yang dihasilkan.</li>
+                                <li><strong>Implementasi di Kasir:</strong> Petugas kantin memasukkan Secret Key ke perangkat kasir POS.</li>
+                                <li><strong>Validasi Real-Time:</strong> Saat kartu santri ditempelkan, Bank Santri langsung memverifikasi status aktif, saldo minimum, dan kuota limit harian santri sebelum mendebit saldo.</li>
                             </ol>
                         </div>
                     )}
