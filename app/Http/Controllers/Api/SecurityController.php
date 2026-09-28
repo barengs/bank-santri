@@ -43,6 +43,11 @@ class SecurityController extends Controller
     // Role CRUD
     public function getRoles()
     {
+        // Self-healing: jika tabel permissions kosong atau role admin belum memiliki permission, jalankan seeder
+        if (Permission::count() === 0 || (Role::where('name', 'admin')->first() && Role::where('name', 'admin')->first()->permissions()->count() === 0)) {
+            \Illuminate\Support\Facades\Artisan::call('db:seed', ['--class' => 'MenuPermissionSeeder', '--force' => true]);
+        }
+
         return response()->json(['data' => Role::with('menus', 'permissions')->get()]);
     }
 

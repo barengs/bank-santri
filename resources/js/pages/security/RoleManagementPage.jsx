@@ -93,9 +93,15 @@ const RoleManagementPage = () => {
             setCheckedMenus(menuIds);
             const permIds = selectedRole.permissions?.map(p => p.id) || [];
             const permNames = selectedRole.permissions?.map(p => p.name) || [];
-            setCheckedPermissions(Array.from(new Set([...permIds, ...permNames])));
+            
+            // If admin role has empty permissions (e.g. fresh DB before seeder), fallback to checking all permissions
+            if (selectedRole.name === 'admin' && permIds.length === 0 && permissions.length > 0) {
+                setCheckedPermissions(permissions.map(p => p.id));
+            } else {
+                setCheckedPermissions(Array.from(new Set([...permIds, ...permNames])));
+            }
         }
-    }, [selectedRole]);
+    }, [selectedRole, permissions]);
 
     // Auto expand all parent menus initially
     useEffect(() => {
@@ -292,7 +298,11 @@ const RoleManagementPage = () => {
             setModalCheckedMenus(role.menus?.map(m => m.id) || []);
             const permIds = role.permissions?.map(p => p.id) || [];
             const permNames = role.permissions?.map(p => p.name) || [];
-            setModalCheckedPermissions(Array.from(new Set([...permIds, ...permNames])));
+            if (role.name === 'admin' && permIds.length === 0 && permissions.length > 0) {
+                setModalCheckedPermissions(permissions.map(p => p.id));
+            } else {
+                setModalCheckedPermissions(Array.from(new Set([...permIds, ...permNames])));
+            }
         } else {
             setEditingRole(null);
             setRoleFormData({ name: '', slug: '', description: '' });
