@@ -16,8 +16,7 @@ import {
     Plus, 
     Edit2,
     Trash2, 
-    Check,
-    ChevronDown,
+    ChevronDown, 
     ChevronRight,
     Lock,
     LayoutDashboard,
@@ -70,6 +69,16 @@ const RoleManagementPage = () => {
     const menus = menusRes?.data || [];
     const permissions = permissionsRes?.data || [];
 
+    // Helper to generate consistent menu slug
+    const getMenuSlug = (menu) => {
+        if (!menu) return '';
+        if (menu.slug) return menu.slug;
+        return (menu.name || '')
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '_')
+            .replace(/^_+|_+$/g, '');
+    };
+
     // Initialize selected role
     useEffect(() => {
         if (roles.length > 0 && !selectedRole) {
@@ -83,7 +92,8 @@ const RoleManagementPage = () => {
             const menuIds = selectedRole.menus?.map(m => m.id) || [];
             setCheckedMenus(menuIds);
             const permIds = selectedRole.permissions?.map(p => p.id) || [];
-            setCheckedPermissions(permIds);
+            const permNames = selectedRole.permissions?.map(p => p.name) || [];
+            setCheckedPermissions(Array.from(new Set([...permIds, ...permNames])));
         }
     }, [selectedRole]);
 
@@ -129,25 +139,31 @@ const RoleManagementPage = () => {
         }
     };
 
-    // Permission helpers
-    const getPermId = (slug) => {
+    // Permission check helper (matches by permission ID or permission name)
+    const isPermCheckedIn = (menuSlug, action, permList) => {
+        const slug = `${menuSlug}.${action}`;
         const perm = permissions.find(p => p.name === slug);
-        return perm ? perm.id : null;
+        if (perm && permList.includes(perm.id)) return true;
+        return permList.includes(slug);
     };
 
-    const isPermCheckedIn = (slug, permList) => {
-        const id = getPermId(slug);
-        return id ? permList.includes(id) : false;
+    // Permission toggle helper (supports both ID and name fallback)
+    const togglePermIn = (menuSlug, action, permList, setPermList) => {
+        const slug = `${menuSlug}.${action}`;
+        const perm = permissions.find(p => p.name === slug);
+        const identifier = perm ? perm.id : slug;
+        
+        setPermList(prev => {
+            const isChecked = (perm && prev.includes(perm.id)) || prev.includes(slug);
+            if (isChecked) {
+                return prev.filter(p => p !== (perm ? perm.id : null) && p !== slug);
+            } else {
+                return [...prev, identifier];
+            }
+        });
     };
 
-    const togglePermIn = (slug, permList, setPermList) => {
-        const id = getPermId(slug);
-        if (!id) return;
-        setPermList(prev => 
-            prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]
-        );
-    };
-
+    // Toggle menu visibility (VIEW)
     const toggleMenuIn = (menuId, children = [], menuList, setMenuList) => {
         setMenuList(prev => {
             const isChecked = prev.includes(menuId);
@@ -161,47 +177,79 @@ const RoleManagementPage = () => {
         });
     };
 
+    // Toggle all actions in a single menu row
     const toggleRowAll = (menu, menuList, setMenuList, permList, setPermList) => {
-        const menuSlug = menu.slug;
+        const menuSlug = getMenuSlug(menu);
         const actions = ['view', 'create', 'update', 'delete', 'print', 'approve'];
-        const allPermIds = actions.map(a => getPermId(`${menuSlug}.${a}`)).filter(Boolean);
         const isMenuChecked = menuList.includes(menu.id);
-        const allPermsChecked = allPermIds.length > 0 && allPermIds.every(id => permList.includes(id));
+        const allPermsChecked = actions.every(a => isPermCheckedIn(menuSlug, a, permList));
         const allChecked = isMenuChecked && allPermsChecked;
 
         if (allChecked) {
             // Uncheck menu and all its perms
             const childIds = menu.children?.map(c => c.id) || [];
             setMenuList(prev => prev.filter(id => id !== menu.id && !childIds.includes(id)));
-            setPermList(prev => prev.filter(id => !allPermIds.includes(id)));
+            
+            setPermList(prev => {
+                const toRemove = new Set();
+                actions.forEach(a => {
+                    const slug = `${menuSlug}.${a}`;
+                    const perm = permissions.find(p => p.name === slug);
+                    toRemove.add(slug);
+                    if (perm) toRemove.add(perm.id);
+                });
+                return prev.filter(p => !toRemove.has(p));
+            });
         } else {
             // Check menu and all its perms
             const childIds = menu.children?.map(c => c.id) || [];
             setMenuList(prev => Array.from(new Set([...prev, menu.id, ...childIds])));
-            setPermList(prev => Array.from(new Set([...prev, ...allPermIds])));
+            
+            setPermList(prev => {
+                const toAdd = [];
+                actions.forEach(a => {
+                    const slug = `${menuSlug}.${a}`;
+                    const perm = permissions.find(p => p.name === slug);
+                    if (perm) toAdd.push(perm.id);
+                    toAdd.push(slug);
+                });
+                return Array.from(new Set([...prev, ...toAdd]));
+            });
         }
     };
 
     // Toggle entire column across all menus
     const toggleColumnAll = (action, permList, setPermList) => {
-        const targetPermIds = [];
+        const allSlugs = [];
         menus.filter(m => !m.is_divider).forEach(m => {
-            const pid = getPermId(`${m.slug}.${action}`);
-            if (pid) targetPermIds.push(pid);
+            allSlugs.push(getMenuSlug(m));
             if (m.children) {
-                m.children.forEach(c => {
-                    const cpid = getPermId(`${c.slug}.${action}`);
-                    if (cpid) targetPermIds.push(cpid);
-                });
+                m.children.forEach(c => allSlugs.push(getMenuSlug(c)));
             }
         });
 
-        const allChecked = targetPermIds.length > 0 && targetPermIds.every(id => permList.includes(id));
+        const allChecked = allSlugs.every(slug => isPermCheckedIn(slug, action, permList));
+        
         setPermList(prev => {
+            const toRemove = new Set();
+            const toAdd = [];
+
+            allSlugs.forEach(slug => {
+                const permName = `${slug}.${action}`;
+                const perm = permissions.find(p => p.name === permName);
+                if (allChecked) {
+                    toRemove.add(permName);
+                    if (perm) toRemove.add(perm.id);
+                } else {
+                    if (perm) toAdd.push(perm.id);
+                    toAdd.push(permName);
+                }
+            });
+
             if (allChecked) {
-                return prev.filter(id => !targetPermIds.includes(id));
+                return prev.filter(p => !toRemove.has(p));
             } else {
-                return Array.from(new Set([...prev, ...targetPermIds]));
+                return Array.from(new Set([...prev, ...toAdd]));
             }
         });
     };
@@ -242,7 +290,9 @@ const RoleManagementPage = () => {
             setEditingRole(role);
             setRoleFormData({ name: role.name, slug: role.slug, description: role.description || '' });
             setModalCheckedMenus(role.menus?.map(m => m.id) || []);
-            setModalCheckedPermissions(role.permissions?.map(p => p.id) || []);
+            const permIds = role.permissions?.map(p => p.id) || [];
+            const permNames = role.permissions?.map(p => p.name) || [];
+            setModalCheckedPermissions(Array.from(new Set([...permIds, ...permNames])));
         } else {
             setEditingRole(null);
             setRoleFormData({ name: '', slug: '', description: '' });
@@ -293,6 +343,8 @@ const RoleManagementPage = () => {
 
     // Reusable Matrix Table Component
     const renderMatrixTable = (menuList, setMenuList, permList, setPermList) => {
+        const actionColumns = ['create', 'update', 'delete', 'print', 'approve'];
+
         return (
             <div className="overflow-x-auto">
                 <table className="w-full text-xs border-collapse">
@@ -307,7 +359,7 @@ const RoleManagementPage = () => {
                             >
                                 View
                             </th>
-                            {['create', 'update', 'delete', 'print', 'approve'].map(act => (
+                            {actionColumns.map(act => (
                                 <th 
                                     key={act} 
                                     className="text-center px-2 py-2.5 font-semibold tracking-wider text-[11px] uppercase cursor-pointer hover:bg-slate-100"
@@ -324,14 +376,13 @@ const RoleManagementPage = () => {
                     </thead>
                     <tbody className="divide-y divide-gray-100 bg-white">
                         {menus.filter(m => !m.is_divider).map((menu) => {
-                            const menuSlug = menu.slug;
+                            const menuSlug = getMenuSlug(menu);
                             const hasChildren = menu.children && menu.children.length > 0;
                             const isExpanded = expandedMenus[menu.id] ?? true;
                             const isMenuChecked = menuList.includes(menu.id);
 
-                            const actions = ['view', 'create', 'update', 'delete', 'print', 'approve'];
-                            const allPermIds = actions.map(a => getPermId(`${menuSlug}.${a}`)).filter(Boolean);
-                            const isRowAllChecked = isMenuChecked && (allPermIds.length === 0 || allPermIds.every(id => permList.includes(id)));
+                            const allActions = ['view', 'create', 'update', 'delete', 'print', 'approve'];
+                            const isRowAllChecked = isMenuChecked && allActions.every(a => isPermCheckedIn(menuSlug, a, permList));
 
                             return (
                                 <React.Fragment key={menu.id}>
@@ -370,21 +421,16 @@ const RoleManagementPage = () => {
                                         </td>
 
                                         {/* Actions Checkboxes */}
-                                        {['create', 'update', 'delete', 'print', 'approve'].map(action => {
-                                            const permId = getPermId(`${menuSlug}.${action}`);
-                                            const isChecked = permId ? permList.includes(permId) : false;
+                                        {actionColumns.map(action => {
+                                            const isChecked = isPermCheckedIn(menuSlug, action, permList);
                                             return (
                                                 <td key={action} className="text-center px-2 py-2.5">
-                                                    {permId ? (
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={isChecked}
-                                                            onChange={() => togglePermIn(`${menuSlug}.${action}`, permList, setPermList)}
-                                                            className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                                                        />
-                                                    ) : (
-                                                        <span className="text-gray-200 select-none">-</span>
-                                                    )}
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={isChecked}
+                                                        onChange={() => togglePermIn(menuSlug, action, permList, setPermList)}
+                                                        className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                                    />
                                                 </td>
                                             );
                                         })}
@@ -402,10 +448,9 @@ const RoleManagementPage = () => {
 
                                     {/* Child Submenu Rows */}
                                     {hasChildren && isExpanded && menu.children.map(child => {
-                                        const childSlug = child.slug;
+                                        const childSlug = getMenuSlug(child);
                                         const isChildChecked = menuList.includes(child.id);
-                                        const childPermIds = actions.map(a => getPermId(`${childSlug}.${a}`)).filter(Boolean);
-                                        const isChildRowAllChecked = isChildChecked && (childPermIds.length === 0 || childPermIds.every(id => permList.includes(id)));
+                                        const isChildRowAllChecked = isChildChecked && allActions.every(a => isPermCheckedIn(childSlug, a, permList));
 
                                         return (
                                             <tr key={child.id} className="hover:bg-blue-50/40 transition-colors bg-white">
@@ -427,21 +472,16 @@ const RoleManagementPage = () => {
                                                 </td>
 
                                                 {/* Child Actions Checkboxes */}
-                                                {['create', 'update', 'delete', 'print', 'approve'].map(action => {
-                                                    const permId = getPermId(`${childSlug}.${action}`);
-                                                    const isChecked = permId ? permList.includes(permId) : false;
+                                                {actionColumns.map(action => {
+                                                    const isChecked = isPermCheckedIn(childSlug, action, permList);
                                                     return (
                                                         <td key={action} className="text-center px-2 py-2">
-                                                            {permId ? (
-                                                                <input
-                                                                    type="checkbox"
-                                                                    checked={isChecked}
-                                                                    onChange={() => togglePermIn(`${childSlug}.${action}`, permList, setPermList)}
-                                                                    className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                                                                />
-                                                            ) : (
-                                                                <span className="text-gray-200 select-none">-</span>
-                                                            )}
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={isChecked}
+                                                                onChange={() => togglePermIn(childSlug, action, permList, setPermList)}
+                                                                className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                                            />
                                                         </td>
                                                     );
                                                 })}
