@@ -7,7 +7,8 @@ import {
     CreditCard, 
     Globe, 
     Info,
-    ShieldCheck
+    ShieldCheck,
+    X
 } from 'lucide-react';
 import { useGetSettingsQuery, useUpdateSettingsMutation } from '../../store/settingApi';
 import { toast } from 'react-toastify';
