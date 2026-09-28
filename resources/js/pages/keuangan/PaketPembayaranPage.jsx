@@ -32,7 +32,7 @@ const PaketPembayaranPage = () => {
         package_name: '',
         description: '',
         academic_year: '2024/2025',
-        semester: 'ganjil',
+        semester: '12_bulan',
         is_active: true,
         items: [{ transaction_item_id: '', item_name: '', category: 'pendidikan', amount: 0, is_saku: false }]
     });
@@ -51,11 +51,13 @@ const PaketPembayaranPage = () => {
     const trxItems = trxItemsRes?.data?.data || [];
 
     const formatIDR = (amount) => {
+        const num = Number(amount);
+        if (isNaN(num)) return 'Rp0';
         return new Intl.NumberFormat('id-ID', {
             style: 'currency',
             currency: 'IDR',
             minimumFractionDigits: 0
-        }).format(amount || 0);
+        }).format(num);
     };
 
     const handleOpenModal = (pkg = null) => {
@@ -66,7 +68,7 @@ const PaketPembayaranPage = () => {
                 package_name: pkg.package_name,
                 description: pkg.description || '',
                 academic_year: pkg.academic_year || '2024/2025',
-                semester: pkg.semester || 'ganjil',
+                semester: pkg.semester || '12_bulan',
                 is_active: Boolean(pkg.is_active),
                 items: pkg.items?.map(i => ({
                     transaction_item_id: i.transaction_item_id || '',
@@ -83,7 +85,7 @@ const PaketPembayaranPage = () => {
                 package_name: '',
                 description: '',
                 academic_year: '2024/2025',
-                semester: 'ganjil',
+                semester: '12_bulan',
                 is_active: true,
                 items: [{ transaction_item_id: '', item_name: '', category: 'pendidikan', amount: 0, is_saku: false }]
             });
@@ -297,14 +299,16 @@ const PaketPembayaranPage = () => {
                             />
                         </div>
                         <div className="space-y-1">
-                            <label className="text-[11px] font-semibold text-gray-600 uppercase">Semester</label>
+                            <label className="text-[11px] font-semibold text-gray-600 uppercase">Periode Pembayaran</label>
                             <select
                                 className="w-full px-2.5 py-1.5 bg-white border border-gray-300 rounded-md text-xs focus:border-blue-500 outline-none"
                                 value={formData.semester}
                                 onChange={(e) => setFormData({...formData, semester: e.target.value})}
                             >
-                                <option value="ganjil">Ganjil</option>
-                                <option value="genap">Genap</option>
+                                <option value="12_bulan">12 Bulan</option>
+                                <option value="6_bulan">6 Bulan</option>
+                                <option value="3_bulan">3 Bulan</option>
+                                <option value="bulanan">Bulanan</option>
                             </select>
                         </div>
                         <div className="space-y-1">
@@ -384,7 +388,7 @@ const PaketPembayaranPage = () => {
                                                     required
                                                     className="w-full pl-6 pr-2 py-1 bg-white border border-gray-300 rounded text-xs font-semibold outline-none focus:border-blue-500"
                                                     value={item.amount}
-                                                    onChange={(e) => handleItemChange(index, 'amount', parseFloat(e.target.value))}
+                                                    onChange={(e) => handleItemChange(index, 'amount', parseFloat(e.target.value) || 0)}
                                                 />
                                             </div>
                                         </div>
@@ -405,7 +409,7 @@ const PaketPembayaranPage = () => {
                         <div>
                             <span className="text-[10px] text-gray-400 uppercase font-semibold block">Total Paket:</span>
                             <span className="text-base font-bold text-blue-700">
-                                {formatIDR(formData.items.reduce((acc, curr) => acc + (curr.amount || 0), 0))}
+                                {formatIDR(formData.items.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0))}
                             </span>
                         </div>
                         <div className="flex gap-2">
