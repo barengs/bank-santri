@@ -32,7 +32,7 @@ const PaketPembayaranPage = () => {
         package_name: '',
         description: '',
         academic_year: '2024/2025',
-        semester: '12_bulan',
+        semester: '1_bulan',
         is_active: true,
         items: [{ transaction_item_id: '', item_name: '', category: 'pendidikan', amount: 0, is_saku: false }]
     });
@@ -60,6 +60,29 @@ const PaketPembayaranPage = () => {
         }).format(num);
     };
 
+    const getMonthMultiplier = (period) => {
+        if (!period) return 1;
+        const p = String(period).toLowerCase();
+        if (p.includes('10')) return 10;
+        if (p.includes('5')) return 5;
+        if (p.includes('3')) return 3;
+        if (p.includes('6')) return 6;
+        if (p.includes('12')) return 12;
+        return 1;
+    };
+
+    const getPeriodLabel = (val) => {
+        if (!val) return '-';
+        const v = String(val).toLowerCase();
+        if (v.includes('10')) return '10 Bulan';
+        if (v.includes('5')) return '5 Bulan';
+        if (v.includes('3')) return '3 Bulan';
+        if (v.includes('6')) return '6 Bulan';
+        if (v.includes('12')) return '12 Bulan';
+        if (v.includes('1') || v.includes('bulan')) return '1 Bulan';
+        return val;
+    };
+
     const handleOpenModal = (pkg = null) => {
         if (pkg) {
             setSelectedPackage(pkg);
@@ -68,7 +91,7 @@ const PaketPembayaranPage = () => {
                 package_name: pkg.package_name,
                 description: pkg.description || '',
                 academic_year: pkg.academic_year || '2024/2025',
-                semester: pkg.semester || '12_bulan',
+                semester: pkg.semester || '1_bulan',
                 is_active: Boolean(pkg.is_active),
                 items: pkg.items?.map(i => ({
                     transaction_item_id: i.transaction_item_id || '',
@@ -85,7 +108,7 @@ const PaketPembayaranPage = () => {
                 package_name: '',
                 description: '',
                 academic_year: '2024/2025',
-                semester: '12_bulan',
+                semester: '1_bulan',
                 is_active: true,
                 items: [{ transaction_item_id: '', item_name: '', category: 'pendidikan', amount: 0, is_saku: false }]
             });
@@ -187,7 +210,7 @@ const PaketPembayaranPage = () => {
             cell: ({ row }) => (
                 <div className="flex flex-col text-xs text-gray-700">
                     <span>{row.original.academic_year || '-'}</span>
-                    <span className="text-[10px] text-gray-400 uppercase">{row.original.semester || ''}</span>
+                    <span className="text-[10px] text-gray-400 font-semibold uppercase">{getPeriodLabel(row.original.semester)}</span>
                 </div>
             )
         },
@@ -305,10 +328,10 @@ const PaketPembayaranPage = () => {
                                 value={formData.semester}
                                 onChange={(e) => setFormData({...formData, semester: e.target.value})}
                             >
-                                <option value="12_bulan">12 Bulan</option>
-                                <option value="6_bulan">6 Bulan</option>
+                                <option value="1_bulan">1 Bulan</option>
                                 <option value="3_bulan">3 Bulan</option>
-                                <option value="bulanan">Bulanan</option>
+                                <option value="5_bulan">5 Bulan</option>
+                                <option value="10_bulan">10 Bulan</option>
                             </select>
                         </div>
                         <div className="space-y-1">
@@ -407,10 +430,19 @@ const PaketPembayaranPage = () => {
 
                     <div className="pt-3 border-t border-gray-100 flex items-center justify-between">
                         <div>
-                            <span className="text-[10px] text-gray-400 uppercase font-semibold block">Total Paket:</span>
-                            <span className="text-base font-bold text-blue-700">
-                                {formatIDR(formData.items.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0))}
+                            <span className="text-[10px] text-gray-400 uppercase font-semibold block">
+                                Total Paket ({getMonthMultiplier(formData.semester)} Bulan):
                             </span>
+                            <div className="flex items-baseline gap-2">
+                                <span className="text-base font-bold text-blue-700">
+                                    {formatIDR(formData.items.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0) * getMonthMultiplier(formData.semester))}
+                                </span>
+                                {getMonthMultiplier(formData.semester) > 1 && (
+                                    <span className="text-xs text-gray-500 font-medium">
+                                        ({formatIDR(formData.items.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0))} / bln × {getMonthMultiplier(formData.semester)} bln)
+                                    </span>
+                                )}
+                            </div>
                         </div>
                         <div className="flex gap-2">
                             <button

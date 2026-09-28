@@ -47,13 +47,19 @@ class PaymentPackage extends Model
         $baseTotal = $items->sum('amount');
         
         $multiplier = 1.0;
-        $semester = $this->semester;
-        if (in_array($semester, ['3', '3_bulan', '3bulan'])) {
+        $semester = (string) $this->semester;
+        if (in_array($semester, ['10', '10_bulan', '10bulan', '10 Bulan'])) {
+            $multiplier = 10.0;
+        } elseif (in_array($semester, ['5', '5_bulan', '5bulan', '5 Bulan'])) {
+            $multiplier = 5.0;
+        } elseif (in_array($semester, ['3', '3_bulan', '3bulan', '3 Bulan'])) {
             $multiplier = 3.0;
-        } elseif (in_array($semester, ['6', '6_bulan', '6bulan'])) {
+        } elseif (in_array($semester, ['6', '6_bulan', '6bulan', '6 Bulan'])) {
             $multiplier = 6.0;
-        } elseif (in_array($semester, ['12', '12_bulan', '12bulan'])) {
+        } elseif (in_array($semester, ['12', '12_bulan', '12bulan', '12 Bulan'])) {
             $multiplier = 12.0;
+        } else {
+            $multiplier = 1.0;
         }
 
         $this->total_amount = (string) ($baseTotal * $multiplier);
