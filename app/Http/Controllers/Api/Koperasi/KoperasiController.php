@@ -232,6 +232,21 @@ class KoperasiController extends Controller
             ], 422);
         }
 
+        // 1.5 Validasi Batas Maksimal Transaksi Dinamis di DPU / Koperasi
+        $limitKey = $outletType === 'dapur' ? 'dapur_max_transaction_amount' : 'koperasi_max_transaction_amount';
+        $outletLabel = $outletType === 'dapur' ? 'DPU (Dapur Pesantren)' : 'Koperasi';
+        $maxTransactionAmount = Setting::where('key', $limitKey)->value('value');
+        if ($maxTransactionAmount !== null && (float) $maxTransactionAmount > 0) {
+            $maxLimit = (float) $maxTransactionAmount;
+            if ($amount > $maxLimit) {
+                return response()->json([
+                    'status'  => 'error',
+                    'code'    => 'MAX_TRANSACTION_LIMIT_EXCEEDED',
+                    'message' => "Nominal transaksi melebihi batas maksimal transaksi {$outletLabel} yang diatur oleh Bank (Maksimal Rp " . number_format($maxLimit, 0, ',', '.') . " per transaksi).",
+                ], 422);
+            }
+        }
+
         // 2. Validasi Limit Harian Uang Saku
         $dailyLimit = (float) ($account->daily_withdrawal_limit ?? $account->product->daily_withdrawal_limit ?? 0);
         if ($dailyLimit > 0) {
