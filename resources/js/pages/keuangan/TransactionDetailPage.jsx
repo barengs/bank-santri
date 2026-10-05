@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
     ArrowLeft, 
     Printer, 
@@ -13,16 +13,26 @@ import {
     Info,
     ArrowRightCircle,
     User,
-    Banknote
+    Banknote,
+    RotateCcw,
+    Loader2
 } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useGetTransactionDetailQuery } from '../../store/transactionApi';
+import { useGetTransactionDetailQuery, useReverseTransactionMutation } from '../../store/transactionApi';
 import { printReceiptPdf } from '../../utils/reportPdf';
+import { toast } from 'react-toastify';
 
 const TransactionDetailPage = () => {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { data: transRes, isLoading } = useGetTransactionDetailQuery(id);
+    const { data: transRes, isLoading, refetch } = useGetTransactionDetailQuery(id);
+    const [reverseTransaction, { isLoading: isReversing }] = useReverseTransactionMutation();
+    
+    // Reversal Modal State
+    const [showReverseModal, setShowReverseModal] = useState(false);
+    const [reverseReason, setReverseReason] = useState('');
+    const [reverseError, setReverseError] = useState('');
+
     const data = transRes?.data;
 
     const formatIDR = (amount) => {
@@ -46,6 +56,36 @@ const TransactionDetailPage = () => {
         }
         
         return <p className="text-xs font-semibold text-gray-800">{account}</p>;
+    };
+
+    const handleReverse = async () => {
+        if (!reverseReason.trim()) {
+            setReverseError('Alasan reversal wajib diisi');
+            return;
+        }
+
+        try {
+            await reverseTransaction({ 
+                id, 
+                reason: reverseReason.trim() 
+            }).unwrap();
+            
+            toast.success('Transaksi berhasil di-reverse');
+            setShowReverseModal(false);
+            setReverseReason('');
+            setReverseError('');
+            refetch();
+        } catch (err) {
+            const msg = err?.data?.message || 'Gagal melakukan reversal';
+            setReverseError(msg);
+            toast.error(msg);
+        }
+    };
+
+    const openReverseModal = () => {
+        setReverseReason('');
+        setReverseError('');
+        setShowReverseModal(true);
     };
 
     if (isLoading) {
@@ -75,6 +115,8 @@ const TransactionDetailPage = () => {
         reversed: { bg: 'bg-gray-50 text-gray-700 border-gray-200', icon: AlertCircle },
     }[data.status] || { bg: 'bg-gray-50 text-gray-700 border-gray-200', icon: AlertCircle };
 
+    const canReverse = data.status === 'success';
+
     return (
         <div className="bg-white border border-gray-200 rounded-md p-4 space-y-4 shadow-none">
             {/* Header Actions */}
@@ -99,6 +141,20 @@ const TransactionDetailPage = () => {
                     >
                         Kembali
                     </button>
+                    {canReverse && (
+                        <button 
+                            onClick={openReverseModal}
+                            disabled={isReversing}
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-600 text-white rounded text-xs font-semibold hover:bg-rose-700 disabled:bg-rose-400"
+                        >
+                            {isReversing ? (
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
+                                <RotateCcw className="w-3.5 h-3.5" />
+                            )}
+                            Reverse
+                        </button>
+                    )}
                     {data.status === 'pending' && (
                         <button 
                             onClick={() => navigate(`/proses-pembayaran?ref=${data.reference_number}`)}
@@ -178,6 +234,99 @@ const TransactionDetailPage = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Reversal Info Banner */}
+            {data.status === 'reversed' && (
+                <div className="p-3 bg-rose-50 border border-rose-200 rounded-md flex gap-2">
+                    <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                    <p className="text-[11px] text-rose-800 leading-relaxed">
+                        Transaksi ini telah di-reverse (dibatalkan). Saldo telah dikembalikan dan jurnal telah dibalik.
+                    </p>
+                </div>
+            )}
+
+            {/* Reverse Modal */}
+            {showReverseModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40">
+                    <div className="bg-white rounded-md border border-gray-200 shadow-xl max-w-md w-full overflow-hidden">
+                        <div className="px-4 py-3 bg-rose-50 border-b border-rose-100 flex items-center justify-between">
+                            <div className="flex items-center gap-2 text-xs font-bold text-rose-700">
+                                <RotateCcw className="w-4 h-4" />
+                                <span>Reverse Transaksi</span>
+                            </div>
+                            <button 
+                                onClick={() => setShowReverseModal(false)} 
+                                className="text-gray-400 hover:text-gray-600"
+                            >
+                                <XCircle className="w-4 h-4" />
+                            </button>
+                        </div>
+                        
+                        <div className="p-4 space-y-4">
+                            <div className="p-3 bg-amber-50 border border-amber-200 rounded-md flex gap-2">
+                                <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                                <p className="text-[11px] text-amber-800 leading-relaxed">
+                                    Tindakan ini akan membatalkan transaksi, mengembalikan saldo, dan membalik jurnal. 
+                                    Transaksi yang sudah di-reverse tidak dapat dikembalikan lagi.
+                                </p>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-xs font-semibold text-gray-700 block">
+                                    Alasan Reversal <span className="text-rose-500">*</span>
+                                </label>
+                                <textarea
+                                    value={reverseReason}
+                                    onChange={(e) => setReverseReason(e.target.value)}
+                                    placeholder="Contoh: Kesalahan input nominal oleh teller, seharusnya Rp 800.000..."
+                                    rows={3}
+                                    className="w-full px-3 py-2 text-xs bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-rose-500 focus:border-rose-500 transition-all text-gray-900 resize-none"
+                                />
+                                {reverseError && (
+                                    <p className="text-[11px] text-rose-600 font-medium">{reverseError}</p>
+                                )}
+                            </div>
+
+                            <div className="p-3 bg-gray-50 border border-gray-200 rounded-md space-y-1.5 text-xs">
+                                <div className="flex justify-between">
+                                    <span className="text-gray-500">Nominal yang akan direverse</span>
+                                    <span className="font-bold text-gray-800">{formatIDR(data.amount)}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-gray-500">Nomor Referensi</span>
+                                    <span className="font-mono text-gray-600">{data.reference_number || '-'}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="px-4 py-3 bg-gray-50 border-t border-gray-200 flex justify-end gap-2">
+                            <button
+                                onClick={() => setShowReverseModal(false)}
+                                className="px-4 py-2 border border-gray-300 text-gray-700 rounded text-xs font-semibold hover:bg-gray-100"
+                            >
+                                Batal
+                            </button>
+                            <button
+                                onClick={handleReverse}
+                                disabled={isReversing || !reverseReason.trim()}
+                                className="px-4 py-2 bg-rose-600 text-white rounded text-xs font-semibold hover:bg-rose-700 disabled:bg-rose-400 disabled:cursor-not-allowed flex items-center gap-1.5"
+                            >
+                                {isReversing ? (
+                                    <>
+                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                        Memproses...
+                                    </>
+                                ) : (
+                                    <>
+                                        <RotateCcw className="w-3.5 h-3.5" />
+                                        Ya, Reverse Transaksi
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

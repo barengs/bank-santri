@@ -81,6 +81,24 @@ class MenuPermissionSeeder extends Seeder
             $pimpinan->syncPermissions($perms);
         }
 
+        // 5. Special permissions (not tied to menu)
+        $specialPerms = [
+            'transaction.reverse' => ['admin', 'adminbank'], // Only admin roles can reverse
+        ];
+
+        foreach ($specialPerms as $permName => $roleNames) {
+            $perm = Permission::firstOrCreate([
+                'name' => $permName,
+                'guard_name' => 'api'
+            ]);
+            foreach ($roleNames as $roleName) {
+                $role = Role::where('name', $roleName)->first();
+                if ($role && !$role->hasPermissionTo($perm)) {
+                    $role->givePermissionTo($perm);
+                }
+            }
+        }
+
         echo "Permissions synced for all roles.\n";
     }
 }

@@ -57,6 +57,14 @@ export const transactionApi = baseApi.injectEndpoints({
             }),
             invalidatesTags: ['Transaction', 'Account', 'Dashboard'],
         }),
+        reverseTransaction: builder.mutation({
+            query: ({ id, reason }) => ({
+                url: `/main/transaction/${id}/reverse`,
+                method: 'POST',
+                body: { reason },
+            }),
+            invalidatesTags: ['Transaction', 'Account', 'Dashboard'],
+        }),
     }),
 });
 
@@ -65,8 +73,9 @@ export const {
     useGetAccountTransactionsQuery,
     useGetTransactionDetailQuery,
     useCashDepositMutation, 
-    useCashWithdrawalMutation, 
+    useCashWithdrawalMutation,
     useFundTransferMutation,
     useActivateTransactionMutation,
-    useCreateTransactionMutation
+    useCreateTransactionMutation,
+    useReverseTransactionMutation
 } = transactionApi;

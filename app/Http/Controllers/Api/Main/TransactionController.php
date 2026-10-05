@@ -283,6 +283,16 @@ class TransactionController extends Controller
      */
     public function reverseTransaction(Request $request, string $id)
     {
+        $user = auth('api')->user();
+        
+        // Permission check: hanya user dengan permission transaction.reverse atau super admin
+        if (!$user->hasPermissionTo('transaction.reverse') && !$user->hasRole('admin')) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Anda tidak memiliki izin untuk melakukan reversal transaksi.'
+            ], 403);
+        }
+
         return DB::transaction(function () use ($id, $request) {
             $original = Transaction::findOrFail($id);
 
