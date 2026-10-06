@@ -420,7 +420,7 @@ class AccountingReportController extends Controller
             $productsQuery->where('id', $productId);
         }
 
-        $products = $productsQuery->get()->map(function ($p) use ($startDate, $endDate, $transactionItemId) {
+        $products = $productsQuery->get()->map(function ($p) use ($startDate, $endDate, $transactionItemId, $category) {
             // Hitung mutasi kredit (masuk) dan debit (keluar) untuk semua rekening pada produk ini
             $movements = DB::table('account_movements')
                 ->join('accounts', 'account_movements.account_number', '=', 'accounts.account_number')
@@ -431,6 +431,10 @@ class AccountingReportController extends Controller
                     DB::raw("SUM(CASE WHEN account_movements.type = 'credit' THEN account_movements.amount ELSE 0 END) as total_credit"),
                     DB::raw("SUM(CASE WHEN account_movements.type = 'debit' THEN account_movements.amount ELSE 0 END) as total_debit")
                 );
+
+            if (!empty($category) && $category !== 'all') {
+                $movements->where('account_movements.type', $category);
+            }
 
             $movements = $this->applyTransactionItemFilter($movements, $transactionItemId)->first();
 
@@ -472,7 +476,9 @@ class AccountingReportController extends Controller
 
         $movementsQuery = $this->applyTransactionItemFilter($movementsQuery, $transactionItemId);
 
-        $transactionsList = $movementsQuery->orderBy('account_movements.created_at', 'desc')->paginate(50);
+        $perPage = (int) $request->get('per_page', 25);
+        $perPage = ($perPage <= 0) ? 25 : min($perPage, 500);
+        $transactionsList = $movementsQuery->orderBy('account_movements.created_at', 'desc')->paginate($perPage);
 
         return response()->json([
             'status' => 'success',
@@ -521,7 +527,7 @@ class AccountingReportController extends Controller
             $productsQuery->where('id', $productId);
         }
 
-        $products = $productsQuery->get()->map(function ($p) use ($startDate, $endDate, $transactionItemId) {
+        $products = $productsQuery->get()->map(function ($p) use ($startDate, $endDate, $transactionItemId, $category) {
             $movements = DB::table('account_movements')
                 ->join('accounts', 'account_movements.account_number', '=', 'accounts.account_number')
                 ->leftJoin('transactions', 'account_movements.transaction_id', '=', 'transactions.id')
@@ -531,6 +537,10 @@ class AccountingReportController extends Controller
                     DB::raw("SUM(CASE WHEN account_movements.type = 'credit' THEN account_movements.amount ELSE 0 END) as total_credit"),
                     DB::raw("SUM(CASE WHEN account_movements.type = 'debit' THEN account_movements.amount ELSE 0 END) as total_debit")
                 );
+
+            if (!empty($category) && $category !== 'all') {
+                $movements->where('account_movements.type', $category);
+            }
 
             $movements = $this->applyTransactionItemFilter($movements, $transactionItemId)->first();
 
@@ -597,10 +607,8 @@ class AccountingReportController extends Controller
 
     /**
      * Terapkan filter Rincian Transaksi (Master Transaction Item) pada query mutasi rekening.
-     *
-     * Transaksi pembayaran paket terhubung ke transaction_items melalui payment_record_items
-     * (reference_number transaksi = "{payment_records.reference_number}-{payment_record_items.id}"),
-     * dan deskripsi mutasi memuat nama rincian (mis. "Pembayaran MIQ ... [PAY-...]").
+     * Menggunakan strategi pencarian ganda (keyword deskripsi, payment_record_items, & transaction_rules)
+     * untuk memastikan kecocokan mutlak meskipun ada perbedaan penulisan atau transaksi manual.
      */
     private function applyTransactionItemFilter($query, $transactionItemId)
     {
@@ -611,23 +619,100 @@ class AccountingReportController extends Controller
         $item = TransactionItem::find($transactionItemId);
 
         if (!$item) {
-            // ID tidak valid -> kosongkan laporan, jangan sampai seluruh data bocor
+            // ID tidak valid -> kosongkan laporan
             return $query->whereRaw('1 = 0');
         }
 
-        $namePattern = '%' . addcslashes(mb_strtolower($item->item_name), '%_\\') . '%';
+        // 1. Kumpulkan semua kata kunci / nama yang merepresentasikan item ini
+        $keywords = [];
+        $rawName = trim($item->item_name);
+        $keywords[] = $rawName;
 
-        return $query->where(function ($q) use ($item, $namePattern) {
-            // 1) Deskripsi mutasi mengandung nama rincian transaksi
-            $q->whereRaw('LOWER(COALESCE(account_movements.description, \'\')) LIKE ?', [$namePattern]);
+        // Tangani variasi tanda petik (' vs ’)
+        if (str_contains($rawName, "'")) {
+            $keywords[] = str_replace("'", "’", $rawName);
+        }
+        if (str_contains($rawName, "’")) {
+            $keywords[] = str_replace("’", "'", $rawName);
+        }
 
-            // 2) Kaitan eksplisit via payment_record_items (transaksi per item paket pembayaran)
+        // Jika nama memiliki singkatan atau keterangan dalam kurung (misal: "MIQ (Madrasah Ilmu Al-qur'an)")
+        if (str_contains($rawName, '(')) {
+            $parts = explode('(', $rawName);
+            $acronym = trim($parts[0]);
+            if (mb_strlen($acronym) >= 2) {
+                $keywords[] = $acronym;
+            }
+            $inside = trim(rtrim($parts[1] ?? '', ')'));
+            if (mb_strlen($inside) >= 3) {
+                $keywords[] = $inside;
+                if (str_contains($inside, "'")) {
+                    $keywords[] = str_replace("'", "’", $inside);
+                }
+                if (str_contains($inside, "’")) {
+                    $keywords[] = str_replace("’", "'", $inside);
+                }
+            }
+        }
+
+        // Ambil nama dari payment_package_items & payment_record_items
+        $pkgNames = DB::table('payment_package_items')
+            ->where('transaction_item_id', $item->id)
+            ->pluck('item_name')
+            ->toArray();
+
+        $recNames = DB::table('payment_record_items')
+            ->where('transaction_item_id', $item->id)
+            ->pluck('item_name')
+            ->toArray();
+
+        foreach (array_merge($pkgNames, $recNames) as $alias) {
+            $alias = trim($alias);
+            if (mb_strlen($alias) >= 2) {
+                $keywords[] = $alias;
+            }
+        }
+
+        // Khusus Uang Saku
+        if (stripos($rawName, 'saku') !== false) {
+            $keywords[] = 'uang saku';
+            $keywords[] = 'uang saku santri';
+        }
+
+        $keywords = array_values(array_unique(array_filter($keywords)));
+
+        return $query->where(function ($q) use ($item, $keywords) {
+            // A) Cocokkan deskripsi mutasi/transaksi dengan seluruh variasi nama/kata kunci
+            $q->where(function ($descQuery) use ($keywords) {
+                foreach ($keywords as $kw) {
+                    $pattern = '%' . addcslashes(mb_strtolower($kw), '%_\\') . '%';
+                    $descQuery->orWhereRaw('LOWER(COALESCE(account_movements.description, \'\')) LIKE ?', [$pattern])
+                              ->orWhereRaw('LOWER(COALESCE(transactions.description, \'\')) LIKE ?', [$pattern]);
+                }
+            });
+
+            // B) Kaitan eksplisit via payment_record_items (paket pembayaran tagihan)
             $q->orWhereExists(function ($sub) use ($item) {
                 $sub->selectRaw('1')
                     ->from('payment_record_items as pri')
                     ->join('payment_records as pr', 'pr.id', '=', 'pri.payment_record_id')
                     ->where('pri.transaction_item_id', $item->id)
-                    ->whereRaw("CONCAT(pr.reference_number, '-', pri.id) = transactions.reference_number");
+                    ->where(function ($w) {
+                        $w->whereRaw("transactions.reference_number = CONCAT(pr.reference_number, '-', pri.package_item_id)")
+                          ->orWhereRaw("transactions.reference_number = CONCAT(pr.reference_number, '-', pri.id)")
+                          ->orWhere(function ($w2) {
+                              $w2->whereRaw("transactions.reference_number LIKE CONCAT(pr.reference_number, '-%')")
+                                 ->whereRaw("LOWER(COALESCE(transactions.description, '')) LIKE CONCAT('%', LOWER(pri.item_name), '%')");
+                          });
+                    });
+            });
+
+            // C) Kaitan via aturan transaksi perbankan (TransactionRule - Teller/Manual)
+            $q->orWhereExists(function ($sub) use ($item) {
+                $sub->selectRaw('1')
+                    ->from('transaction_rules as tr')
+                    ->where('tr.transaction_item_id', $item->id)
+                    ->whereColumn('tr.transaction_type_id', 'transactions.transaction_type_id');
             });
         });
     }

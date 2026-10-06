@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useGetRekapitulasiQuery } from '../../store/reportApi';
 import { useGetProductsQuery } from '../../store/productApi';
 import { useGetTransactionItemsQuery } from '../../store/transactionItemApi';
@@ -14,7 +14,9 @@ import {
     ArrowUpRight,
     ArrowDownLeft,
     Layers,
-    Loader2
+    Loader2,
+    ChevronLeft,
+    ChevronRight
 } from 'lucide-react';
 
 const RekapitulasiPage = () => {
@@ -26,19 +28,29 @@ const RekapitulasiPage = () => {
         start_date: new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0],
         end_date: now.toISOString().split('T')[0],
     });
+    const [page, setPage] = useState(1);
+    const [perPage, setPerPage] = useState(25);
+
+    // Kembali ke halaman 1 setiap kali filter berubah
+    useEffect(() => {
+        setPage(1);
+    }, [selectedProduct, selectedTransactionItem, category, dateRange.start_date, dateRange.end_date]);
 
     const { data: productsRes } = useGetProductsQuery();
     const productsList = productsRes?.data || [];
     
     const { data: trxItemsRes } = useGetTransactionItemsQuery({ per_page: 100 });
-    const transactionItemsList = trxItemsRes?.data?.data || trxItemsRes?.data || [];
+    const rawTrxItems = trxItemsRes?.data?.data || trxItemsRes?.data || [];
+    const transactionItemsList = [...rawTrxItems].sort((a, b) => (a.item_name || '').localeCompare(b.item_name || ''));
 
     const { data: rekapRes, isLoading, isFetching } = useGetRekapitulasiQuery({
         product_id: selectedProduct || undefined,
         transaction_item_id: selectedTransactionItem || undefined,
         start_date: dateRange.start_date,
         end_date: dateRange.end_date,
-        category: category !== 'all' ? category : undefined
+        category: category !== 'all' ? category : undefined,
+        page,
+        per_page: perPage
     });
 
     const rekapData = rekapRes?.data;
@@ -50,7 +62,25 @@ const RekapitulasiPage = () => {
         net_change: 0
     };
     const products = rekapData?.products || [];
-    const transactions = rekapData?.transactions?.data || [];
+    const trxPag = rekapData?.transactions;
+    const transactions = trxPag?.data || [];
+
+    // Meta pagination backend (Laravel paginator)
+    const trxMeta = useMemo(() => ({
+        current_page: trxPag?.current_page || 1,
+        last_page: trxPag?.last_page || 1,
+        per_page: trxPag?.per_page || perPage,
+        from: trxPag?.from || 0,
+        to: trxPag?.to || 0,
+        total: trxPag?.total || 0,
+    }), [trxPag, perPage]);
+
+    const handleChangePage = (newPage) => {
+        if (newPage < 1 || newPage > trxMeta.last_page) return;
+        setPage(newPage);
+        // Scroll mulus ke tabel rincian transaksi
+        document.getElementById('rincian-transaksi-tabel')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
 
     const formatIDR = (amount) => {
         return new Intl.NumberFormat('id-ID', {
@@ -282,12 +312,15 @@ const RekapitulasiPage = () => {
             </div>
 
             {/* Section 2: Rincian Transaksi */}
-            <div className="space-y-2">
-                <div className="flex items-center justify-between">
+            <div id="rincian-transaksi-tabel" className="space-y-2 pt-1">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <h3 className="text-xs font-bold text-gray-800 uppercase tracking-wider flex items-center gap-1.5">
                         <FileText className="w-4 h-4 text-blue-600" />
                         II. Rincian Transaksi & Mutasi (Periode Terpilih)
                     </h3>
+                    <div className="text-[11px] text-gray-500 font-medium">
+                        Total {trxMeta.total.toLocaleString('id-ID')} transaksi ditemukan
+                    </div>
                 </div>
 
                 <div className="bg-white border border-gray-200 rounded-md overflow-hidden">
@@ -306,9 +339,9 @@ const RekapitulasiPage = () => {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
-                                {isLoading ? (
+                                {isLoading || isFetching ? (
                                     <tr>
-                                        <td colSpan="8" className="text-center py-6 text-gray-400">
+                                        <td colSpan="8" className="text-center py-8 text-gray-400">
                                             <Loader2 className="w-5 h-5 animate-spin mx-auto mb-1 text-blue-600" />
                                             Memuat rincian transaksi...
                                         </td>
@@ -320,42 +353,102 @@ const RekapitulasiPage = () => {
                                         </td>
                                     </tr>
                                 ) : (
-                                    transactions.map((trx, idx) => (
-                                        <tr key={trx.id} className="hover:bg-slate-50 transition-colors">
-                                            <td className="px-3 py-2 text-center text-gray-500 font-medium">{idx + 1}</td>
-                                            <td className="px-3 py-2 whitespace-nowrap text-gray-700">
-                                                {new Date(trx.created_at).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' })} {new Date(trx.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
-                                            </td>
-                                            <td className="px-3 py-2 font-mono text-blue-600 font-medium">{trx.reference_number || '-'}</td>
-                                            <td className="px-3 py-2">
-                                                <span className="font-bold text-gray-900 block">{trx.customer_name}</span>
-                                                <span className="text-[10px] text-gray-400 font-mono">{trx.account_number}</span>
-                                            </td>
-                                            <td className="px-3 py-2 text-gray-700">{trx.product_name}</td>
-                                            <td className="px-3 py-2 text-center">
-                                                {trx.type === 'credit' ? (
-                                                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">
-                                                        MASUK
+                                    transactions.map((trx, idx) => {
+                                        const itemIndex = ((trxMeta.current_page - 1) * trxMeta.per_page) + idx + 1;
+                                        return (
+                                            <tr key={trx.id} className="hover:bg-slate-50 transition-colors">
+                                                <td className="px-3 py-2 text-center text-gray-500 font-medium">{itemIndex}</td>
+                                                <td className="px-3 py-2 whitespace-nowrap text-gray-700">
+                                                    {new Date(trx.created_at).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' })} {new Date(trx.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+                                                </td>
+                                                <td className="px-3 py-2 font-mono text-blue-600 font-medium">{trx.reference_number || '-'}</td>
+                                                <td className="px-3 py-2">
+                                                    <span className="font-bold text-gray-900 block">{trx.customer_name}</span>
+                                                    <span className="text-[10px] text-gray-400 font-mono">{trx.account_number}</span>
+                                                </td>
+                                                <td className="px-3 py-2 text-gray-700">{trx.product_name}</td>
+                                                <td className="px-3 py-2 text-center">
+                                                    {trx.type === 'credit' ? (
+                                                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                                                            MASUK
+                                                        </span>
+                                                    ) : (
+                                                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-800">
+                                                            KELUAR
+                                                        </span>
+                                                    )}
+                                                </td>
+                                                <td className="px-3 py-2 text-right font-mono font-bold">
+                                                    <span className={trx.type === 'credit' ? 'text-emerald-600' : 'text-rose-600'}>
+                                                        {trx.type === 'credit' ? '+' : '-'}{formatIDR(trx.amount)}
                                                     </span>
-                                                ) : (
-                                                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-800">
-                                                        KELUAR
-                                                    </span>
-                                                )}
-                                            </td>
-                                            <td className="px-3 py-2 text-right font-mono font-bold">
-                                                <span className={trx.type === 'credit' ? 'text-emerald-600' : 'text-rose-600'}>
-                                                    {trx.type === 'credit' ? '+' : '-'}{formatIDR(trx.amount)}
-                                                </span>
-                                            </td>
-                                            <td className="px-3 py-2 text-gray-600 text-[11px] max-w-xs truncate" title={trx.description}>
-                                                {trx.description || '-'}
-                                            </td>
-                                        </tr>
-                                    ))
+                                                </td>
+                                                <td className="px-3 py-2 text-gray-600 text-[11px] max-w-xs truncate" title={trx.description}>
+                                                    {trx.description || '-'}
+                                                </td>
+                                            </tr>
+                                        );
+                                    })
                                 )}
                             </tbody>
                         </table>
+                    </div>
+
+                    {/* Pagination Bar */}
+                    <div className="px-3.5 py-2.5 bg-white border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-gray-500">
+                        <div className="flex flex-wrap items-center gap-3">
+                            <div className="text-xs text-gray-500">
+                                Menampilkan {trxMeta.total > 0 ? trxMeta.from : 0} - {trxMeta.to} dari {trxMeta.total} entri
+                            </div>
+
+                            <div className="flex items-center gap-1.5 text-xs text-gray-500">
+                                <span>Tampilkan:</span>
+                                <select 
+                                    value={perPage}
+                                    onChange={(e) => {
+                                        setPerPage(Number(e.target.value));
+                                        setPage(1);
+                                    }}
+                                    className="bg-white border border-gray-300 rounded px-2 py-0.5 text-xs text-gray-700 focus:outline-none focus:border-blue-500 cursor-pointer"
+                                >
+                                    {[10, 25, 50, 100].map((size) => (
+                                        <option key={size} value={size}>{size} / hal</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-1">
+                            <button
+                                type="button"
+                                onClick={() => handleChangePage(trxMeta.current_page - 1)}
+                                disabled={trxMeta.current_page <= 1 || isLoading || isFetching}
+                                className="p-1 rounded border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-40 transition-colors"
+                                title="Halaman sebelumnya"
+                            >
+                                <ChevronLeft className="w-4 h-4" />
+                            </button>
+                            
+                            <div className="flex items-center gap-1 mx-1.5 text-xs">
+                                 <span className="font-semibold text-blue-600 px-2 py-0.5 bg-blue-50 rounded border border-blue-200">
+                                    {trxMeta.current_page}
+                                 </span>
+                                 <span className="text-gray-400">/</span>
+                                 <span className="text-gray-600">
+                                    {trxMeta.last_page}
+                                 </span>
+                            </div>
+
+                            <button
+                                type="button"
+                                onClick={() => handleChangePage(trxMeta.current_page + 1)}
+                                disabled={trxMeta.current_page >= trxMeta.last_page || isLoading || isFetching}
+                                className="p-1 rounded border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-40 transition-colors"
+                                title="Halaman berikutnya"
+                            >
+                                <ChevronRight className="w-4 h-4" />
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
