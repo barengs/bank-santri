@@ -286,7 +286,7 @@ class TransactionController extends Controller
         $user = auth('api')->user();
         
         // Permission check: hanya user dengan permission transaction.reverse atau super admin
-        if (!$user->hasPermissionTo('transaction.reverse') && !$user->hasRole('admin')) {
+        if (!$user->hasRole('admin') && !$user->can('transaction.reverse')) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Anda tidak memiliki izin untuk melakukan reversal transaksi.'
