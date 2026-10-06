@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useGetRekapitulasiQuery } from '../../store/reportApi';
 import { useGetProductsQuery } from '../../store/productApi';
+import { useGetTransactionItemsQuery } from '../../store/transactionItemApi';
 import { 
     FileText, 
     Calendar, 
@@ -19,6 +20,7 @@ import {
 const RekapitulasiPage = () => {
     const now = new Date();
     const [selectedProduct, setSelectedProduct] = useState('');
+    const [selectedTransactionItem, setSelectedTransactionItem] = useState('');
     const [category, setCategory] = useState('all');
     const [dateRange, setDateRange] = useState({
         start_date: new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0],
@@ -27,9 +29,13 @@ const RekapitulasiPage = () => {
 
     const { data: productsRes } = useGetProductsQuery();
     const productsList = productsRes?.data || [];
+    
+    const { data: trxItemsRes } = useGetTransactionItemsQuery({ per_page: 100 });
+    const transactionItemsList = trxItemsRes?.data?.data || trxItemsRes?.data || [];
 
     const { data: rekapRes, isLoading, isFetching } = useGetRekapitulasiQuery({
         product_id: selectedProduct || undefined,
+        transaction_item_id: selectedTransactionItem || undefined,
         start_date: dateRange.start_date,
         end_date: dateRange.end_date,
         category: category !== 'all' ? category : undefined
@@ -62,6 +68,7 @@ const RekapitulasiPage = () => {
         if (dateRange.start_date) params.append('start_date', dateRange.start_date);
         if (dateRange.end_date) params.append('end_date', dateRange.end_date);
         if (category && category !== 'all') params.append('category', category);
+        if (selectedTransactionItem) params.append('transaction_item_id', selectedTransactionItem);
 
         const url = `/api/reports/rekapitulasi/print?${params.toString()}`;
         window.open(url, '_blank');
@@ -95,7 +102,7 @@ const RekapitulasiPage = () => {
                     <span>Filter Laporan Rekapitulasi</span>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
                     {/* Produk Bank */}
                     <div>
                         <label className="text-[11px] font-semibold text-gray-600 block mb-1">Produk Bank</label>
@@ -107,6 +114,21 @@ const RekapitulasiPage = () => {
                             <option value="">Semua Produk Bank</option>
                             {productsList.map(p => (
                                 <option key={p.id} value={p.id}>{p.product_name} ({p.product_code})</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {/* Rincian Transaksi */}
+                    <div>
+                        <label className="text-[11px] font-semibold text-gray-600 block mb-1">Rincian Transaksi</label>
+                        <select 
+                            value={selectedTransactionItem}
+                            onChange={(e) => setSelectedTransactionItem(e.target.value)}
+                            className="w-full px-2.5 py-1.5 text-xs bg-white border border-gray-300 rounded-md focus:outline-none focus:border-blue-500 text-gray-700 cursor-pointer"
+                        >
+                            <option value="">Semua Rincian Transaksi</option>
+                            {transactionItemsList.map(item => (
+                                <option key={item.id} value={item.id}>{item.item_name}</option>
                             ))}
                         </select>
                     </div>

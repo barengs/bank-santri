@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
     ArrowUpCircle, 
     Search, 
@@ -37,6 +37,19 @@ const TarikTunaiPage = () => {
 
     const account = accountRes?.data;
     const isInstansi = account?.customer_id === 0;
+
+    // Auto-focus ke input nominal ketika data rekening sudah ditemukan
+    const amountInputRef = useRef(null);
+    useEffect(() => {
+        if (account) {
+            // Tunggu render form penarikan agar elemen sudah ter-mount (form aktif)
+            const timer = setTimeout(() => {
+                amountInputRef.current?.focus();
+                amountInputRef.current?.select?.();
+            }, 100);
+            return () => clearTimeout(timer);
+        }
+    }, [account]);
 
     const formatIDR = (val) => {
         return new Intl.NumberFormat('id-ID', {
@@ -192,6 +205,7 @@ const TarikTunaiPage = () => {
                                 <div className="relative">
                                     <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-sm">Rp</span>
                                     <input 
+                                        ref={amountInputRef}
                                         type="text" 
                                         placeholder="0" 
                                         value={amount}

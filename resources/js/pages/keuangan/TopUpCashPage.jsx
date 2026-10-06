@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
     PlusCircle, 
     Search, 
@@ -31,6 +31,45 @@ const TopUpCashPage = () => {
     const [fetchAccount, { data: accountRes, isFetching: isChecking }] = useLazyGetAccountDetailQuery();
     const { data: packagesRes, isLoading: isLoadingPackages } = useGetPaymentPackagesQuery({ is_active: true });
     const [processTopUp, { isLoading: isProcessing }] = useCashTopUpMutation();
+
+    // Refs untuk alur input cepat berbasis keyboard (teller)
+    const amountInputRef = useRef(null);
+    const notesInputRef = useRef(null);
+    const account = nis ? accountRes?.data : null;
+
+    // Setelah data rekening ditemukan, pindahkan fokus ke input jumlah setoran
+    useEffect(() => {
+        if (accountRes?.data) {
+            const timer = setTimeout(() => amountInputRef.current?.focus(), 150);
+            return () => clearTimeout(timer);
+        }
+    }, [accountRes]);
+
+    // Enter pada input NIS -> langsung proses pencarian rekening
+    const handleNisKeyDown = (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            if (nis.trim().length >= 3) {
+                fetchAccount(nis.trim());
+            }
+        }
+    };
+
+    // Enter pada input nominal -> lanjut ke kolom catatan (atau submit jika kosong)
+    const handleAmountKeyDown = (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            notesInputRef.current?.focus();
+        }
+    };
+
+    // Enter pada kolom catatan -> langsung proses & cetak struk
+    const handleNotesKeyDown = (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            e.currentTarget.form?.requestSubmit();
+        }
+    };
 
     const formatIDR = (amount) => {
         return new Intl.NumberFormat('id-ID', {
@@ -109,7 +148,6 @@ const TopUpCashPage = () => {
         handleResetForm();
     };
 
-    const account = nis ? accountRes?.data : null;
     const packages = packagesRes?.data?.data || [];
 
     return (
@@ -145,6 +183,7 @@ const TopUpCashPage = () => {
                                     placeholder="Ketik NIS atau Scan Kartu..."
                                     value={nis}
                                     onChange={(e) => setNis(e.target.value)}
+                                    onKeyDown={handleNisKeyDown}
                                     onBlur={() => nis.length >= 4 && fetchAccount(nis)}
                                     className="w-full pl-8 pr-3 py-1.5 bg-white border border-gray-300 rounded-md text-xs font-semibold focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none"
                                     required
@@ -178,8 +217,10 @@ const TopUpCashPage = () => {
                                 <input 
                                     type="text"
                                     placeholder="0"
+                                    ref={amountInputRef}
                                     value={amount}
                                     onChange={handleAmountChange}
+                                    onKeyDown={handleAmountKeyDown}
                                     className="w-full pl-8 pr-3 py-2 bg-white border border-gray-300 rounded-md text-base font-bold text-emerald-600 focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
                                     required
                                 />
@@ -192,8 +233,10 @@ const TopUpCashPage = () => {
                             <input 
                                 type="text"
                                 placeholder="Keterangan tambahan..."
+                                ref={notesInputRef}
                                 value={notes}
                                 onChange={(e) => setNotes(e.target.value)}
+                                onKeyDown={handleNotesKeyDown}
                                 className="w-full px-2.5 py-1.5 bg-white border border-gray-300 rounded-md text-xs focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none"
                             />
                         </div>

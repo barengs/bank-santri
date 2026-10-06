@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Reports;
 use App\Http\Controllers\Controller;
 use App\Models\Account;
 use App\Models\Product;
+use App\Models\TransactionItem;
 use App\Models\TransactionLedger;
 use App\Models\ChartOfAccount;
 use Illuminate\Http\Request;
@@ -407,6 +408,7 @@ class AccountingReportController extends Controller
         $startDate = $request->get('start_date', now()->startOfMonth()->format('Y-m-d'));
         $endDate   = $request->get('end_date', now()->format('Y-m-d'));
         $category  = $request->get('category'); // all, or specific type
+        $transactionItemId = $request->get('transaction_item_id');
 
         // 1. Rekapitulasi per Produk Bank
         $productsQuery = Product::withCount(['accounts as total_accounts' => function ($q) {
@@ -418,16 +420,19 @@ class AccountingReportController extends Controller
             $productsQuery->where('id', $productId);
         }
 
-        $products = $productsQuery->get()->map(function ($p) use ($startDate, $endDate) {
+        $products = $productsQuery->get()->map(function ($p) use ($startDate, $endDate, $transactionItemId) {
             // Hitung mutasi kredit (masuk) dan debit (keluar) untuk semua rekening pada produk ini
             $movements = DB::table('account_movements')
                 ->join('accounts', 'account_movements.account_number', '=', 'accounts.account_number')
+                ->leftJoin('transactions', 'account_movements.transaction_id', '=', 'transactions.id')
                 ->where('accounts.product_id', $p->id)
                 ->whereBetween('account_movements.created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
                 ->select(
                     DB::raw("SUM(CASE WHEN account_movements.type = 'credit' THEN account_movements.amount ELSE 0 END) as total_credit"),
                     DB::raw("SUM(CASE WHEN account_movements.type = 'debit' THEN account_movements.amount ELSE 0 END) as total_debit")
-                )->first();
+                );
+
+            $movements = $this->applyTransactionItemFilter($movements, $transactionItemId)->first();
 
             $p->total_credit = (float) ($movements->total_credit ?? 0);
             $p->total_debit  = (float) ($movements->total_debit ?? 0);
@@ -465,6 +470,8 @@ class AccountingReportController extends Controller
             $movementsQuery->where('account_movements.type', $category);
         }
 
+        $movementsQuery = $this->applyTransactionItemFilter($movementsQuery, $transactionItemId);
+
         $transactionsList = $movementsQuery->orderBy('account_movements.created_at', 'desc')->paginate(50);
 
         return response()->json([
@@ -472,6 +479,7 @@ class AccountingReportController extends Controller
             'data'   => [
                 'filters' => [
                     'product_id' => $productId,
+                    'transaction_item_id' => $transactionItemId,
                     'start_date' => $startDate,
                     'end_date'   => $endDate,
                     'category'   => $category,
@@ -498,8 +506,10 @@ class AccountingReportController extends Controller
         $startDate = $request->get('start_date', now()->startOfMonth()->format('Y-m-d'));
         $endDate   = $request->get('end_date', now()->format('Y-m-d'));
         $category  = $request->get('category');
+        $transactionItemId = $request->get('transaction_item_id');
 
         $selectedProduct = $productId ? Product::find($productId) : null;
+        $selectedTransactionItem = $transactionItemId ? TransactionItem::find($transactionItemId) : null;
 
         // Rekap per Produk
         $productsQuery = Product::withCount(['accounts as total_accounts' => function ($q) {
@@ -511,15 +521,18 @@ class AccountingReportController extends Controller
             $productsQuery->where('id', $productId);
         }
 
-        $products = $productsQuery->get()->map(function ($p) use ($startDate, $endDate) {
+        $products = $productsQuery->get()->map(function ($p) use ($startDate, $endDate, $transactionItemId) {
             $movements = DB::table('account_movements')
                 ->join('accounts', 'account_movements.account_number', '=', 'accounts.account_number')
+                ->leftJoin('transactions', 'account_movements.transaction_id', '=', 'transactions.id')
                 ->where('accounts.product_id', $p->id)
                 ->whereBetween('account_movements.created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
                 ->select(
                     DB::raw("SUM(CASE WHEN account_movements.type = 'credit' THEN account_movements.amount ELSE 0 END) as total_credit"),
                     DB::raw("SUM(CASE WHEN account_movements.type = 'debit' THEN account_movements.amount ELSE 0 END) as total_debit")
-                )->first();
+                );
+
+            $movements = $this->applyTransactionItemFilter($movements, $transactionItemId)->first();
 
             $p->total_credit = (float) ($movements->total_credit ?? 0);
             $p->total_debit  = (float) ($movements->total_debit ?? 0);
@@ -555,6 +568,8 @@ class AccountingReportController extends Controller
             $movementsQuery->where('account_movements.type', $category);
         }
 
+        $movementsQuery = $this->applyTransactionItemFilter($movementsQuery, $transactionItemId);
+
         $transactions = $movementsQuery->orderBy('account_movements.created_at', 'desc')->limit(300)->get();
 
         $summary = [
@@ -570,11 +585,50 @@ class AccountingReportController extends Controller
             'transactions'     => $transactions,
             'summary'          => $summary,
             'selectedProduct'  => $selectedProduct,
+            'selectedTransactionItem' => $selectedTransactionItem,
+            'category'         => $category,
             'startDate'        => $startDate,
             'endDate'          => $endDate,
             'generated_at'     => now()->translatedFormat('d F Y H:i:s'),
         ])->setPaper('a4', 'portrait');
 
         return $pdf->download('Rekapitulasi_BankSantri_' . date('Ymd_His') . '.pdf');
+    }
+
+    /**
+     * Terapkan filter Rincian Transaksi (Master Transaction Item) pada query mutasi rekening.
+     *
+     * Transaksi pembayaran paket terhubung ke transaction_items melalui payment_record_items
+     * (reference_number transaksi = "{payment_records.reference_number}-{payment_record_items.id}"),
+     * dan deskripsi mutasi memuat nama rincian (mis. "Pembayaran MIQ ... [PAY-...]").
+     */
+    private function applyTransactionItemFilter($query, $transactionItemId)
+    {
+        if (empty($transactionItemId)) {
+            return $query;
+        }
+
+        $item = TransactionItem::find($transactionItemId);
+
+        if (!$item) {
+            // ID tidak valid -> kosongkan laporan, jangan sampai seluruh data bocor
+            return $query->whereRaw('1 = 0');
+        }
+
+        $namePattern = '%' . addcslashes(mb_strtolower($item->item_name), '%_\\') . '%';
+
+        return $query->where(function ($q) use ($item, $namePattern) {
+            // 1) Deskripsi mutasi mengandung nama rincian transaksi
+            $q->whereRaw('LOWER(COALESCE(account_movements.description, \'\')) LIKE ?', [$namePattern]);
+
+            // 2) Kaitan eksplisit via payment_record_items (transaksi per item paket pembayaran)
+            $q->orWhereExists(function ($sub) use ($item) {
+                $sub->selectRaw('1')
+                    ->from('payment_record_items as pri')
+                    ->join('payment_records as pr', 'pr.id', '=', 'pri.payment_record_id')
+                    ->where('pri.transaction_item_id', $item->id)
+                    ->whereRaw("CONCAT(pr.reference_number, '-', pri.id) = transactions.reference_number");
+            });
+        });
     }
 }

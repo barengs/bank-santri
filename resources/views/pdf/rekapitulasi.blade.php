@@ -71,6 +71,12 @@
         <tr>
             <td class="info-lbl">Filter Produk</td>
             <td class="info-val">: {{ $selectedProduct ? $selectedProduct->product_name . ' (' . $selectedProduct->product_code . ')' : 'Semua Produk Bank' }}</td>
+            <td class="info-lbl">Rincian Transaksi</td>
+            <td class="info-val">: {{ !empty($selectedTransactionItem) ? $selectedTransactionItem->item_name : 'Semua Rincian Transaksi' }}</td>
+        </tr>
+        <tr>
+            <td class="info-lbl">Arus Transaksi</td>
+            <td class="info-val">: {{ ($category ?? 'all') === 'credit' ? 'Dana Masuk (Kredit)' : (($category ?? 'all') === 'debit' ? 'Dana Keluar (Debit)' : 'Semua Arus Transaksi') }}</td>
             <td class="info-lbl">Total Rekening</td>
             <td class="info-val">: {{ number_format($summary['total_accounts'], 0, ',', '.') }} Rekening Aktif</td>
         </tr>
