@@ -66,13 +66,14 @@ const TopUpCashPage = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!accountRes?.data || !amount) return;
+        const account = accountRes?.data;
+        if (!account || !amount) return;
 
         const rawAmount = Number(amount.replace(/\./g, ''));
 
         try {
             const res = await processTopUp({
-                account_number: nis,
+                account_number: account.account_number,
                 amount: rawAmount,
                 payment_package_id: packageId || null,
                 notes: notes || undefined
