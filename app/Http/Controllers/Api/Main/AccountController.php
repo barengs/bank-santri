@@ -60,8 +60,18 @@ class AccountController extends Controller
         $perPage = $request->get('per_page', 15);
         $search  = $request->get('search');
         $isInstansi = $request->get('is_instansi');
+        $productId  = $request->get('product_id');
+        $status     = $request->get('status');
 
         $query = Account::with('product');
+
+        if ($productId) {
+            $query->where('product_id', $productId);
+        }
+
+        if ($status) {
+            $query->where('status', $status);
+        }
 
         if ($search) {
             $query->where(function ($q) use ($search) {
@@ -148,10 +158,18 @@ class AccountController extends Controller
             'akad_type'      => 'nullable|in:wadiah,mudharabah',
             // card_number from request is no longer strictly used/required from UI, but keep validation if passed internally
             'card_number'    => 'nullable|string|unique:accounts,card_number',
+        ], [
+            'account_number.unique' => "Santri '{$request->customer_name}' dengan NIS '{$request->account_number}' sudah memiliki rekening terdaftar di Bank Santri.",
+            'card_number.unique'    => "Nomor kartu '{$request->card_number}' sudah terdaftar pada rekening lain.",
+            'product_id.exists'     => 'Produk tabungan yang dipilih tidak valid.',
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['status' => 'error', 'errors' => $validator->errors()], 422);
+            return response()->json([
+                'status'  => 'error',
+                'message' => $validator->errors()->first(),
+                'errors'  => $validator->errors()
+            ], 422);
         }
 
         $cardNumber = $request->card_number;
@@ -417,7 +435,32 @@ class AccountController extends Controller
             ]);
 
             if ($response->successful()) {
-                return response()->json($response->json());
+                $payload = $response->json();
+                
+                // Coba enrich data dengan flag has_account jika hasil pencarian valid
+                if (isset($payload['data']['data']) && is_array($payload['data']['data'])) {
+                    $students = $payload['data']['data'];
+                    $nises = collect($students)->pluck('nis')->filter()->values();
+                    
+                    if ($nises->isNotEmpty()) {
+                        $existingAccounts = Account::whereIn('account_number', $nises)
+                            ->get(['account_number', 'status'])
+                            ->keyBy('account_number');
+                            
+                        foreach ($students as &$student) {
+                            $nis = $student['nis'] ?? null;
+                            if ($nis && $existingAccounts->has($nis)) {
+                                $student['has_account'] = true;
+                                $student['account_status'] = $existingAccounts[$nis]->status;
+                            } else {
+                                $student['has_account'] = false;
+                            }
+                        }
+                        $payload['data']['data'] = $students;
+                    }
+                }
+                
+                return response()->json($payload);
             }
 
             Log::error('SMPT search failed', [

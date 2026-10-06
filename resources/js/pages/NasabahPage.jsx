@@ -40,12 +40,18 @@ const NasabahPage = () => {
     // Rekening Koran State
     const [koranAccount, setKoranAccount] = useState(null);
 
+    // Product & Status filter state
+    const [productFilter, setProductFilter] = useState('');
+    const [statusFilter, setStatusFilter] = useState('');
+
     // API Hooks
     const { data: accountsRes, isLoading, isFetching } = useGetAccountsQuery({
         page,
         search,
         per_page: 10,
-        is_instansi: activeTab === 'instansi' ? '1' : '0'
+        is_instansi: activeTab === 'instansi' ? '1' : '0',
+        product_id: productFilter || undefined,
+        status: statusFilter || undefined
     });
     const [triggerSearch, { data: studentResults, isFetching: isSearchingStudents }] = useLazySearchSmptStudentsQuery();
     const [createAccount, { isLoading: isCreating }] = useCreateAccountMutation();
@@ -86,7 +92,7 @@ const NasabahPage = () => {
             )
         },
         {
-            accessorKey: 'product.name',
+            accessorKey: 'product.product_name',
             header: 'Produk & Limit',
             cell: ({ row }) => {
                 const customLimit = row.original.daily_withdrawal_limit;
@@ -96,7 +102,7 @@ const NasabahPage = () => {
 
                 return (
                     <div className="flex flex-col">
-                        <span className="text-xs font-bold text-gray-700">{row.original.product?.name || '-'}</span>
+                        <span className="text-xs font-bold text-gray-700">{row.original.product?.product_name || row.original.product?.name || '-'}</span>
                         <div className="flex items-center gap-1 mt-0.5">
                             <span className="text-[10px] text-gray-500">
                                 Limit: <strong className={isCustom ? "text-amber-600 font-bold" : "text-gray-600"}>
@@ -232,7 +238,8 @@ const NasabahPage = () => {
             setCardNumber('');
             toast.success('Rekening berhasil dibuka!');
         } catch (err) {
-            toast.error('Gagal membuka rekening: ' + (err.data?.message || 'Terjadi kesalahan'));
+            const firstError = err.data?.message || err.data?.errors?.account_number?.[0] || 'Terjadi kesalahan pada server';
+            toast.error(`Gagal membuka rekening: ${firstError}`);
         }
     };
 
@@ -326,7 +333,7 @@ const NasabahPage = () => {
             {/* Tabs */}
             <div className="flex items-center gap-1 border-b border-gray-200">
                 <button
-                    onClick={() => { setActiveTab('santri'); setPage(1); setSearch(''); }}
+                    onClick={() => { setActiveTab('santri'); setPage(1); setSearch(''); setProductFilter(''); setStatusFilter(''); }}
                     className={`px-4 py-2 text-sm font-semibold border-b-2 transition-colors ${
                         activeTab === 'santri'
                             ? 'border-blue-600 text-blue-600'
@@ -337,7 +344,7 @@ const NasabahPage = () => {
                     Rekening Santri
                 </button>
                 <button
-                    onClick={() => { setActiveTab('instansi'); setPage(1); setSearch(''); }}
+                    onClick={() => { setActiveTab('instansi'); setPage(1); setSearch(''); setProductFilter(''); setStatusFilter(''); }}
                     className={`px-4 py-2 text-sm font-semibold border-b-2 transition-colors ${
                         activeTab === 'instansi'
                             ? 'border-blue-600 text-blue-600'
@@ -359,6 +366,40 @@ const NasabahPage = () => {
                 onSearchChange={setSearch}
                 onRowClick={(row) => navigate(`/nasabah/${row.account_number}`)}
                 placeholder="Cari nama santri atau nomor rekening..."
+                extraFilters={(
+                    <div className="flex items-center gap-2">
+                        <select
+                            id="product-filter"
+                            value={productFilter}
+                            onChange={(e) => {
+                                setProductFilter(e.target.value);
+                                setPage(1);
+                            }}
+                            className="w-44 px-2.5 py-1.5 bg-white border border-gray-300 rounded-md focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-xs text-gray-700 cursor-pointer"
+                        >
+                            <option value="">Semua Produk Bank</option>
+                            {products.map((p) => (
+                                <option key={p.id} value={p.id}>{p.product_name}</option>
+                            ))}
+                        </select>
+
+                        <select
+                            id="status-filter"
+                            value={statusFilter}
+                            onChange={(e) => {
+                                setStatusFilter(e.target.value);
+                                setPage(1);
+                            }}
+                            className="w-32 px-2.5 py-1.5 bg-white border border-gray-300 rounded-md focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-xs text-gray-700 cursor-pointer"
+                        >
+                            <option value="">Semua Status</option>
+                            <option value="AKTIF">Aktif</option>
+                            <option value="TIDAK AKTIF">Tidak Aktif</option>
+                            <option value="TERBLOKIR">Terblokir</option>
+                            <option value="TUTUP">Tutup</option>
+                        </select>
+                    </div>
+                )}
             />
 
             {/* Buka Rekening Modal */}
@@ -412,7 +453,13 @@ const NasabahPage = () => {
                                                     <p className="text-xs font-bold text-gray-800 group-hover:text-blue-600">{student.first_name} {student.last_name}</p>
                                                     <p className="text-[10px] text-gray-500 font-mono">NIS: {student.nis}</p>
                                                 </div>
-                                                <Plus className="w-3.5 h-3.5 text-gray-300 group-hover:text-blue-600" />
+                                                {student.has_account ? (
+                                                    <span className="text-[10px] font-semibold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded border border-amber-300">
+                                                        Rekening Aktif
+                                                    </span>
+                                                ) : (
+                                                    <Plus className="w-3.5 h-3.5 text-gray-300 group-hover:text-blue-600" />
+                                                )}
                                             </button>
                                         ))}
                                     </div>
@@ -420,14 +467,24 @@ const NasabahPage = () => {
 
                                 {/* Selected Student Card */}
                                 {selectedStudent && (
-                                    <div className="p-2.5 bg-blue-50 border border-blue-200 rounded-md flex items-center justify-between">
+                                    <div className={`p-2.5 border rounded-md flex items-center justify-between ${
+                                        selectedStudent.has_account 
+                                            ? 'bg-amber-50 border-amber-300' 
+                                            : 'bg-blue-50 border-blue-200'
+                                    }`}>
                                         <div className="flex items-center gap-2.5">
-                                            <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center font-bold text-white text-xs">
+                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-white text-xs ${
+                                                selectedStudent.has_account ? 'bg-amber-600' : 'bg-blue-600'
+                                            }`}>
                                                 {selectedStudent.first_name[0]}
                                             </div>
                                             <div>
-                                                <p className="text-xs font-bold text-blue-900">{selectedStudent.first_name} {selectedStudent.last_name}</p>
-                                                <p className="text-[10px] text-blue-600 font-mono font-medium">{selectedStudent.nis}</p>
+                                                <p className={`text-xs font-bold ${selectedStudent.has_account ? 'text-amber-900' : 'text-blue-900'}`}>
+                                                    {selectedStudent.first_name} {selectedStudent.last_name}
+                                                </p>
+                                                <p className={`text-[10px] font-mono font-medium ${selectedStudent.has_account ? 'text-amber-600' : 'text-blue-600'}`}>
+                                                    NIS: {selectedStudent.nis}
+                                                </p>
                                             </div>
                                         </div>
                                         <button 
@@ -436,6 +493,17 @@ const NasabahPage = () => {
                                         >
                                             Batal
                                         </button>
+                                    </div>
+                                )}
+
+                                {/* Warning if student already has account */}
+                                {selectedStudent?.has_account && (
+                                    <div className="flex items-start gap-2 text-[11px] text-amber-800 bg-amber-100 border border-amber-300 rounded-md p-2">
+                                        <AlertCircle className="w-4 h-4 mt-0.5 shrink-0 text-amber-600" />
+                                        <span>
+                                            Santri ini sudah memiliki rekening aktif (Status: {selectedStudent.account_status || 'AKTIF'}). 
+                                            Proses pembukaan rekening akan gagal karena NIS sudah terdaftar di sistem Bank Santri.
+                                        </span>
                                     </div>
                                 )}
                             </div>
@@ -477,15 +545,15 @@ const NasabahPage = () => {
                                 </button>
                                 <button 
                                     onClick={handleCreateAccount}
-                                    disabled={!selectedStudent || isCreating}
+                                    disabled={!selectedStudent || selectedStudent?.has_account || isCreating}
                                     className={`flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md font-medium text-xs text-white transition-all ${
-                                        selectedStudent && !isCreating 
+                                        selectedStudent && !selectedStudent?.has_account && !isCreating
                                             ? 'bg-blue-600 hover:bg-blue-700' 
                                             : 'bg-gray-300 cursor-not-allowed'
                                     }`}
                                 >
                                     {isCreating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ShieldCheck className="w-3.5 h-3.5" />}
-                                    Konfirmasi & Buka
+                                    {selectedStudent?.has_account ? 'Sudah Punya Rekening' : 'Konfirmasi & Buka'}
                                 </button>
                             </div>
                         </div>

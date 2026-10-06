@@ -3,10 +3,13 @@
 namespace App\Http\Controllers\Api\Reports;
 
 use App\Http\Controllers\Controller;
+use App\Models\Account;
+use App\Models\Product;
 use App\Models\TransactionLedger;
 use App\Models\ChartOfAccount;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class AccountingReportController extends Controller
 {
@@ -393,5 +396,185 @@ class AccountingReportController extends Controller
                 ]
             ]
         ]);
+    }
+
+    /**
+     * Data Rekapitulasi Produk Bank & Rincian Transaksi
+     */
+    public function rekapitulasi(Request $request)
+    {
+        $productId = $request->get('product_id');
+        $startDate = $request->get('start_date', now()->startOfMonth()->format('Y-m-d'));
+        $endDate   = $request->get('end_date', now()->format('Y-m-d'));
+        $category  = $request->get('category'); // all, or specific type
+
+        // 1. Rekapitulasi per Produk Bank
+        $productsQuery = Product::withCount(['accounts as total_accounts' => function ($q) {
+            $q->where('status', '!=', 'TUTUP');
+        }])
+        ->withSum('accounts as total_balance', 'balance');
+
+        if (!empty($productId)) {
+            $productsQuery->where('id', $productId);
+        }
+
+        $products = $productsQuery->get()->map(function ($p) use ($startDate, $endDate) {
+            // Hitung mutasi kredit (masuk) dan debit (keluar) untuk semua rekening pada produk ini
+            $movements = DB::table('account_movements')
+                ->join('accounts', 'account_movements.account_number', '=', 'accounts.account_number')
+                ->where('accounts.product_id', $p->id)
+                ->whereBetween('account_movements.created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
+                ->select(
+                    DB::raw("SUM(CASE WHEN account_movements.type = 'credit' THEN account_movements.amount ELSE 0 END) as total_credit"),
+                    DB::raw("SUM(CASE WHEN account_movements.type = 'debit' THEN account_movements.amount ELSE 0 END) as total_debit")
+                )->first();
+
+            $p->total_credit = (float) ($movements->total_credit ?? 0);
+            $p->total_debit  = (float) ($movements->total_debit ?? 0);
+            $p->net_change   = $p->total_credit - $p->total_debit;
+            return $p;
+        });
+
+        // 2. Rincian Transaksi / Mutasi
+        $movementsQuery = DB::table('account_movements')
+            ->join('accounts', 'account_movements.account_number', '=', 'accounts.account_number')
+            ->join('products', 'accounts.product_id', '=', 'products.id')
+            ->leftJoin('transactions', 'account_movements.transaction_id', '=', 'transactions.id')
+            ->whereBetween('account_movements.created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
+            ->select(
+                'account_movements.id',
+                'account_movements.created_at',
+                'account_movements.account_number',
+                'accounts.customer_name',
+                'products.product_name',
+                'products.id as product_id',
+                'account_movements.type',
+                'account_movements.amount',
+                'account_movements.balance_before',
+                'account_movements.balance_after',
+                'account_movements.description',
+                'transactions.reference_number',
+                'transactions.channel'
+            );
+
+        if (!empty($productId)) {
+            $movementsQuery->where('accounts.product_id', $productId);
+        }
+
+        if (!empty($category) && $category !== 'all') {
+            $movementsQuery->where('account_movements.type', $category);
+        }
+
+        $transactionsList = $movementsQuery->orderBy('account_movements.created_at', 'desc')->paginate(50);
+
+        return response()->json([
+            'status' => 'success',
+            'data'   => [
+                'filters' => [
+                    'product_id' => $productId,
+                    'start_date' => $startDate,
+                    'end_date'   => $endDate,
+                    'category'   => $category,
+                ],
+                'summary' => [
+                    'total_accounts' => (int) $products->sum('total_accounts'),
+                    'total_balance'  => (float) $products->sum('total_balance'),
+                    'total_masuk'    => (float) $products->sum('total_credit'),
+                    'total_keluar'   => (float) $products->sum('total_debit'),
+                    'net_change'     => (float) $products->sum('net_change'),
+                ],
+                'products'     => $products,
+                'transactions' => $transactionsList
+            ]
+        ]);
+    }
+
+    /**
+     * Cetak PDF Rekapitulasi dengan Kolom Tanda Tangan Pejabat Bank
+     */
+    public function printRekapitulasi(Request $request)
+    {
+        $productId = $request->get('product_id');
+        $startDate = $request->get('start_date', now()->startOfMonth()->format('Y-m-d'));
+        $endDate   = $request->get('end_date', now()->format('Y-m-d'));
+        $category  = $request->get('category');
+
+        $selectedProduct = $productId ? Product::find($productId) : null;
+
+        // Rekap per Produk
+        $productsQuery = Product::withCount(['accounts as total_accounts' => function ($q) {
+            $q->where('status', '!=', 'TUTUP');
+        }])
+        ->withSum('accounts as total_balance', 'balance');
+
+        if (!empty($productId)) {
+            $productsQuery->where('id', $productId);
+        }
+
+        $products = $productsQuery->get()->map(function ($p) use ($startDate, $endDate) {
+            $movements = DB::table('account_movements')
+                ->join('accounts', 'account_movements.account_number', '=', 'accounts.account_number')
+                ->where('accounts.product_id', $p->id)
+                ->whereBetween('account_movements.created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
+                ->select(
+                    DB::raw("SUM(CASE WHEN account_movements.type = 'credit' THEN account_movements.amount ELSE 0 END) as total_credit"),
+                    DB::raw("SUM(CASE WHEN account_movements.type = 'debit' THEN account_movements.amount ELSE 0 END) as total_debit")
+                )->first();
+
+            $p->total_credit = (float) ($movements->total_credit ?? 0);
+            $p->total_debit  = (float) ($movements->total_debit ?? 0);
+            $p->net_change   = $p->total_credit - $p->total_debit;
+            return $p;
+        });
+
+        // Rincian Transaksi (maksimal 300 untuk PDF)
+        $movementsQuery = DB::table('account_movements')
+            ->join('accounts', 'account_movements.account_number', '=', 'accounts.account_number')
+            ->join('products', 'accounts.product_id', '=', 'products.id')
+            ->leftJoin('transactions', 'account_movements.transaction_id', '=', 'transactions.id')
+            ->whereBetween('account_movements.created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
+            ->select(
+                'account_movements.id',
+                'account_movements.created_at',
+                'account_movements.account_number',
+                'accounts.customer_name',
+                'products.product_name',
+                'account_movements.type',
+                'account_movements.amount',
+                'account_movements.balance_before',
+                'account_movements.balance_after',
+                'account_movements.description',
+                'transactions.reference_number'
+            );
+
+        if (!empty($productId)) {
+            $movementsQuery->where('accounts.product_id', $productId);
+        }
+
+        if (!empty($category) && $category !== 'all') {
+            $movementsQuery->where('account_movements.type', $category);
+        }
+
+        $transactions = $movementsQuery->orderBy('account_movements.created_at', 'desc')->limit(300)->get();
+
+        $summary = [
+            'total_accounts' => (int) $products->sum('total_accounts'),
+            'total_balance'  => (float) $products->sum('total_balance'),
+            'total_masuk'    => (float) $products->sum('total_credit'),
+            'total_keluar'   => (float) $products->sum('total_debit'),
+            'net_change'     => (float) $products->sum('net_change'),
+        ];
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.rekapitulasi', [
+            'products'         => $products,
+            'transactions'     => $transactions,
+            'summary'          => $summary,
+            'selectedProduct'  => $selectedProduct,
+            'startDate'        => $startDate,
+            'endDate'          => $endDate,
+            'generated_at'     => now()->translatedFormat('d F Y H:i:s'),
+        ])->setPaper('a4', 'portrait');
+
+        return $pdf->download('Rekapitulasi_BankSantri_' . date('Ymd_His') . '.pdf');
     }
 }

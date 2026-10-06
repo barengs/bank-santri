@@ -330,6 +330,17 @@ export const getRouteMeta = (pathname) => {
         };
     }
 
+    if (pathname === '/laporan/rekapitulasi') {
+        return {
+            title: 'Rekapitulasi Produk Bank',
+            section: 'Laporan',
+            crumbs: [
+                { name: 'Laporan', path: '/laporan' },
+                { name: 'Rekapitulasi Produk Bank' }
+            ]
+        };
+    }
+
     // Dynamic Fallback
     const segments = pathname.split('/').filter(Boolean);
     const lastSeg = segments[segments.length - 1] || 'Dashboard';

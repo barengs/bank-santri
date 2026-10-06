@@ -41,6 +41,13 @@ export const reportApi = baseApi.injectEndpoints({
             query: () => '/reports/reconciliation',
             providesTags: ['Reconciliation'],
         }),
+        getRekapitulasi: builder.query({
+            query: (params) => ({
+                url: '/reports/rekapitulasi',
+                params,
+            }),
+            providesTags: ['Rekapitulasi'],
+        }),
     }),
 });
 
@@ -51,4 +58,5 @@ export const {
     useGetProfitLossQuery,
     useGetBalanceSheetQuery,
     useGetReconciliationQuery,
+    useGetRekapitulasiQuery,
 } = reportApi;

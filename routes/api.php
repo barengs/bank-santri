@@ -178,5 +178,7 @@ Route::group(['middleware' => ['auth:api']], function () {
         Route::get('profit-loss', [\App\Http\Controllers\Api\Reports\AccountingReportController::class, 'profitLoss']);
         Route::get('balance-sheet', [\App\Http\Controllers\Api\Reports\AccountingReportController::class, 'balanceSheet']);
         Route::get('reconciliation', [\App\Http\Controllers\Api\Reports\AccountingReportController::class, 'savingsReconciliation']);
+        Route::get('rekapitulasi', [\App\Http\Controllers\Api\Reports\AccountingReportController::class, 'rekapitulasi']);
+        Route::get('rekapitulasi/print', [\App\Http\Controllers\Api\Reports\AccountingReportController::class, 'printRekapitulasi']);
     });
 });

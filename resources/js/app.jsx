@@ -45,6 +45,7 @@ import {
     TrialBalancePage, 
     FinancialStatementPage, 
     ReconciliationPage,
+    RekapitulasiPage,
     LaporanPage 
 } from './pages/reports';
 
@@ -106,6 +107,7 @@ const App = () => {
                             <Route path="laporan/neraca-saldo" element={<TrialBalancePage />} />
                             <Route path="laporan/keuangan" element={<FinancialStatementPage />} />
                             <Route path="laporan/rekonsiliasi" element={<ReconciliationPage />} />
+                            <Route path="laporan/rekapitulasi" element={<RekapitulasiPage />} />
                         </Route>
                     </Routes>
                 </AuthMonitor>

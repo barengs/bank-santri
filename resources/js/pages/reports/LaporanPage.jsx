@@ -77,6 +77,12 @@ const LaporanPage = () => {
                     icon: <Scale className="w-4 h-4 text-emerald-600" />,
                     path: '/laporan/rekonsiliasi',
                     detail: 'Pencocokan saldo nasabah (Sub-Ledger) vs GL 2100.'
+                },
+                {
+                    name: 'Rekapitulasi Produk Bank',
+                    icon: <Wallet className="w-4 h-4 text-indigo-600" />,
+                    path: '/laporan/rekapitulasi',
+                    detail: 'Rekap saldo, mutasi masuk/keluar, dan rincian transaksi per produk.'
                 }
             ]
         }

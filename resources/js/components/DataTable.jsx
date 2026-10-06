@@ -31,6 +31,7 @@ const DataTable = ({
     perPage = null,
     onPerPageChange = null,
     pageSizeOptions = [10, 20, 50, 100],
+    extraFilters = null,
 }) => {
     const [sorting, setSorting] = useState([]);
     const [globalFilter, setGlobalFilter] = useState('');
@@ -66,18 +67,21 @@ const DataTable = ({
             {/* Table Search & Controls */}
             {!hideSearch && (
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div className="relative flex-1 max-w-xs">
-                        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
-                        <input 
-                            type="text"
-                            value={globalFilter ?? ''}
-                            onChange={(e) => {
-                                setGlobalFilter(e.target.value);
-                                onSearchChange?.(e.target.value);
-                            }}
-                            placeholder={placeholder}
-                            className="w-full pl-8 pr-3 py-1.5 bg-white border border-gray-300 rounded-md focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-xs text-gray-700 placeholder-gray-400"
-                        />
+                    <div className="flex flex-wrap items-center gap-2.5 flex-1">
+                        <div className="relative flex-1 max-w-xs">
+                            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+                            <input 
+                                type="text"
+                                value={globalFilter ?? ''}
+                                onChange={(e) => {
+                                    setGlobalFilter(e.target.value);
+                                    onSearchChange?.(e.target.value);
+                                }}
+                                placeholder={placeholder}
+                                className="w-full pl-8 pr-3 py-1.5 bg-white border border-gray-300 rounded-md focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-xs text-gray-700 placeholder-gray-400"
+                            />
+                        </div>
+                        {extraFilters}
                     </div>
                 </div>
             )}
