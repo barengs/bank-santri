@@ -9,6 +9,7 @@ use App\Models\Setting;
 use App\Models\Transaction;
 use App\Services\AccountingService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Validator;
@@ -91,19 +92,26 @@ class KoperasiController extends Controller
             ], 422);
         }
 
-        // 2. Ambil data profil & foto santri dari SMPT
+        // 2. Ambil data profil & foto santri dari SMPT (dengan cache 30 menit & timeout cepat 1.5s)
         $studentData = null;
-        try {
-            $smptUrl = config('services.smpt.url');
-            $internalKey = config('services.smpt.key') ?: config('services.bank_santri.key');
-            $res = Http::timeout(4)
-                ->withHeaders(['X-Internal-Key' => $internalKey])
-                ->get("{$smptUrl}/api/main/student/{$account->customer_id}");
-            if ($res->successful()) {
-                $studentData = $res->json('data');
-            }
-        } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::warning('Koperasi: Gagal ambil foto santri dari SMPT: ' . $e->getMessage());
+        if (!empty($account->customer_id)) {
+            $studentData = Cache::remember("smpt:student:{$account->customer_id}", 1800, function () use ($account) {
+                try {
+                    $smptUrl = config('services.smpt.url');
+                    $internalKey = config('services.smpt.internal_key') ?: config('services.bank_santri.key');
+                    if (!$smptUrl) return null;
+
+                    $res = Http::connectTimeout(1)
+                        ->timeout(1.5)
+                        ->withHeaders(['X-Internal-Key' => $internalKey])
+                        ->get("{$smptUrl}/api/main/student/{$account->customer_id}");
+
+                    return $res->successful() ? $res->json('data') : null;
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::warning('Koperasi: Gagal ambil foto santri dari SMPT: ' . $e->getMessage());
+                    return null;
+                }
+            });
         }
 
         // 3. Hitung limit harian santri
