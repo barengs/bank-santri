@@ -425,4 +425,124 @@ class KoperasiController extends Controller
             'data'   => $trx,
         ]);
     }
+
+    /**
+     * Data agregat terpadu Dashboard Mobile POS (SantriPay & Meal).
+     */
+    public function dashboard(Request $request)
+    {
+        $merchant = $request->get('koperasi_merchant');
+        $today = now()->toDateString();
+
+        // 1. Ambil staff / user yang sedang login jika token JWT disertakan
+        $authUser = null;
+        try {
+            if (auth('api')->check()) {
+                $authUser = auth('api')->user();
+            }
+        } catch (\Throwable $e) {}
+
+        // 2. Transaksi Koperasi hari ini
+        $koperasiQuery = KoperasiTransaction::whereDate('created_at', $today)
+            ->where('outlet_name', 'not like', '%Dapur%');
+        $koperasiTotal = (float) (clone $koperasiQuery)->sum('amount');
+        $koperasiCount = (int) (clone $koperasiQuery)->count();
+
+        // 3. Distribusi Makan DPU hari ini
+        $dapurQuery = KoperasiTransaction::whereDate('created_at', $today)
+            ->where('outlet_name', 'like', '%Dapur%');
+        $dapurCount = (int) (clone $dapurQuery)->count();
+
+        // Target porsi: hitung total santri aktif di sistem pesantren
+        $totalSantri = Account::where('status', 'AKTIF')->count();
+        $targetPortions = $totalSantri > 0 ? $totalSantri : 620;
+        $dapurPercent = $targetPortions > 0 ? round(($dapurCount / $targetPortions) * 100, 1) : 0;
+
+        // 4. Sesi Makan Aktif & Menu Hari Ini
+        $nowTime = now()->format('H:i');
+        $sessionsSetting = Setting::where('key', 'dapur_meal_sessions')->value('value');
+        $sessions = $sessionsSetting ? json_decode($sessionsSetting, true) : [
+            ['id' => 'pagi',  'name' => 'Makan Pagi (Sarapan)', 'start_time' => '06:00', 'end_time' => '08:30', 'price' => 10000, 'is_active' => true],
+            ['id' => 'siang', 'name' => 'Makan Siang',          'start_time' => '11:30', 'end_time' => '13:45', 'price' => 12000, 'is_active' => true],
+            ['id' => 'malam', 'name' => 'Makan Malam',          'start_time' => '17:30', 'end_time' => '19:45', 'price' => 12000, 'is_active' => true],
+        ];
+
+        $activeSession = null;
+        foreach ($sessions as $s) {
+            if (($s['is_active'] ?? true) && $nowTime >= $s['start_time'] && $nowTime <= $s['end_time']) {
+                $activeSession = $s;
+                break;
+            }
+        }
+
+        $menuSetting = Setting::where('key', 'dapur_menu_today')->value('value');
+        $menuToday = $menuSetting ? json_decode($menuSetting, true) : [
+            'name'        => 'Ayam Semur Manis + Sayur Bening',
+            'side_dishes' => 'Lauk: Tempe Mendoan, Buah Pisang Ambon.',
+            'shift_label' => 'Shift: 11:30 - 13:30 WIB',
+            'portions_left' => max(0, $targetPortions - $dapurCount),
+            'image_url'   => 'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?auto=format&fit=crop&w=150&q=80',
+        ];
+
+        // 5. Riwayat 6 Transaksi Terakhir (Live)
+        $recentTransactions = KoperasiTransaction::with('account')
+            ->latest('id')
+            ->limit(6)
+            ->get()
+            ->map(function ($t) {
+                $isDapur = str_contains($t->outlet_name ?? '', 'Dapur');
+                $customerName = $t->account->customer_name ?? 'Santri';
+                $words = explode(' ', trim($customerName));
+                $initials = '';
+                foreach (array_slice($words, 0, 2) as $w) {
+                    $initials .= strtoupper(substr($w, 0, 1));
+                }
+
+                return [
+                    'id'               => $t->id,
+                    'reference_number' => $t->reference_number,
+                    'customer_name'    => $customerName,
+                    'initials'         => $initials ?: 'ST',
+                    'class_name'       => $t->account->account_number ?? '-',
+                    'amount'           => (float) $t->amount,
+                    'amount_formatted' => $isDapur ? 'Makan ' . ($t->item_description ?: 'Valid') : 'Rp ' . number_format($t->amount, 0, ',', '.'),
+                    'type'             => $isDapur ? 'DPU' : 'POS',
+                    'time'             => $t->created_at ? $t->created_at->format('H:i') : '-',
+                    'is_dapur'         => $isDapur,
+                ];
+            });
+
+        return response()->json([
+            'status' => 'success',
+            'data'   => [
+                'server_time' => now()->toDateTimeString(),
+                'user'        => $authUser ? [
+                    'id'    => $authUser->id,
+                    'name'  => $authUser->name,
+                    'email' => $authUser->email,
+                    'role'  => $authUser->role,
+                ] : null,
+                'merchant'    => $merchant ? [
+                    'id'   => $merchant->id,
+                    'name' => $merchant->name,
+                ] : null,
+                'stats'       => [
+                    'koperasi_total'           => $koperasiTotal,
+                    'koperasi_total_formatted' => 'Rp ' . number_format($koperasiTotal, 0, ',', '.'),
+                    'koperasi_count'           => $koperasiCount,
+                    'dapur_count'              => $dapurCount,
+                    'dapur_target'             => $targetPortions,
+                    'dapur_percentage'         => $dapurPercent,
+                    'offline_queue_count'      => 0,
+                    'cash_in_drawer'           => $koperasiTotal,
+                    'cash_in_drawer_formatted' => 'Rp ' . number_format($koperasiTotal, 0, ',', '.'),
+                ],
+                'dapur'       => [
+                    'active_session' => $activeSession,
+                    'menu_today'     => $menuToday,
+                ],
+                'recent_transactions' => $recentTransactions,
+            ],
+        ]);
+    }
 }

@@ -131,6 +131,7 @@ Route::group(['prefix' => 'main', 'middleware' => ['autoprovision', 'auth:api']]
 // Koperasi & Dapur Outlet API — autentikasi via X-Koperasi-Key header (tidak butuh JWT)
 Route::group(['prefix' => 'koperasi', 'middleware' => ['koperasi.key']], function () {
     Route::get('config',              [KoperasiController::class, 'config']);
+    Route::get('dashboard',           [KoperasiController::class, 'dashboard']);
     Route::get('check/{identifier}',  [KoperasiController::class, 'check']);
     Route::post('debit',              [KoperasiController::class, 'debit']);
     Route::get('transactions',        [KoperasiController::class, 'transactions']);

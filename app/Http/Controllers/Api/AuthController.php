@@ -77,12 +77,21 @@ class AuthController extends Controller
 
     protected function respondWithToken($token)
     {
+        $user = auth('api')->user();
+        $roles = $user ? $user->getRoleNames()->toArray() : [];
+        $activeRole = !empty($roles) ? $roles[0] : ($user?->role ?? 'kasir_koperasi');
+
+        $userData = $user ? array_merge($user->toArray(), [
+            'role'  => $activeRole,
+            'roles' => $roles,
+        ]) : null;
+
         return response()->json([
             'status'       => 'success',
             'access_token' => $token,
             'token_type'   => 'bearer',
             'expires_in'   => config('jwt.ttl') * 60,
-            'user'         => auth('api')->user(),
+            'user'         => $userData,
         ]);
     }
 }
