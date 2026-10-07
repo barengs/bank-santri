@@ -36,7 +36,7 @@ class KoperasiController extends Controller
         $preventDoubleTap = $preventDoubleTapSetting === null ? true : (bool) $preventDoubleTapSetting;
 
         // Tentukan sesi makan aktif saat ini
-        $nowTime = now()->format('H:i');
+        $nowTime = now()->timezone('Asia/Jakarta')->format('H:i');
         $activeSession = null;
         foreach ($sessions as $session) {
             if (($session['is_active'] ?? true) && $nowTime >= $session['start_time'] && $nowTime <= $session['end_time']) {
@@ -133,7 +133,7 @@ class KoperasiController extends Controller
         // 4. Khusus Dapur Umum: Cek Sesi Makan Aktif & Riwayat Tap Hari Ini
         $kitchenStatus = null;
         if ($outletType === 'dapur') {
-            $nowTime = now()->format('H:i');
+            $nowTime = now()->timezone('Asia/Jakarta')->format('H:i');
             $sessionsSetting = Setting::where('key', 'dapur_meal_sessions')->value('value');
             $sessions = $sessionsSetting ? json_decode($sessionsSetting, true) : [];
             $activeSession = null;
@@ -459,7 +459,7 @@ class KoperasiController extends Controller
         $dapurPercent = $targetPortions > 0 ? round(($dapurCount / $targetPortions) * 100, 1) : 0;
 
         // 4. Sesi Makan Aktif & Menu Hari Ini
-        $nowTime = now()->format('H:i');
+        $nowTime = now()->timezone('Asia/Jakarta')->format('H:i');
         $sessionsSetting = Setting::where('key', 'dapur_meal_sessions')->value('value');
         $sessions = $sessionsSetting ? json_decode($sessionsSetting, true) : [
             ['id' => 'pagi',  'name' => 'Makan Pagi (Sarapan)', 'start_time' => '06:00', 'end_time' => '08:30', 'price' => 10000, 'is_active' => true],
