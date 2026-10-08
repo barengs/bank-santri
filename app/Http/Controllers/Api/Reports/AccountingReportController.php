@@ -420,26 +420,36 @@ class AccountingReportController extends Controller
             $productsQuery->where('id', $productId);
         }
 
-        $products = $productsQuery->get()->map(function ($p) use ($startDate, $endDate, $transactionItemId, $category) {
-            // Hitung mutasi kredit (masuk) dan debit (keluar) untuk semua rekening pada produk ini
-            $movements = DB::table('account_movements')
-                ->join('accounts', 'account_movements.account_number', '=', 'accounts.account_number')
-                ->leftJoin('transactions', 'account_movements.transaction_id', '=', 'transactions.id')
-                ->where('accounts.product_id', $p->id)
-                ->whereBetween('account_movements.created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
-                ->select(
-                    DB::raw("SUM(CASE WHEN account_movements.type = 'credit' THEN account_movements.amount ELSE 0 END) as total_credit"),
-                    DB::raw("SUM(CASE WHEN account_movements.type = 'debit' THEN account_movements.amount ELSE 0 END) as total_debit")
-                );
+        $allProducts = $productsQuery->get();
 
-            if (!empty($category) && $category !== 'all') {
-                $movements->where('account_movements.type', $category);
-            }
+        // Hitung mutasi kredit (masuk) dan debit (keluar) sekaligus per produk dengan GROUP BY (1 query cepat)
+        $groupedMovementsQuery = DB::table('account_movements')
+            ->join('accounts', 'account_movements.account_number', '=', 'accounts.account_number')
+            ->leftJoin('transactions', 'account_movements.transaction_id', '=', 'transactions.id')
+            ->whereBetween('account_movements.created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
+            ->select(
+                'accounts.product_id',
+                DB::raw("SUM(CASE WHEN account_movements.type = 'credit' THEN account_movements.amount ELSE 0 END) as total_credit"),
+                DB::raw("SUM(CASE WHEN account_movements.type = 'debit' THEN account_movements.amount ELSE 0 END) as total_debit")
+            )
+            ->groupBy('accounts.product_id');
 
-            $movements = $this->applyTransactionItemFilter($movements, $transactionItemId)->first();
+        if (!empty($productId)) {
+            $groupedMovementsQuery->where('accounts.product_id', $productId);
+        }
 
-            $p->total_credit = (float) ($movements->total_credit ?? 0);
-            $p->total_debit  = (float) ($movements->total_debit ?? 0);
+        if (!empty($category) && $category !== 'all') {
+            $groupedMovementsQuery->where('account_movements.type', $category);
+        }
+
+        $movementsStats = $this->applyTransactionItemFilter($groupedMovementsQuery, $transactionItemId)
+            ->get()
+            ->keyBy('product_id');
+
+        $products = $allProducts->map(function ($p) use ($movementsStats) {
+            $stat = $movementsStats->get($p->id);
+            $p->total_credit = (float) ($stat->total_credit ?? 0);
+            $p->total_debit  = (float) ($stat->total_debit ?? 0);
             $p->net_change   = $p->total_credit - $p->total_debit;
             return $p;
         });
@@ -527,25 +537,35 @@ class AccountingReportController extends Controller
             $productsQuery->where('id', $productId);
         }
 
-        $products = $productsQuery->get()->map(function ($p) use ($startDate, $endDate, $transactionItemId, $category) {
-            $movements = DB::table('account_movements')
-                ->join('accounts', 'account_movements.account_number', '=', 'accounts.account_number')
-                ->leftJoin('transactions', 'account_movements.transaction_id', '=', 'transactions.id')
-                ->where('accounts.product_id', $p->id)
-                ->whereBetween('account_movements.created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
-                ->select(
-                    DB::raw("SUM(CASE WHEN account_movements.type = 'credit' THEN account_movements.amount ELSE 0 END) as total_credit"),
-                    DB::raw("SUM(CASE WHEN account_movements.type = 'debit' THEN account_movements.amount ELSE 0 END) as total_debit")
-                );
+        $allProducts = $productsQuery->get();
 
-            if (!empty($category) && $category !== 'all') {
-                $movements->where('account_movements.type', $category);
-            }
+        $groupedMovementsQuery = DB::table('account_movements')
+            ->join('accounts', 'account_movements.account_number', '=', 'accounts.account_number')
+            ->leftJoin('transactions', 'account_movements.transaction_id', '=', 'transactions.id')
+            ->whereBetween('account_movements.created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
+            ->select(
+                'accounts.product_id',
+                DB::raw("SUM(CASE WHEN account_movements.type = 'credit' THEN account_movements.amount ELSE 0 END) as total_credit"),
+                DB::raw("SUM(CASE WHEN account_movements.type = 'debit' THEN account_movements.amount ELSE 0 END) as total_debit")
+            )
+            ->groupBy('accounts.product_id');
 
-            $movements = $this->applyTransactionItemFilter($movements, $transactionItemId)->first();
+        if (!empty($productId)) {
+            $groupedMovementsQuery->where('accounts.product_id', $productId);
+        }
 
-            $p->total_credit = (float) ($movements->total_credit ?? 0);
-            $p->total_debit  = (float) ($movements->total_debit ?? 0);
+        if (!empty($category) && $category !== 'all') {
+            $groupedMovementsQuery->where('account_movements.type', $category);
+        }
+
+        $movementsStats = $this->applyTransactionItemFilter($groupedMovementsQuery, $transactionItemId)
+            ->get()
+            ->keyBy('product_id');
+
+        $products = $allProducts->map(function ($p) use ($movementsStats) {
+            $stat = $movementsStats->get($p->id);
+            $p->total_credit = (float) ($stat->total_credit ?? 0);
+            $p->total_debit  = (float) ($stat->total_debit ?? 0);
             $p->net_change   = $p->total_credit - $p->total_debit;
             return $p;
         });
@@ -616,6 +636,10 @@ class AccountingReportController extends Controller
             return $query;
         }
 
+        static $cachedMatchingTxIds = null;
+        static $cachedKeywords = null;
+        static $cachedItem = null;
+
         $item = TransactionItem::find($transactionItemId);
 
         if (!$item) {
@@ -623,97 +647,126 @@ class AccountingReportController extends Controller
             return $query->whereRaw('1 = 0');
         }
 
-        // 1. Kumpulkan semua kata kunci / nama yang merepresentasikan item ini
-        $keywords = [];
-        $rawName = trim($item->item_name);
-        $keywords[] = $rawName;
+        if ($cachedItem === null || $cachedItem->id != $transactionItemId) {
+            $cachedItem = $item;
+            
+            $keywords = [];
+            $rawName = trim($item->item_name);
+            $keywords[] = $rawName;
 
-        // Tangani variasi tanda petik (' vs ’)
-        if (str_contains($rawName, "'")) {
-            $keywords[] = str_replace("'", "’", $rawName);
-        }
-        if (str_contains($rawName, "’")) {
-            $keywords[] = str_replace("’", "'", $rawName);
-        }
+            if (str_contains($rawName, "'")) $keywords[] = str_replace("'", "’", $rawName);
+            if (str_contains($rawName, "’")) $keywords[] = str_replace("’", "'", $rawName);
 
-        // Jika nama memiliki singkatan atau keterangan dalam kurung (misal: "MIQ (Madrasah Ilmu Al-qur'an)")
-        if (str_contains($rawName, '(')) {
-            $parts = explode('(', $rawName);
-            $acronym = trim($parts[0]);
-            if (mb_strlen($acronym) >= 2) {
-                $keywords[] = $acronym;
-            }
-            $inside = trim(rtrim($parts[1] ?? '', ')'));
-            if (mb_strlen($inside) >= 3) {
-                $keywords[] = $inside;
-                if (str_contains($inside, "'")) {
-                    $keywords[] = str_replace("'", "’", $inside);
-                }
-                if (str_contains($inside, "’")) {
-                    $keywords[] = str_replace("’", "'", $inside);
+            if (str_contains($rawName, '(')) {
+                $parts = explode('(', $rawName);
+                $acronym = trim($parts[0]);
+                if (mb_strlen($acronym) >= 2) $keywords[] = $acronym;
+                $inside = trim(rtrim($parts[1] ?? '', ')'));
+                if (mb_strlen($inside) >= 3) {
+                    $keywords[] = $inside;
+                    if (str_contains($inside, "'")) $keywords[] = str_replace("'", "’", $inside);
+                    if (str_contains($inside, "’")) $keywords[] = str_replace("’", "'", $inside);
                 }
             }
-        }
 
-        // Ambil nama dari payment_package_items & payment_record_items
-        $pkgNames = DB::table('payment_package_items')
-            ->where('transaction_item_id', $item->id)
-            ->pluck('item_name')
-            ->toArray();
+            $pkgNames = DB::table('payment_package_items')
+                ->where('transaction_item_id', $item->id)
+                ->pluck('item_name')->toArray();
 
-        $recNames = DB::table('payment_record_items')
-            ->where('transaction_item_id', $item->id)
-            ->pluck('item_name')
-            ->toArray();
+            $recNames = DB::table('payment_record_items')
+                ->where('transaction_item_id', $item->id)
+                ->pluck('item_name')->toArray();
 
-        foreach (array_merge($pkgNames, $recNames) as $alias) {
-            $alias = trim($alias);
-            if (mb_strlen($alias) >= 2) {
-                $keywords[] = $alias;
+            foreach (array_merge($pkgNames, $recNames) as $alias) {
+                $alias = trim($alias);
+                if (mb_strlen($alias) >= 2) {
+                    $keywords[] = $alias;
+                }
             }
+
+            if (stripos($rawName, 'saku') !== false) {
+                $keywords[] = 'uang saku';
+                $keywords[] = 'uang saku santri';
+            }
+
+            $cachedKeywords = array_values(array_unique(array_filter($keywords)));
+
+            // Pre-calculate matching transaction IDs to avoid heavy correlated subqueries
+            // C) Transaction rules
+            $matchingTxIds = DB::table('transactions')
+                ->join('transaction_rules as tr', 'tr.transaction_type_id', '=', 'transactions.transaction_type_id')
+                ->where('tr.transaction_item_id', $item->id)
+                ->pluck('transactions.id')->toArray();
+            
+            // B) Payment records
+            $priRecords = DB::table('payment_record_items as pri')
+                ->join('payment_records as pr', 'pr.id', '=', 'pri.payment_record_id')
+                ->where('pri.transaction_item_id', $item->id)
+                ->select('pr.reference_number as pr_ref', 'pri.package_item_id', 'pri.id as pri_id', 'pri.item_name')
+                ->get();
+            
+            if ($priRecords->count() > 0) {
+                $prRefs = $priRecords->pluck('pr_ref')->unique()->values()->toArray();
+                $priByRef = $priRecords->groupBy('pr_ref');
+
+                $txQuery = DB::table('transactions')->select('id', 'reference_number', 'description');
+                $txQuery->where(function ($q) use ($priRecords) {
+                    foreach ($priRecords as $pri) {
+                        $q->orWhere('reference_number', $pri->pr_ref . '-' . $pri->package_item_id)
+                          ->orWhere('reference_number', $pri->pr_ref . '-' . $pri->pri_id);
+                    }
+                });
+
+                $matchedTxs = $txQuery->get();
+                $matchingTxIds = array_merge($matchingTxIds, $matchedTxs->pluck('id')->toArray());
+
+                if (!empty($prRefs)) {
+                    $prefixTxs = DB::table('transactions')->select('id', 'reference_number', 'description')
+                        ->where(function ($q) use ($prRefs) {
+                            foreach ($prRefs as $prRef) {
+                                $q->orWhere('reference_number', 'like', $prRef . '-%');
+                            }
+                        })
+                        ->get();
+
+                    foreach ($prefixTxs as $tx) {
+                        $matchedByPrefix = false;
+                        foreach ($priByRef as $prRef => $priors) {
+                            if (!str_starts_with($tx->reference_number, $prRef . '-')) {
+                                continue;
+                            }
+                            foreach ($priors as $pri) {
+                                if (stripos($tx->description ?? '', $pri->item_name) !== false) {
+                                    $matchedByPrefix = true;
+                                    break 2;
+                                }
+                            }
+                        }
+                        if ($matchedByPrefix) {
+                            $matchingTxIds[] = $tx->id;
+                        }
+                    }
+                }
+            }
+            
+            $cachedMatchingTxIds = array_values(array_unique(array_filter($matchingTxIds)));
         }
 
-        // Khusus Uang Saku
-        if (stripos($rawName, 'saku') !== false) {
-            $keywords[] = 'uang saku';
-            $keywords[] = 'uang saku santri';
-        }
-
-        $keywords = array_values(array_unique(array_filter($keywords)));
-
-        return $query->where(function ($q) use ($item, $keywords) {
-            // A) Cocokkan deskripsi mutasi/transaksi dengan seluruh variasi nama/kata kunci
-            $q->where(function ($descQuery) use ($keywords) {
-                foreach ($keywords as $kw) {
+        return $query->where(function ($q) use ($cachedKeywords, $cachedMatchingTxIds) {
+            // Match descriptions and keywords
+            $q->where(function ($descQuery) use ($cachedKeywords) {
+                foreach ($cachedKeywords as $kw) {
                     $pattern = '%' . addcslashes(mb_strtolower($kw), '%_\\') . '%';
                     $descQuery->orWhereRaw('LOWER(COALESCE(account_movements.description, \'\')) LIKE ?', [$pattern])
                               ->orWhereRaw('LOWER(COALESCE(transactions.description, \'\')) LIKE ?', [$pattern]);
                 }
             });
 
-            // B) Kaitan eksplisit via payment_record_items (paket pembayaran tagihan)
-            $q->orWhereExists(function ($sub) use ($item) {
-                $sub->selectRaw('1')
-                    ->from('payment_record_items as pri')
-                    ->join('payment_records as pr', 'pr.id', '=', 'pri.payment_record_id')
-                    ->where('pri.transaction_item_id', $item->id)
-                    ->where(function ($w) {
-                        $w->whereRaw("transactions.reference_number = CONCAT(pr.reference_number, '-', pri.package_item_id)")
-                          ->orWhereRaw("transactions.reference_number = CONCAT(pr.reference_number, '-', pri.id)")
-                          ->orWhere(function ($w2) {
-                              $w2->whereRaw("transactions.reference_number LIKE CONCAT(pr.reference_number, '-%')")
-                                 ->whereRaw("LOWER(COALESCE(transactions.description, '')) LIKE CONCAT('%', LOWER(pri.item_name), '%')");
-                          });
-                    });
-            });
-
-            // C) Kaitan via aturan transaksi perbankan (TransactionRule - Teller/Manual)
-            $q->orWhereExists(function ($sub) use ($item) {
-                $sub->selectRaw('1')
-                    ->from('transaction_rules as tr')
-                    ->where('tr.transaction_item_id', $item->id)
-                    ->whereColumn('tr.transaction_type_id', 'transactions.transaction_type_id');
-            });
+            // Match pre-calculated related transactions (rules & payment records)
+            if (!empty($cachedMatchingTxIds)) {
+                $q->orWhereIn('transactions.id', $cachedMatchingTxIds);
+                $q->orWhereIn('account_movements.transaction_id', $cachedMatchingTxIds);
+            }
         });
     }
 }

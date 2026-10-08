@@ -138,7 +138,7 @@ const RekapitulasiPage = () => {
                         <label className="text-[11px] font-semibold text-gray-600 block mb-1">Produk Bank</label>
                         <select 
                             value={selectedProduct}
-                            onChange={(e) => setSelectedProduct(e.target.value)}
+                            onChange={(e) => { setSelectedProduct(e.target.value); setPage(1); }}
                             className="w-full px-2.5 py-1.5 text-xs bg-white border border-gray-300 rounded-md focus:outline-none focus:border-blue-500 text-gray-700 cursor-pointer"
                         >
                             <option value="">Semua Produk Bank</option>
@@ -153,7 +153,7 @@ const RekapitulasiPage = () => {
                         <label className="text-[11px] font-semibold text-gray-600 block mb-1">Rincian Transaksi</label>
                         <select 
                             value={selectedTransactionItem}
-                            onChange={(e) => setSelectedTransactionItem(e.target.value)}
+                            onChange={(e) => { setSelectedTransactionItem(e.target.value); setPage(1); }}
                             className="w-full px-2.5 py-1.5 text-xs bg-white border border-gray-300 rounded-md focus:outline-none focus:border-blue-500 text-gray-700 cursor-pointer"
                         >
                             <option value="">Semua Rincian Transaksi</option>
@@ -169,7 +169,7 @@ const RekapitulasiPage = () => {
                         <input 
                             type="date"
                             value={dateRange.start_date}
-                            onChange={(e) => setDateRange(prev => ({ ...prev, start_date: e.target.value }))}
+                            onChange={(e) => { setDateRange(prev => ({ ...prev, start_date: e.target.value })); setPage(1); }}
                             className="w-full px-2.5 py-1.5 text-xs bg-white border border-gray-300 rounded-md focus:outline-none focus:border-blue-500 text-gray-700"
                         />
                     </div>
@@ -180,7 +180,7 @@ const RekapitulasiPage = () => {
                         <input 
                             type="date"
                             value={dateRange.end_date}
-                            onChange={(e) => setDateRange(prev => ({ ...prev, end_date: e.target.value }))}
+                            onChange={(e) => { setDateRange(prev => ({ ...prev, end_date: e.target.value })); setPage(1); }}
                             className="w-full px-2.5 py-1.5 text-xs bg-white border border-gray-300 rounded-md focus:outline-none focus:border-blue-500 text-gray-700"
                         />
                     </div>
@@ -190,7 +190,7 @@ const RekapitulasiPage = () => {
                         <label className="text-[11px] font-semibold text-gray-600 block mb-1">Arus Transaksi</label>
                         <select 
                             value={category}
-                            onChange={(e) => setCategory(e.target.value)}
+                            onChange={(e) => { setCategory(e.target.value); setPage(1); }}
                             className="w-full px-2.5 py-1.5 text-xs bg-white border border-gray-300 rounded-md focus:outline-none focus:border-blue-500 text-gray-700 cursor-pointer"
                         >
                             <option value="all">Semua Arus Transaksi</option>
@@ -317,14 +317,20 @@ const RekapitulasiPage = () => {
                     <h3 className="text-xs font-bold text-gray-800 uppercase tracking-wider flex items-center gap-1.5">
                         <FileText className="w-4 h-4 text-blue-600" />
                         II. Rincian Transaksi & Mutasi (Periode Terpilih)
+                        {isFetching && !isLoading && (
+                            <span className="flex items-center gap-1 text-[11px] font-normal normal-case text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                                <Loader2 className="w-3 h-3 animate-spin" />
+                                Memperbarui data...
+                            </span>
+                        )}
                     </h3>
                     <div className="text-[11px] text-gray-500 font-medium">
                         Total {trxMeta.total.toLocaleString('id-ID')} transaksi ditemukan
                     </div>
                 </div>
 
-                <div className="bg-white border border-gray-200 rounded-md overflow-hidden">
-                    <div className="overflow-x-auto">
+                <div className="bg-white border border-gray-200 rounded-md overflow-hidden relative">
+                    <div className={`overflow-x-auto transition-opacity duration-150 ${isFetching ? 'opacity-60' : 'opacity-100'}`}>
                         <table className="w-full text-left border-collapse text-xs">
                             <thead className="bg-slate-50 border-b border-gray-200">
                                 <tr>
@@ -339,7 +345,7 @@ const RekapitulasiPage = () => {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
-                                {isLoading || isFetching ? (
+                                {isLoading ? (
                                     <tr>
                                         <td colSpan="8" className="text-center py-8 text-gray-400">
                                             <Loader2 className="w-5 h-5 animate-spin mx-auto mb-1 text-blue-600" />
