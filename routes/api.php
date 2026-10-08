@@ -109,6 +109,15 @@ Route::group(['prefix' => 'main', 'middleware' => ['autoprovision', 'auth:api']]
     Route::get('payment/{id}',                         [PaymentController::class, 'show']);
     Route::get('payment/account/{accountNumber}',      [PaymentController::class, 'byAccount']);
 
+    // Tagihan Bulanan & Tunggakan
+    Route::get('bills',                                [\App\Http\Controllers\Api\Main\BillController::class, 'index']);
+    Route::get('bills/preview',                        [\App\Http\Controllers\Api\Main\BillController::class, 'preview']);
+    Route::post('bills/generate',                      [\App\Http\Controllers\Api\Main\BillController::class, 'generate']);
+    Route::post('bills/pay-cash',                      [\App\Http\Controllers\Api\Main\BillController::class, 'payCash']);
+    Route::get('bills/overdue',                        [\App\Http\Controllers\Api\Main\BillController::class, 'markOverdue']);
+    Route::get('bills/account/{accountNumber}',        [\App\Http\Controllers\Api\Main\BillController::class, 'byAccount']);
+    Route::get('bills/{id}',                           [\App\Http\Controllers\Api\Main\BillController::class, 'show']);
+
     // Laporan Perbankan (Mini Bank)
     Route::group(['prefix' => 'report'], function () {
         Route::get('jurnal-umum',              [\App\Http\Controllers\Api\Main\ReportController::class, 'jurnalUmum']);
@@ -151,6 +160,7 @@ Route::group(['prefix' => 'internal', 'middleware' => ['internal.key']], functio
     Route::put('transaction/{id}/activate', [TransactionController::class, 'activate']);
     Route::get('account/{accountNumber}', [AccountController::class, 'showInternal']);
     Route::get('account/{accountNumber}/transactions', [\App\Http\Controllers\Api\Main\TransactionController::class, 'getByAccountInternal']);
+    Route::get('account/{accountNumber}/arrears', [\App\Http\Controllers\Api\Main\BillController::class, 'getArrearsInternal']);
 });
 
 // Protected Security & Admin Routes

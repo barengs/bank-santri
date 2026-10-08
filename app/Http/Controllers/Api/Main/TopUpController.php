@@ -51,6 +51,10 @@ class TopUpController extends Controller
         $validator = Validator::make($request->all(), [
             'account_number'     => 'required|exists:accounts,account_number',
             'payment_package_id' => 'nullable|exists:payment_packages,id',
+            'bill_ids'           => 'nullable|array',
+            'bill_ids.*'         => 'integer|exists:bills,id',
+            'addon_item_ids'     => 'nullable|array',
+            'addon_item_ids.*'   => 'integer|exists:transaction_items,id',
             'amount'             => 'required|numeric|min:1000',
             'notes'              => 'nullable|string',
         ]);
@@ -59,6 +63,27 @@ class TopUpController extends Controller
             return response()->json(['status' => 'error', 'errors' => $validator->errors()], 422);
         }
 
+        // Jika input dari teller memiliki bill_ids (Artinya opsi Bayar Tagihan Paket dipilih)
+        if ($request->has('bill_ids') && count($request->bill_ids) > 0) {
+            try {
+                $result = app(\App\Services\BillingService::class)->payBillsCash(
+                    $request->account_number,
+                    $request->bill_ids,
+                    $request->notes,
+                    auth('api')->id()
+                );
+
+                return response()->json([
+                    'status'  => 'success',
+                    'message' => 'Pembayaran tunai tagihan berhasil. Sisa tunggakan Rp ' . number_format((float) $result['remaining_arrears'], 0, ',', '.'),
+                    'data'    => $result,
+                ], 201);
+            } catch (\Exception $e) {
+                return response()->json(['status' => 'error', 'message' => $e->getMessage()], 422);
+            }
+        }
+
+        // Jika tidak ada bill_ids (Artinya opsi Top-Up Tabungan atau Paket Regular + Addon)
         return DB::transaction(function () use ($request) {
             // Buat record top-up (audit trail frontend)
             $topUp = TopUpRequest::create([
@@ -95,7 +120,6 @@ class TopUpController extends Controller
                         "Pelunasan otomatis dari Top-Up Tunai [{$topUp->payment_ref}]"
                     );
                 } catch (\Exception $e) {
-                    // Log warning saja — top-up tetap berhasil, paket belum terbayar
                     \Illuminate\Support\Facades\Log::warning('Top-up berhasil, tapi paket belum terbayar: ' . $e->getMessage(), [
                         'account_number'     => $request->account_number,
                         'payment_package_id' => $request->payment_package_id,
@@ -105,10 +129,41 @@ class TopUpController extends Controller
                 }
             }
 
+            // Step 3: Proses item Add-on jika dipilih
+            $processedAddons = [];
+            if (!empty($request->addon_item_ids)) {
+                $addonItems = \App\Models\TransactionItem::whereIn('id', $request->addon_item_ids)
+                    ->where('is_active', true)
+                    ->get();
+
+                foreach ($addonItems as $addon) {
+                    try {
+                        app(\App\Services\AccountingService::class)->recordPackageItemTransaction(
+                            $addon,
+                            (float) $addon->default_amount,
+                            $request->account_number,
+                            $addon->destination_account,
+                            "Biaya Add-On: {$addon->item_name} [{$topUp->payment_ref}]",
+                            'cash',
+                            ['reference_number' => $topUp->payment_ref . '-ADD' . $addon->id]
+                        );
+                        $processedAddons[] = [
+                            'id'     => $addon->id,
+                            'name'   => $addon->item_name,
+                            'amount' => (float) $addon->default_amount,
+                        ];
+                    } catch (\Exception $e) {
+                        \Illuminate\Support\Facades\Log::warning("Gagal memproses add-on {$addon->item_name}: " . $e->getMessage());
+                    }
+                }
+            }
+
             return response()->json([
                 'status'          => 'success',
                 'message'         => 'Top-up tunai berhasil.' . ($paymentWarning ? ' Catatan: ' . $paymentWarning : ($request->payment_package_id ? ' Pembayaran paket diproses.' : '')),
-                'data'            => $topUp,
+                'data'            => array_merge($topUp->toArray(), [
+                    'addons' => $processedAddons,
+                ]),
                 'payment_warning' => $paymentWarning,
             ], 201);
         });
@@ -182,25 +237,35 @@ class TopUpController extends Controller
                 );
 
                 // Pemicu otomatis pembayaran paket jika ada
+                $paymentWarning = null;
                 if ($topUp->payment_package_id) {
-                    app(\App\Services\PaymentService::class)->processPayment(
-                        $topUp->account_number,
-                        $topUp->payment_package_id,
-                        $topUp->id,
-                        "Pelunasan otomatis dari Bank Transfer [{$topUp->payment_ref}]"
-                    );
+                    try {
+                        app(\App\Services\PaymentService::class)->processPayment(
+                            $topUp->account_number,
+                            $topUp->payment_package_id,
+                            $topUp->id,
+                            "Pelunasan otomatis dari Bank Transfer [{$topUp->payment_ref}]"
+                        );
+                    } catch (\Exception $e) {
+                        // Log warning saja — top-up tabungan berhasil, tapi paket tidak terbayar
+                        \Illuminate\Support\Facades\Log::warning('Verifikasi transfer berhasil, tapi pelunasan paket gagal: ' . $e->getMessage(), [
+                            'top_up_id' => $topUp->id,
+                        ]);
+                        $paymentWarning = $e->getMessage();
+                    }
                 }
 
                 return response()->json([
-                    'status'  => 'success',
-                    'message' => 'Top-up berhasil diverifikasi dan pembayaran diproses.',
-                    'data'    => $topUp,
+                    'status'          => 'success',
+                    'message'         => 'Top-up berhasil diverifikasi.' . ($paymentWarning ? " Catatan: {$paymentWarning}" : ($topUp->payment_package_id ? " Pembayaran paket diproses." : "")),
+                    'data'            => $topUp,
+                    'payment_warning' => $paymentWarning,
                 ]);
 
             } catch (\Exception $e) {
                 return response()->json([
                     'status'  => 'error',
-                    'message' => 'Verifikasi berhasil, namun gagal mencatat jurnal keuangan: ' . $e->getMessage(),
+                    'message' => 'Verifikasi top-up gagal saat mencatat jurnal kas: ' . $e->getMessage(),
                 ], 422);
             }
         });

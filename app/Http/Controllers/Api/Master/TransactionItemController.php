@@ -12,10 +12,20 @@ class TransactionItemController extends Controller
     public function index(Request $request)
     {
         $items = TransactionItem::when($request->search, fn($q, $s) => $q->where('item_name', 'like', "%{$s}%"))
-            ->latest()
-            ->paginate($request->get('per_page', 15));
+            ->when(isset($request->is_active), fn($q) => $q->where('is_active', filter_var($request->is_active, FILTER_VALIDATE_BOOLEAN)))
+            ->when($request->exclude_package_id, function($q, $pkgId) {
+                $excludedItemIds = \App\Models\PaymentPackageItem::where('package_id', $pkgId)
+                    ->whereNotNull('transaction_item_id')
+                    ->pluck('transaction_item_id');
+                $q->whereNotIn('id', $excludedItemIds);
+            })
+            ->latest();
 
-        return response()->json(['status' => 'success', 'data' => $items]);
+        $data = ($request->boolean('all') || $request->get('per_page') === 'all')
+            ? $items->get()
+            : $items->paginate($request->get('per_page', 15));
+
+        return response()->json(['status' => 'success', 'data' => $data]);
     }
 
     public function store(Request $request)

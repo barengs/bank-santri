@@ -47,7 +47,7 @@ class PaymentService
             $totalNeeded  = $package->total_amount;
 
             if ($account->balance < $totalNeeded) {
-                throw new \Exception("Saldo tidak mencukupi. Dibutuhkan Rp " . number_format($totalNeeded, 0, ',', '.') . ", saldo tersedia Rp " . number_format($account->balance, 0, ',', '.'));
+                throw new \Exception("Saldo tidak mencukupi. Dibutuhkan Rp " . number_format((float) $totalNeeded, 0, ',', '.') . ", saldo tersedia Rp " . number_format((float) $account->balance, 0, ',', '.'));
             }
 
             $ref = 'PAY-' . date('Ymd') . '-' . strtoupper(Str::random(8));
@@ -95,11 +95,13 @@ class PaymentService
                 }
             }
 
-            // Catatan: Porsi Saku tidak perlu dijurnal COA karena dananya tetap di Bank (di Akun Santri), 
-            // dan saldo santri sudah didebit full lalu dikredit balik jika kita pakai logika lama.
-            // Namun agar saldo santri di DB berkurang tepat sebesar Non-Saku total (setelah saku dialokasikan),
-            // AccountingService sudah menangani pergerakan saldo tersebut jika kita panggil recordTransaction.
-            
+            // Otomatis alokasikan ke tagihan santri jika ada tagihan yang belum lunas (FIFO)
+            app(\App\Services\BillingService::class)->allocatePaymentFifo(
+                $account->account_number,
+                $record->id,
+                (float) $package->total_amount
+            );
+
             return $record;
         });
     }
