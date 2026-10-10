@@ -76,7 +76,7 @@ const PanduanPage = () => {
         { id: 'simulator', title: 'Simulator Jurnal', icon: <Calculator className="w-4 h-4" />, category: 'Akuntansi' },
         { id: 'rekonsiliasi', title: 'Rekonsiliasi Wadiah', icon: <CheckCircle2 className="w-4 h-4" />, category: 'Akuntansi' },
         { id: 'operasional', title: 'Operasional Teller', icon: <ArrowRightLeft className="w-4 h-4" />, category: 'Teller' },
-        { id: 'tagihan', title: 'Manajemen Tagihan', icon: <FileText className="w-4 h-4" />, category: 'Pembayaran' },
+        { id: 'tagihan', title: 'Tagihan, Tunggakan & Bayar Dimuka', icon: <FileText className="w-4 h-4" />, category: 'Pembayaran' },
         { id: 'koperasi', title: 'Kasir Koperasi (RFID)', icon: <Store className="w-4 h-4" />, category: 'Eksternal' },
         { id: 'keamanan', title: 'Keamanan Sistem', icon: <ShieldCheck className="w-4 h-4" />, category: 'Keamanan' }
     ];
@@ -792,19 +792,19 @@ const PanduanPage = () => {
                     {activeSection === 'tagihan' && (
                         <div className="space-y-5">
                             <div className="border-b border-slate-200 pb-3">
-                                <h2 className="text-lg font-bold text-slate-900">Manajemen Tagihan & Uang Saku</h2>
-                                <p className="text-xs text-slate-500">Pemisahan otomatis antara biaya institusi dan hak uang saku santri</p>
+                                <h2 className="text-lg font-bold text-slate-900">Manajemen Tagihan, Tunggakan & Pembayaran Dimuka</h2>
+                                <p className="text-xs text-slate-500">Pemisahan otomatis antara biaya institusi, penanganan tunggakan, dan cara memproses pembayaran di muka (advance payment).</p>
                             </div>
 
                             <div className="bg-slate-50 border-l-2 border-blue-600 p-2.5">
-                                <span className="font-bold text-slate-900 text-[11px] uppercase block mb-1">Kegunaan Fitur:</span>
+                                <span className="font-bold text-slate-900 text-[11px] uppercase block mb-1">Kegunaan Fitur Tagihan:</span>
                                 <p className="text-xs text-slate-600 leading-relaxed">
                                     Menyusun paket tagihan bulanan (Syahriyah) atau pendaftaran dengan kemampuan memisahkan antara biaya operasional milik pesantren (seperti SPP dan uang makan) dengan uang saku murni santri. Sistem menjamin uang saku tidak dipotong untuk biaya lain dan tetap aman mengendap di kartu RFID santri.
                                 </p>
                             </div>
 
                             <div>
-                                <span className="font-bold text-slate-900 text-[11px] uppercase block mb-1.5">Langkah-Langkah Penggunaan:</span>
+                                <h3 className="font-bold text-slate-900 text-[12px] uppercase block mb-2 border-b border-slate-200 pb-1">A. Pembuatan & Pemisahan Paket</h3>
                                 <ol className="text-xs text-slate-600 list-decimal pl-5 space-y-1.5">
                                     <li>Buka menu <strong>Pembayaran & Tagihan &gt; Paket Pembayaran</strong>.</li>
                                     <li>Klik tombol <strong>+ Tambah Paket Pembayaran</strong>.</li>
@@ -815,29 +815,64 @@ const PanduanPage = () => {
                                             <li>Untuk komponen Uang Saku: Aktifkan toggle <strong>Is Saku</strong> MENYALA. (Dana tidak dipotong, melainkan dikreditkan ke saldo kartu santri).</li>
                                         </ul>
                                     </li>
-                                    <li>Klik <strong>Simpan Paket</strong>. Saat wali santri membayar paket ini melalui teller atau Virtual Account, sistem langsung mengeksekusi pemisahan dana tersebut secara otomatis.</li>
+                                    <li>Klik <strong>Simpan Paket</strong>. Saat wali santri membayar paket ini, sistem langsung mengeksekusi pemisahan dana tersebut secara otomatis.</li>
                                 </ol>
                             </div>
 
-                            <div className="border border-slate-300 overflow-x-auto mt-3">
+                            <div className="mt-4 pt-4 border-t border-slate-200">
+                                <h3 className="font-bold text-slate-900 text-[12px] uppercase block mb-2 border-b border-slate-200 pb-1">B. Penanganan Tunggakan & Sistem Pelunasan (FIFO)</h3>
+                                <p className="text-xs text-slate-600 mb-2 leading-relaxed">
+                                    Tagihan yang melewati tanggal jatuh tempo otomatis berubah statusnya menjadi <strong>OVERDUE (Tunggakan)</strong>. Sistem Bank Santri menerapkan <strong>Prinsip FIFO (First-In, First-Out)</strong> yang mutlak. Artinya, pelunasan tagihan <strong>WAJIB</strong> dimulai dari periode/bulan tertua. Santri tidak diperbolehkan melompati bulan (misalnya membayar SPP Mei jika SPP Maret belum lunas).
+                                </p>
+                                <ul className="text-xs text-slate-600 list-disc pl-5 space-y-1.5">
+                                    <li><strong>Pelunasan Tunai via Teller:</strong> Teller mengakses menu <em>Pembayaran & Tagihan &gt; Proses Pembayaran</em>. Setelah memasukkan NIS santri, sistem akan menampilkan rincian riwayat seluruh tunggakan. Teller hanya dapat mencentang dan melunasi periode-periode tertua terlebih dahulu.</li>
+                                    <li><strong>Pelunasan Autodebit:</strong> Jika wali santri mengisi saldo tabungan rekening santri (Top-Up via transfer bank/kantor), maka secara otomatis (jika diaktifkan) sistem akan memotong saldo tersebut untuk melunasi tagihan yang paling lama menunggak.</li>
+                                </ul>
+                            </div>
+
+                            <div className="mt-4 pt-4 border-t border-slate-200">
+                                <h3 className="font-bold text-slate-900 text-[12px] uppercase block mb-2 border-b border-slate-200 pb-1">C. Cara Mengatasi Pembayaran Tagihan Di Muka</h3>
+                                <p className="text-xs text-slate-600 mb-2 leading-relaxed">
+                                    Terkadang wali santri ingin melunasi pembayaran beberapa bulan sekaligus ke depan (contoh: langsung bayar SPP satu semester). Namun, tagihan bulan-bulan ke depan tersebut mungkin belum diterbitkan oleh bendahara. Ada dua cara menanganinya:
+                                </p>
+                                <ol className="text-xs text-slate-600 list-decimal pl-5 space-y-2">
+                                    <li>
+                                        <strong>Penerbitan Tagihan Lebih Awal (Opsi A)</strong>
+                                        <br/>Staf bendahara dapat masuk ke menu <em>Pembayaran & Tagihan &gt; Paket Pembayaran</em> lalu menerbitkan tagihan (Generate Bills) untuk bulan-bulan mendatang (misal November & Desember). Setelah tagihan itu muncul di sistem, kasir/teller dapat langsung memproses pelunasannya di loket.
+                                    </li>
+                                    <li>
+                                        <strong>Menitipkan Dana di Saldo Tabungan / Top-Up Wadiah (Opsi B - Direkomendasikan)</strong>
+                                        <br/>Jika staf tidak ingin repot menerbitkan tagihan lebih awal, wali santri cukup menyetorkan uang sejumlah tagihan tersebut melalui <strong>Menu Top-Up / Setor Tunai</strong>. 
+                                        Uang tersebut akan mengendap secara aman sebagai Saldo Tabungan Santri (Titipan Wadiah).
+                                        <br/><em>Keuntungan:</em> Pada saat tanggal 1 (atau saat bendahara merilis tagihan baru di bulan berikutnya), sistem akan secara otomatis memotong tagihan baru tersebut dari saldo tabungan santri (Autodebit) tanpa wali santri perlu datang ke loket lagi. Secara akuntansi, uang tersebut sah diakui sebagai Pendapatan Pesantren saat tagihannya terbit dan terpotong.
+                                    </li>
+                                </ol>
+                            </div>
+
+                            <div className="border border-slate-300 overflow-x-auto mt-4">
                                 <table className="w-full text-xs text-left">
                                     <thead className="bg-slate-100 text-slate-800 border-b border-slate-300 uppercase font-semibold text-[11px]">
                                         <tr>
-                                            <th className="px-3 py-2.5">Komponen Tagihan</th>
+                                            <th className="px-3 py-2.5">Komponen / Aksi</th>
                                             <th className="px-3 py-2.5">Status Pengaturan</th>
                                             <th className="px-3 py-2.5">Perlakuan Akuntansi Sistem</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-200">
                                         <tr className="hover:bg-slate-50">
-                                            <td className="px-3 py-2.5 font-medium text-slate-900">Uang Makan & SPP</td>
+                                            <td className="px-3 py-2.5 font-medium text-slate-900">Bayar SPP / Makan</td>
                                             <td className="px-3 py-2.5"><span className="bg-slate-200 text-slate-800 font-mono text-[10px] font-bold px-1.5 py-0.5">BUKAN SAKU</span></td>
-                                            <td className="px-3 py-2.5 text-slate-600">Dipotong dari saldo dan diakui sah sebagai Pendapatan Pesantren (COA Kepala 4).</td>
+                                            <td className="px-3 py-2.5 text-slate-600">Dicatat sebagai Pelunasan Tagihan dan diakui sebagai Pendapatan Pesantren (COA 4).</td>
                                         </tr>
                                         <tr className="hover:bg-slate-50">
                                             <td className="px-3 py-2.5 font-medium text-slate-900">Uang Saku Pegangan</td>
                                             <td className="px-3 py-2.5"><span className="bg-blue-100 text-blue-800 font-mono text-[10px] font-bold px-1.5 py-0.5">UANG SAKU</span></td>
-                                            <td className="px-3 py-2.5 text-slate-600"><strong>TIDAK DIPOTONG</strong>. Dana tetap mengendap di rekening santri dan siap dibelanjakan via kartu RFID.</td>
+                                            <td className="px-3 py-2.5 text-slate-600"><strong>TIDAK DIPOTONG</strong>. Dana langsung menjadi saldo tabungan santri (Titipan Wadiah).</td>
+                                        </tr>
+                                        <tr className="hover:bg-slate-50">
+                                            <td className="px-3 py-2.5 font-medium text-slate-900">Bayar Tagihan di Muka via Saldo</td>
+                                            <td className="px-3 py-2.5"><span className="bg-emerald-100 text-emerald-800 font-mono text-[10px] font-bold px-1.5 py-0.5">SETOR TUNAI</span></td>
+                                            <td className="px-3 py-2.5 text-slate-600">Disimpan di saldo tabungan. Nantinya otomatis terpotong saat tagihan bulan depan terbit.</td>
                                         </tr>
                                     </tbody>
                                 </table>

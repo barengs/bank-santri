@@ -521,7 +521,7 @@
 
       <div class="nav-section-title">Tagihan & Kasir Eksternal</div>
       <a class="nav-item" href="#paket-pembayaran">
-        <span>📦</span> Paket Tagihan & Uang Saku
+        <span>📦</span> Paket Tagihan, Tunggakan & Dimuka
       </a>
       <a class="nav-item" href="#koperasi-dapur">
         <span>🏪</span> Kasir Koperasi & Dapur (RFID)
@@ -1065,9 +1065,9 @@
     <!-- Section 8: Paket Tagihan & Uang Saku -->
     <section id="paket-pembayaran" class="section-card">
       <div class="section-title">
-        <span>📦</span> Manajemen Paket Tagihan & Komponen Uang Saku
+        <span>📦</span> Manajemen Paket Tagihan, Tunggakan & Pembayaran Dimuka
       </div>
-      <div class="section-subtitle">Cara kerja pemisahan biaya operasional dan uang saku santri dalam satu paket tagihan.</div>
+      <div class="section-subtitle">Pemisahan biaya operasional & uang saku, aturan pelunasan tunggakan (FIFO), dan solusi pembayaran tagihan di muka.</div>
 
       <p style="font-size: 0.88rem; color: #475569; margin-bottom: 16px;">
         Seringkali wali santri mentransfer uang bulanan secara gelondongan (misal Rp 1.500.000), yang terdiri dari Biaya Makan, Laundry, SPP, dan Uang Saku santri. Fitur <strong>Paket Pembayaran</strong> secara cerdas memisahkannya:
@@ -1110,6 +1110,33 @@
             </tr>
           </tbody>
         </table>
+      </div>
+      <div style="margin-top: 30px; border-top: 1px solid var(--border); padding-top: 20px;">
+        <h4 style="font-size: 1.05rem; font-weight: 700; color: var(--primary); margin-bottom: 12px;">Sistem Tunggakan & Aturan Pelunasan (FIFO)</h4>
+        <p style="font-size: 0.88rem; color: #475569; margin-bottom: 10px; line-height: 1.6;">
+          Tagihan yang melewati tanggal jatuh tempo otomatis berstatus <strong>OVERDUE</strong>. Bank Santri menerapkan aturan <strong>FIFO (First-In, First-Out) mutlak</strong> untuk pelunasan tagihan:
+        </p>
+        <ul style="font-size: 0.85rem; color: #475569; padding-left: 20px; line-height: 1.6; margin-bottom: 20px;">
+          <li>Santri <strong>wajib melunasi tagihan yang paling tertua terlebih dahulu</strong>. Sistem tidak akan mengizinkan wali santri / teller melompati bulan tunggakan.</li>
+          <li>Pembayaran tunggakan dapat dilakukan secara tunai di Kasir Teller (melalui menu <em>Proses Pembayaran</em>).</li>
+          <li>Jika fitur Autodebit diaktifkan, uang yang disetorkan ke saldo rekening santri akan dipotong secara otomatis untuk menutupi tunggakan tertua.</li>
+        </ul>
+
+        <h4 style="font-size: 1.05rem; font-weight: 700; color: var(--primary); margin-bottom: 12px;">Cara Mengatasi Pembayaran Tagihan Di Muka (Advance Payment)</h4>
+        <p style="font-size: 0.88rem; color: #475569; margin-bottom: 10px; line-height: 1.6;">
+          Jika wali santri ingin menitipkan uang untuk membayar SPP/Syahriyah beberapa bulan ke depan (misal bayar full 1 semester) sementara tagihan bulan depan belum diterbitkan oleh bendahara, terdapat dua opsi:
+        </p>
+        <ol style="font-size: 0.85rem; color: #475569; padding-left: 20px; line-height: 1.6; margin-bottom: 10px;">
+          <li>
+            <strong>Opsi 1: Menerbitkan Tagihan Lebih Awal (Generate Bills)</strong><br>
+            Bendahara masuk ke menu "Paket Pembayaran" lalu merilis tagihan untuk bulan-bulan mendatang. Setelah tagihan terbit di sistem, teller bisa memproses pembayarannya secara langsung.
+          </li>
+          <li style="margin-top: 10px;">
+            <strong>Opsi 2: Menitipkan Dana di Saldo Tabungan (Direkomendasikan)</strong><br>
+            Wali santri cukup <strong>menyetorkan seluruh uang tersebut ke dalam Saldo Tabungan Santri</strong> (melalui Top-Up Tunai/Transfer).
+            <br>Dana tersebut statusnya sah sebagai Titipan Wadiah (mengendap di rekening). Saat tagihan bulan baru resmi dirilis, <strong>sistem otomatis mendebit saldo santri</strong> dan mengakui dana tersebut sebagai Pendapatan Pesantren tanpa wali santri perlu datang ke loket.
+          </li>
+        </ol>
       </div>
     </section>
 
