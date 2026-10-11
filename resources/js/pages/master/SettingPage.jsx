@@ -107,7 +107,104 @@ const SettingPage = () => {
                                             </div>
                                             
                                             <div className={item.key === 'dapur_meal_sessions' ? '' : 'md:col-span-2'}>
-                                                {item.key === 'dapur_meal_sessions' ? (
+                                                {item.key === 'koperasi_daily_limit_tiers' ? (
+                                                    <div className="space-y-3">
+                                                        <p className="text-xs text-gray-500">
+                                                            Atur limit belanja harian koperasi berdasarkan saldo mengendap santri. 
+                                                            Kosongkan kolom "Saldo Maks" untuk batas atas (tidak terbatas).
+                                                        </p>
+                                                        {(() => {
+                                                            let tiers = [];
+                                                            try {
+                                                                tiers = JSON.parse(item.value || '[]');
+                                                            } catch (e) {
+                                                                tiers = [];
+                                                            }
+                                                            return (
+                                                                <>
+                                                                    <div className="overflow-x-auto">
+                                                                        <table className="w-full text-xs border border-gray-200 rounded-md overflow-hidden">
+                                                                            <thead className="bg-slate-50">
+                                                                                <tr className="text-left text-gray-500 uppercase text-[10px] border-b border-gray-200">
+                                                                                    <th className="px-3 py-2 font-bold">Saldo Minimum (Rp)</th>
+                                                                                    <th className="px-3 py-2 font-bold">Saldo Maksimum (Rp)</th>
+                                                                                    <th className="px-3 py-2 font-bold">Limit Belanja Harian (Rp)</th>
+                                                                                    <th className="px-3 py-2 w-10"></th>
+                                                                                </tr>
+                                                                            </thead>
+                                                                            <tbody className="divide-y divide-gray-100">
+                                                                                {tiers.map((tier, idx) => (
+                                                                                    <tr key={idx} className="bg-white">
+                                                                                        <td className="px-3 py-2">
+                                                                                            <input 
+                                                                                                type="number" 
+                                                                                                value={tier.min} 
+                                                                                                onChange={(e) => {
+                                                                                                    const newTiers = [...tiers]; 
+                                                                                                    newTiers[idx].min = parseInt(e.target.value) || 0; 
+                                                                                                    handleInputChange(item.key, JSON.stringify(newTiers));
+                                                                                                }} 
+                                                                                                className="w-full border border-gray-300 rounded px-2 py-1 text-xs font-mono" 
+                                                                                            />
+                                                                                        </td>
+                                                                                        <td className="px-3 py-2">
+                                                                                            <input 
+                                                                                                type="number" 
+                                                                                                value={tier.max ?? ''} 
+                                                                                                placeholder="Tidak terbatas"
+                                                                                                onChange={(e) => {
+                                                                                                    const newTiers = [...tiers]; 
+                                                                                                    newTiers[idx].max = e.target.value === '' ? null : parseInt(e.target.value); 
+                                                                                                    handleInputChange(item.key, JSON.stringify(newTiers));
+                                                                                                }} 
+                                                                                                className="w-full border border-gray-300 rounded px-2 py-1 text-xs font-mono" 
+                                                                                            />
+                                                                                        </td>
+                                                                                        <td className="px-3 py-2">
+                                                                                            <input 
+                                                                                                type="number" 
+                                                                                                value={tier.limit} 
+                                                                                                onChange={(e) => {
+                                                                                                    const newTiers = [...tiers]; 
+                                                                                                    newTiers[idx].limit = parseInt(e.target.value) || 0; 
+                                                                                                    handleInputChange(item.key, JSON.stringify(newTiers));
+                                                                                                }} 
+                                                                                                className="w-full border border-gray-300 rounded px-2 py-1 text-xs font-mono" 
+                                                                                            />
+                                                                                        </td>
+                                                                                        <td className="px-3 py-2 text-center">
+                                                                                            <button 
+                                                                                                type="button"
+                                                                                                onClick={() => {
+                                                                                                    const newTiers = [...tiers];
+                                                                                                    newTiers.splice(idx, 1);
+                                                                                                    handleInputChange(item.key, JSON.stringify(newTiers));
+                                                                                                }}
+                                                                                                className="text-rose-500 hover:text-rose-700"
+                                                                                            >
+                                                                                                <X className="w-3.5 h-3.5" />
+                                                                                            </button>
+                                                                                        </td>
+                                                                                    </tr>
+                                                                                ))}
+                                                                            </tbody>
+                                                                        </table>
+                                                                    </div>
+                                                                    <button 
+                                                                        type="button" 
+                                                                        onClick={() => {
+                                                                            const newTiers = [...tiers, {min: 0, max: null, limit: 5000}];
+                                                                            handleInputChange(item.key, JSON.stringify(newTiers));
+                                                                        }}
+                                                                        className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-medium rounded border border-gray-300 inline-flex items-center gap-1 mt-2"
+                                                                    >
+                                                                        + Tambah Tier Limit
+                                                                    </button>
+                                                                </>
+                                                            );
+                                                        })()}
+                                                    </div>
+                                                ) : item.key === 'dapur_meal_sessions' ? (
                                                     <div className="space-y-3">
                                                         {(() => {
                                                             let sessions = [];
