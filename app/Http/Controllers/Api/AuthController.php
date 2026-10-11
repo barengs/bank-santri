@@ -17,31 +17,39 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        $credentials = $request->only('email', 'password');
-        
-        $user = \App\Models\User::where('email', $credentials['email'])->first();
-        if (!$user) {
-            \Illuminate\Support\Facades\Log::error('User not found in DB:', ['email' => $credentials['email']]);
-        } else {
-            $passCheck = \Illuminate\Support\Facades\Hash::check($credentials['password'], $user->password);
-            \Illuminate\Support\Facades\Log::info('User found, password check:', ['email' => $credentials['email'], 'match' => $passCheck]);
+        $loginInput = $request->input('email') ?? $request->input('username');
+        $password = $request->input('password') ?? $request->input('pin');
+
+        if (empty($loginInput) || empty($password)) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Email/Username dan Password/PIN wajib diisi.',
+            ], 422);
+        }
+
+        // Cari user berdasarkan email atau name
+        $user = \App\Models\User::where('email', $loginInput)
+            ->orWhere('name', $loginInput)
+            ->first();
+
+        if (!$user || !\Illuminate\Support\Facades\Hash::check($password, $user->password)) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Email/ID Petugas atau Password/PIN salah.',
+            ], 401);
         }
 
         try {
-            if (!$token = auth('api')->attempt($credentials)) {
+            if (!$token = JWTAuth::fromUser($user)) {
                 return response()->json([
                     'status'  => 'error',
-                    'message' => 'Username atau password salah.',
-                    'debug'   => [
-                        'user_found' => (bool)$user,
-                        'pass_match' => isset($passCheck) ? $passCheck : false
-                    ]
+                    'message' => 'Gagal membuat token otentikasi.',
                 ], 401);
             }
         } catch (JWTException $e) {
             return response()->json([
                 'status'  => 'error',
-                'message' => 'Gagal membuat token.',
+                'message' => 'Gagal membuat token: ' . $e->getMessage(),
             ], 500);
         }
 
