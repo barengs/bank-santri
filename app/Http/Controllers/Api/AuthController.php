@@ -53,7 +53,10 @@ class AuthController extends Controller
             ], 500);
         }
 
-        return $this->respondWithToken($token);
+        // JWTAuth::fromUser() tidak menyetel user pada guard auth:api,
+        // dan request login tidak membawa header Bearer, sehingga
+        // auth('api')->user() akan null. Kita kirimkan user secara eksplisit.
+        return $this->respondWithToken($token, $user);
     }
 
     public function me()
@@ -74,7 +77,8 @@ class AuthController extends Controller
     {
         try {
             $token = JWTAuth::refresh(JWTAuth::getToken());
-            return $this->respondWithToken($token);
+            $user = JWTAuth::setToken($token)->toUser();
+            return $this->respondWithToken($token, $user);
         } catch (JWTException $e) {
             return response()->json([
                 'status'  => 'error',
@@ -83,9 +87,9 @@ class AuthController extends Controller
         }
     }
 
-    protected function respondWithToken($token)
+    protected function respondWithToken($token, ?\App\Models\User $user = null)
     {
-        $user = auth('api')->user();
+        $user = $user ?? auth('api')->user();
         $roles = $user ? $user->getRoleNames()->toArray() : [];
         $activeRole = !empty($roles) ? $roles[0] : ($user?->role ?? 'kasir_koperasi');
 
