@@ -97,16 +97,19 @@ const SettingPage = () => {
                                 
                                 <div className="p-3.5 divide-y divide-gray-100">
                                     {items.map((item) => (
-                                        <div key={item.key} className={`py-4 first:pt-2 last:pb-2 border-b last:border-0 border-gray-100 ${item.key === 'dapur_meal_sessions' ? 'block' : 'grid grid-cols-1 md:grid-cols-3 gap-4 items-center'}`}>
-                                            <div className={item.key === 'dapur_meal_sessions' ? 'mb-3' : ''}>
+                                        <div key={item.key} className={`py-4 first:pt-2 last:pb-2 border-b last:border-0 border-gray-100 ${item.key === 'dapur_meal_sessions' || item.key === 'koperasi_daily_limit_tiers' ? 'block' : 'grid grid-cols-1 md:grid-cols-3 gap-4 items-center'}`}>
+                                            <div className={item.key === 'dapur_meal_sessions' || item.key === 'koperasi_daily_limit_tiers' ? 'mb-3' : ''}>
                                                 <label className="text-sm font-semibold text-gray-800 block">{item.label}</label>
                                                 <span className="text-[10px] text-gray-400 font-mono">{item.key}</span>
                                                 {item.key === 'dapur_meal_sessions' && (
                                                     <p className="text-xs text-gray-500 mt-1">Konfigurasi ini mengatur jadwal dan tarif makan santri secara dinamis di Dapur Umum.</p>
                                                 )}
+                                                {item.key === 'koperasi_daily_limit_tiers' && (
+                                                    <p className="text-xs text-gray-500 mt-1">Konfigurasi limit belanja harian santri di koperasi berdasarkan rentang saldo mengendap.</p>
+                                                )}
                                             </div>
                                             
-                                            <div className={item.key === 'dapur_meal_sessions' ? '' : 'md:col-span-2'}>
+                                            <div className={item.key === 'dapur_meal_sessions' || item.key === 'koperasi_daily_limit_tiers' ? '' : 'md:col-span-2'}>
                                                 {item.key === 'koperasi_daily_limit_tiers' ? (
                                                     <div className="space-y-3">
                                                         <p className="text-xs text-gray-500">
