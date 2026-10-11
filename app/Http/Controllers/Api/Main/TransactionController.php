@@ -143,6 +143,9 @@ class TransactionController extends Controller
 
     /**
      * Penarikan tunai — akad Wadiah
+     * KEBIJAKAN: Tanpa limit harian. Aturan penarikan tunai berlaku di
+     * luar sistem (operasional teller). Sistem hanya memastikan saldo
+     * tidak jatuh di bawah minimum_balance produk.
      */
     public function cashWithdrawal(Request $request)
     {
@@ -162,25 +165,18 @@ class TransactionController extends Controller
                 ], 422);
             }
 
-            // Validasi Limit Harian (Santri vs Non-Santri/Instansi)
-            $dailyLimit = (float) ($account->daily_withdrawal_limit ?? $account->product->daily_withdrawal_limit ?? 0);
+            // Guard saldo minimum — penarikan tidak boleh menghabiskan
+            // saldo di bawah minimum_balance produk
+            $minBalance    = (float) ($account->product->minimum_balance ?? 0);
+            $balanceAfter  = (float) $account->balance - (float) $request->amount;
 
-            if ($dailyLimit > 0) {
-                $todayTotalWithdrawal = (float) Transaction::where('source_account', $account->account_number)
-                    ->where('status', 'success')
-                    ->whereDate('created_at', now()->toDateString())
-                    ->whereHas('type', function ($q) {
-                        $q->whereIn('code', ['WDR-SANTRI', 'CASH-WDR', 'COOP-BUY']);
-                    })
-                    ->sum('amount');
-
-                if (($todayTotalWithdrawal + $request->amount) > $dailyLimit) {
-                    $sisaKuota = max(0, $dailyLimit - $todayTotalWithdrawal);
-                    $pesan = "Penarikan melebihi batas limit harian. Maksimal: Rp " . number_format($dailyLimit, 0, ',', '.') . 
-                             " / hari. Sudah ditarik hari ini: Rp " . number_format($todayTotalWithdrawal, 0, ',', '.') . 
-                             ". Sisa kuota hari ini: Rp " . number_format($sisaKuota, 0, ',', '.');
-                    return response()->json(['status' => 'error', 'message' => $pesan], 422);
-                }
+            if ($balanceAfter < $minBalance) {
+                return response()->json([
+                    'status'  => 'error',
+                    'message' => 'Saldo tidak mencukupi. Saldo setelah penarikan harus menyisakan minimal Rp '
+                        . number_format($minBalance, 0, ',', '.') . ' (saldo saat ini: Rp '
+                        . number_format((float) $account->balance, 0, ',', '.') . ').',
+                ], 422);
             }
 
             $typeCode = TransactionType::where('code', 'WDR-SANTRI')->exists() ? 'WDR-SANTRI' : 'CASH-WDR';
@@ -195,27 +191,15 @@ class TransactionController extends Controller
             );
 
             $accountAfter = Account::with('product')->where('account_number', $request->account_number)->first();
-            $todayTotalAfter = (float) Transaction::where('source_account', $account->account_number)
-                ->where('status', 'success')
-                ->whereDate('created_at', now()->toDateString())
-                ->whereHas('type', function ($q) {
-                    $q->whereIn('code', ['WDR-SANTRI', 'CASH-WDR', 'COOP-BUY']);
-                })
-                ->sum('amount');
-
-            $sisaKuotaAfter = $dailyLimit > 0 ? max(0, $dailyLimit - $todayTotalAfter) : null;
 
             return response()->json([
                 'status'  => 'success',
                 'message' => 'Penarikan tunai berhasil diproses.',
                 'data'    => [
-                    'transaction'       => $transaction,
-                    'account'           => $accountAfter,
-                    'balance_before'    => $account->balance,
-                    'balance_after'     => $accountAfter?->balance,
-                    'daily_limit'       => $dailyLimit,
-                    'today_withdrawal'  => $todayTotalAfter,
-                    'remaining_quota'   => $sisaKuotaAfter,
+                    'transaction'    => $transaction,
+                    'account'        => $accountAfter,
+                    'balance_before' => $account->balance,
+                    'balance_after'  => $accountAfter?->balance,
                 ],
             ], 201);
         } catch (\Exception $e) {

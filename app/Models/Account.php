@@ -53,4 +53,49 @@ class Account extends Model
     {
         return $this->hasMany(TopUpRequest::class, 'account_number', 'account_number');
     }
+
+    /**
+     * Limit harian belanja KOPERASI (bukan tarik tunai).
+     *
+     * Hierarki:
+     * 1. Dispensasi manual per akun: accounts.daily_withdrawal_limit > 0
+     * 2. Saldo < 10.000 → 0 (tidak bisa belanja, sesuai aturan bawah tier)
+     * 3. Tier global dari Setting (JSON cached): 5.000 / 10.000 / 15.000
+     * 4. Fallback terakhir: 5.000
+     *
+     * CATATAN: Tarik tunai di teller TIDAK memakai limit ini (kebijakan
+     * berlaku di luar sistem).
+     */
+    public function getKoperasiSpendLimit(): float
+    {
+        // 1. Dispensasi manual per rekening
+        if (!empty($this->daily_withdrawal_limit) && (float) $this->daily_withdrawal_limit > 0) {
+            return (float) $this->daily_withdrawal_limit;
+        }
+
+        $balance = (float) $this->balance;
+
+        // 2. Di bawah batas bawah tier
+        if ($balance < 10000) {
+            return 0;
+        }
+
+        // 3. Cari tier yang cocok dengan saldo saat ini
+        $tiers = Setting::getTiers('koperasi_daily_limit_tiers', [
+            ['min' => 10000,  'max' => 150000, 'limit' => 5000],
+            ['min' => 150001, 'max' => 300000, 'limit' => 10000],
+            ['min' => 300001, 'max' => null,   'limit' => 15000],
+        ]);
+
+        foreach ($tiers as $tier) {
+            $min = (float) $tier['min'];
+            $max = $tier['max'] !== null ? (float) $tier['max'] : null;
+            if ($balance >= $min && ($max === null || $balance <= $max)) {
+                return (float) $tier['limit'];
+            }
+        }
+
+        // 4. Fallback
+        return 5000;
+    }
 }

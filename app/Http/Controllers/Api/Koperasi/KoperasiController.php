@@ -114,15 +114,18 @@ class KoperasiController extends Controller
             });
         }
 
-        // 3. Hitung limit harian santri
-        $dailyLimit = (float) ($account->daily_withdrawal_limit ?? $account->product->daily_withdrawal_limit ?? 0);
+        // 3. Hitung limit harian belanja KOPERASI (tiered berdasarkan saldo)
+        // KEBIJAKAN: Limit ini HANYA berlaku untuk belanja koperasi (COOP-BUY).
+        // Tarik tunai di teller TIDAK punya limit harian (aturan di luar sistem).
+        // Uang makan (COOP-MEAL) diatur di PaymentPackage, tidak masuk hitungan.
+        $dailyLimit    = $account->getKoperasiSpendLimit();
         $spentToday = 0;
         if ($dailyLimit > 0) {
             $spentToday = (float) Transaction::where('source_account', $account->account_number)
                 ->where('status', 'success')
                 ->whereDate('created_at', now()->toDateString())
                 ->whereHas('type', function ($q) {
-                    $q->whereIn('code', ['WDR-SANTRI', 'CASH-WDR', 'COOP-BUY', 'COOP-MEAL']);
+                    $q->where('code', 'COOP-BUY');
                 })
                 ->sum('amount');
         }
@@ -181,6 +184,7 @@ class KoperasiController extends Controller
                 'daily_limit'         => $dailyLimit,
                 'spent_today'         => $spentToday,
                 'remaining_daily_limit'=> $remainingLimit,
+                'remaining_limit'     => $remainingLimit,
                 'student'             => $studentData,
                 'kitchen_status'      => $kitchenStatus,
             ],
@@ -255,24 +259,28 @@ class KoperasiController extends Controller
             }
         }
 
-        // 2. Validasi Limit Harian Uang Saku
-        $dailyLimit = (float) ($account->daily_withdrawal_limit ?? $account->product->daily_withdrawal_limit ?? 0);
-        if ($dailyLimit > 0) {
-            $spentToday = (float) Transaction::where('source_account', $account->account_number)
-                ->where('status', 'success')
-                ->whereDate('created_at', now()->toDateString())
-                ->whereHas('type', function ($q) {
-                    $q->whereIn('code', ['WDR-SANTRI', 'CASH-WDR', 'COOP-BUY', 'COOP-MEAL']);
-                })
-                ->sum('amount');
+        // 2. Validasi Limit Harian Belanja Koperasi (Tiered berdasarkan saldo)
+        // KEBIJAKAN: Hanya berlaku untuk belanja koperasi (outlet_type: koperasi, COOP-BUY).
+        // Dapur (makan) diatur terpisah, dan tarik tunai teller tidak punya limit harian.
+        if ($outletType === 'koperasi') {
+            $dailyLimit = $account->getKoperasiSpendLimit();
+            if ($dailyLimit > 0) {
+                $spentToday = (float) Transaction::where('source_account', $account->account_number)
+                    ->where('status', 'success')
+                    ->whereDate('created_at', now()->toDateString())
+                    ->whereHas('type', function ($q) {
+                        $q->where('code', 'COOP-BUY');
+                    })
+                    ->sum('amount');
 
-            if (($spentToday + $amount) > $dailyLimit) {
-                $sisaKuota = max(0, $dailyLimit - $spentToday);
-                return response()->json([
-                    'status'  => 'error',
-                    'code'    => 'DAILY_LIMIT_EXCEEDED',
-                    'message' => "Transaksi melebihi batas limit harian (Maksimal Rp " . number_format($dailyLimit, 0, ',', '.') . "/hari). Sisa kuota hari ini: Rp " . number_format($sisaKuota, 0, ',', '.') . ".",
-                ], 422);
+                if (($spentToday + $amount) > $dailyLimit) {
+                    $sisaKuota = max(0, $dailyLimit - $spentToday);
+                    return response()->json([
+                        'status'  => 'error',
+                        'code'    => 'DAILY_LIMIT_EXCEEDED',
+                        'message' => "Transaksi melebihi batas limit harian belanja koperasi (Maksimal Rp " . number_format($dailyLimit, 0, ',', '.') . "/hari). Sisa kuota hari ini: Rp " . number_format($sisaKuota, 0, ',', '.') . ".",
+                    ], 422);
+                }
             }
         }
 

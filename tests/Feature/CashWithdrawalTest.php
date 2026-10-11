@@ -81,7 +81,6 @@ class CashWithdrawalTest extends TestCase
             'data' => [
                 'balance_before' => 100000,
                 'balance_after' => 80000,
-                'remaining_quota' => 30000,
             ]
         ]);
 
@@ -114,8 +113,10 @@ class CashWithdrawalTest extends TestCase
         $this->assertEquals(25000, $account->fresh()->balance);
     }
 
-    public function test_cash_withdrawal_rejected_when_exceeding_daily_limit()
+    public function test_cash_withdrawal_no_limit_even_when_above_daily_withdrawal_limit()
     {
+        // KEBIJAKAN: Tarik tunai teller TANPA limit harian (aturan berlaku di luar sistem).
+        // product.daily_withdrawal_limit = 50000, tapi tarik 60000 tetap SUKSES.
         $account = Account::create([
             'account_number' => '1003',
             'customer_id' => 125,
@@ -126,15 +127,20 @@ class CashWithdrawalTest extends TestCase
             'open_date' => now()->toDateString(),
         ]);
 
-        // Daily limit is 50000, trying to withdraw 60000
         $response = $this->actingAs($this->user, 'api')->postJson('/api/main/transaction/cash-withdrawal', [
             'account_number' => '1003',
             'amount' => 60000,
         ]);
 
-        $response->assertStatus(422);
-        $this->assertStringContainsString('limit harian', $response->json('message'));
-        $this->assertEquals(200000, $account->fresh()->balance);
+        $response->assertStatus(201);
+        $response->assertJson([
+            'status' => 'success',
+            'data' => [
+                'balance_before' => 200000,
+                'balance_after' => 140000,
+            ]
+        ]);
+        $this->assertEquals(140000, $account->fresh()->balance);
     }
 
     public function test_instansi_withdrawal_not_restricted_by_santri_limit()

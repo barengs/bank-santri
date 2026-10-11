@@ -48,6 +48,7 @@ class SettingController extends Controller
             'midtrans_server_key', 'midtrans_client_key', 'midtrans_merchant_id',
             'midtrans_is_production',
             'koperasi_api_key', 'koperasi_outlet_name', 'koperasi_max_transaction_amount',
+            'koperasi_daily_limit_tiers',
             'pesantren_name', 'pesantren_address', 'pesantren_phone',
             'dapur_meal_sessions', 'dapur_prevent_double_tap', 'dapur_max_transaction_amount',
         ];

@@ -99,6 +99,9 @@ class KoperasiMobileApiTest extends TestCase
 
     public function test_can_process_koperasi_debit_and_deducts_balance(): void
     {
+        // Saldo 350.000 -> tier 3 (> 300.000) -> limit harian 15.000
+        $this->account->update(['balance' => 350000]);
+
         $response = $this->withHeaders([
             'X-Koperasi-Key' => $this->apiKey,
         ])->postJson('/api/koperasi/debit', [
@@ -110,9 +113,9 @@ class KoperasiMobileApiTest extends TestCase
 
         $response->assertStatus(201)
             ->assertJsonPath('status', 'success')
-            ->assertJsonPath('data.balance_after', 85000);
+            ->assertJsonPath('data.balance_after', 335000);
 
-        $this->assertEquals(85000, (float) $this->account->fresh()->balance);
+        $this->assertEquals(335000, (float) $this->account->fresh()->balance);
     }
 
     public function test_can_process_dapur_meal_debit_and_prevents_double_tap(): void
@@ -161,6 +164,7 @@ class KoperasiMobileApiTest extends TestCase
 
     public function test_debit_records_cashier_audit_trail_and_activity_log(): void
     {
+        $this->account->update(['balance' => 350000]);
         $teller = User::factory()->create(['name' => 'Ustadz Ahmad Kasir']);
         $token = auth('api')->login($teller);
 
@@ -183,5 +187,80 @@ class KoperasiMobileApiTest extends TestCase
             'user_id'        => $teller->id,
             'cashier_name'   => 'Ustadz Ahmad Kasir',
         ]);
+    }
+
+    public function test_rejects_debit_if_exceeding_tiered_daily_limit(): void
+    {
+        // Saldo 100.000 -> tier 2 (10rb-150rb) -> limit harian 5.000 (COOP-BUY only)
+        // Coba debit 15.000 -> harus ditolak DAILY_LIMIT_EXCEEDED
+        $this->account->update(['balance' => 100000]);
+
+        $response = $this->withHeaders([
+            'X-Koperasi-Key' => $this->apiKey,
+        ])->postJson('/api/koperasi/debit', [
+            'account_number'   => 'SANTRI99',
+            'amount'           => 15000,
+            'outlet_type'      => 'koperasi',
+            'item_description' => 'Belanja ATK dan Buku',
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJsonPath('code', 'DAILY_LIMIT_EXCEEDED')
+            ->assertJsonPath('status', 'error');
+        $this->assertStringContainsString('5.000', $response->json('message'));
+        $this->assertEquals(100000, (float) $this->account->fresh()->balance);
+    }
+
+    public function test_dispensasi_manual_limit_overrides_tiered_limit(): void
+    {
+        // daily_withdrawal_limit = 50000 (dispensasi manual) menggantikan tier
+        $this->account->update(['balance' => 350000, 'daily_withdrawal_limit' => 50000]);
+
+        $response = $this->withHeaders([
+            'X-Koperasi-Key' => $this->apiKey,
+        ])->postJson('/api/koperasi/debit', [
+            'account_number'   => 'SANTRI99',
+            'amount'           => 45000,
+            'outlet_type'      => 'koperasi',
+            'item_description' => 'Dispensasi khusus',
+        ]);
+
+        $response->assertStatus(201);
+        $this->assertEquals(305000, (float) $this->account->fresh()->balance);
+    }
+
+    public function test_meal_debit_does_not_count_against_koperasi_daily_limit(): void
+    {
+        // Saldo 100.000 -> tier 2 -> limit harian koperasi 5.000.
+        // Tap makan (COOP-MEAL) 12.000 -> SUKSES karena uang makan diatur terpisah
+        $this->account->update(['balance' => 100000]);
+
+        $response = $this->withHeaders([
+            'X-Koperasi-Key' => $this->apiKey,
+        ])->postJson('/api/koperasi/debit', [
+            'identifier'   => 'SANTRI99',
+            'amount'       => 12000,
+            'outlet_type'  => 'dapur',
+            'meal_session' => 'siang',
+        ]);
+
+        $response->assertStatus(201)
+            ->assertJsonPath('status', 'success');
+        $this->assertEquals(88000, (float) $this->account->fresh()->balance);
+    }
+
+    public function test_check_response_includes_tiered_daily_limit(): void
+    {
+        // Saldo 100.000 -> tier 2 -> daily_limit = 5.000
+        $this->account->update(['balance' => 100000]);
+
+        $response = $this->withHeaders([
+            'X-Koperasi-Key' => $this->apiKey,
+        ])->getJson('/api/koperasi/check/SANTRI99?outlet_type=koperasi');
+
+        $response->assertStatus(200)
+            ->assertJsonPath('data.balance', 100000)
+            ->assertJsonPath('data.daily_limit', 5000)
+            ->assertJsonPath('data.remaining_limit', 5000);
     }
 }
