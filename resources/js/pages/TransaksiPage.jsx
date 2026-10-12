@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { 
     Search, 
     Filter, 
@@ -13,11 +13,15 @@ import {
     Clock,
     CheckCircle2,
     XCircle,
-    AlertCircle
+    AlertCircle,
+    RefreshCw,
+    Radio
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useGetTransactionsQuery } from '../store/transactionApi';
 import DataTable from '../components/DataTable';
+
+const POLLING_INTERVAL = 60; // detik
 
 const TransaksiPage = () => {
     const navigate = useNavigate();
@@ -26,14 +30,55 @@ const TransaksiPage = () => {
     const [search, setSearch] = useState('');
     const [status, setStatus] = useState('');
     const [channel, setChannel] = useState('');
+    const [isAutoRefresh, setIsAutoRefresh] = useState(true);
+    const [lastUpdated, setLastUpdated] = useState(null);
+    const [countdown, setCountdown] = useState(POLLING_INTERVAL);
+    const countdownRef = useRef(null);
 
-    const { data: transRes, isLoading } = useGetTransactionsQuery({
+    const { data: transRes, isLoading, isFetching, refetch, fulfilledTimeStamp } = useGetTransactionsQuery({
         page,
         search,
         status,
         channel,
         per_page: perPage
+    }, {
+        pollingInterval: isAutoRefresh ? POLLING_INTERVAL * 1000 : 0,
+        refetchOnFocus: true,
+        refetchOnReconnect: true,
     });
+
+    // Track waktu update terakhir & reset countdown
+    useEffect(() => {
+        if (fulfilledTimeStamp) {
+            setLastUpdated(new Date(fulfilledTimeStamp));
+            setCountdown(POLLING_INTERVAL);
+        }
+    }, [fulfilledTimeStamp]);
+
+    // Countdown timer
+    useEffect(() => {
+        if (countdownRef.current) clearInterval(countdownRef.current);
+
+        if (isAutoRefresh) {
+            countdownRef.current = setInterval(() => {
+                setCountdown((prev) => (prev <= 1 ? POLLING_INTERVAL : prev - 1));
+            }, 1000);
+        }
+
+        return () => {
+            if (countdownRef.current) clearInterval(countdownRef.current);
+        };
+    }, [isAutoRefresh]);
+
+    const handleManualRefresh = useCallback(() => {
+        refetch();
+        setCountdown(POLLING_INTERVAL);
+    }, [refetch]);
+
+    const formatLastUpdated = (date) => {
+        if (!date) return '-';
+        return date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    };
 
     const formatIDR = (amount) => {
         return new Intl.NumberFormat('id-ID', {
@@ -155,6 +200,39 @@ const TransaksiPage = () => {
                     <p className="text-xs text-gray-500">Daftar riwayat seluruh transaksi perbankan dan mutasi.</p>
                 </div>
                 <div className="flex items-center gap-2">
+                    {/* Auto Refresh Toggle */}
+                    <div className="flex items-center gap-2 mr-1">
+                        <button
+                            onClick={() => setIsAutoRefresh(!isAutoRefresh)}
+                            className={`group relative flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-semibold border transition-all duration-200 ${
+                                isAutoRefresh 
+                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100' 
+                                    : 'bg-gray-50 text-gray-500 border-gray-200 hover:bg-gray-100'
+                            }`}
+                            title={isAutoRefresh ? `Auto-refresh aktif · Update berikutnya: ${countdown}s` : 'Auto-refresh nonaktif'}
+                        >
+                            <Radio className={`w-3 h-3 ${
+                                isAutoRefresh ? 'text-emerald-500 animate-pulse' : 'text-gray-400'
+                            }`} />
+                            {isAutoRefresh ? (
+                                <>
+                                    <span>Live</span>
+                                    <span className="tabular-nums text-[10px] text-emerald-500 font-mono">{countdown}s</span>
+                                </>
+                            ) : (
+                                <span>Paused</span>
+                            )}
+                        </button>
+                        <button
+                            onClick={handleManualRefresh}
+                            disabled={isFetching}
+                            className="flex items-center justify-center p-1.5 rounded-md border border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors disabled:opacity-50"
+                            title={`Refresh sekarang${lastUpdated ? ` · Terakhir: ${formatLastUpdated(lastUpdated)}` : ''}`}
+                        >
+                            <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? 'animate-spin' : ''}`} />
+                        </button>
+                    </div>
+
                     <button 
                         onClick={() => {
                             const params = new URLSearchParams();
@@ -247,6 +325,11 @@ const TransaksiPage = () => {
             </div>
 
             {/* Table Area */}
+            {/* Subtle fetch indicator bar */}
+            {isFetching && !isLoading && (
+                <div className="h-0.5 w-full bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-500 rounded-full animate-pulse" />
+            )}
+
             <DataTable 
                 columns={columns}
                 data={transRes?.data?.data || []}
@@ -262,6 +345,16 @@ const TransaksiPage = () => {
                 }}
                 pageSizeOptions={[10, 20, 50, 100]}
             />
+
+            {/* Footer: last updated info */}
+            {lastUpdated && (
+                <div className="flex items-center justify-end gap-1.5 pt-1 border-t border-gray-50">
+                    <Clock className="w-3 h-3 text-gray-300" />
+                    <span className="text-[10px] text-gray-400 font-medium">
+                        Data terakhir diperbarui: {formatLastUpdated(lastUpdated)}
+                    </span>
+                </div>
+            )}
         </div>
     );
 };
