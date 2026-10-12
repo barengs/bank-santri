@@ -15,14 +15,17 @@ class TopUpRequest extends Model
         'status',            // pending | waiting_verification | success | failed
         'payment_ref',       // order_id Midtrans / no. referensi transfer
         'payment_proof',     // path foto bukti transfer
+        'addon_item_ids',    // array id transaction_items yang dipilih
+        'requested_by_type', // wali | teller
         'verified_by',       // admin user_id
         'verified_at',
         'notes',
     ];
 
     protected $casts = [
-        'amount'      => 'decimal:2',
-        'verified_at' => 'datetime',
+        'amount'         => 'decimal:2',
+        'addon_item_ids' => 'array',
+        'verified_at'    => 'datetime',
     ];
 
     public function account()

@@ -363,19 +363,93 @@ class AccountController extends Controller
             abort(404, "Rekening atau nomor kartu tidak ditemukan.");
         }
 
-        if ($account->customer_id != 0 && !isset($account->student)) {
+        if (!isset($account->student)) {
             try {
                 $smptUrl = $this->smptBaseUrl();
-                $studentRes = $this->smptHttp()->get("{$smptUrl}/api/main/student/{$account->customer_id}");
-                if ($studentRes->successful()) {
-                    $account->student = $studentRes->json('data');
+                $studentRes = null;
+                if (!empty($account->customer_id)) {
+                    $studentRes = $this->smptHttp()->get("{$smptUrl}/api/main/student/{$account->customer_id}");
+                    if ($studentRes->successful()) {
+                        $account->student = $studentRes->json('data');
+                    }
+                }
+
+                // Jika belum dapat dari customer_id, cari berdasarkan NIS (account_number)
+                if (!isset($account->student) && !empty($account->account_number)) {
+                    $cardRes = $this->smptHttp()->get("{$smptUrl}/api/main/student/card/{$account->account_number}");
+                    if ($cardRes->successful() && !empty($cardRes->json('data.card.student'))) {
+                        $account->student = $cardRes->json('data.card.student');
+                    }
                 }
             } catch (\Exception $e) {
                 Log::warning('Failed to fetch student from SMPT: ' . $e->getMessage());
             }
         }
 
+        // Format full photo_url jika foto santri tersedia
+        if (isset($account->student)) {
+            $student = is_array($account->student) ? $account->student : (array) $account->student;
+            $photo = $student['photo_url'] ?? $student['photo'] ?? null;
+            if ($photo) {
+                $smptUrl = rtrim($this->smptBaseUrl(), '/');
+                $fullPhotoUrl = str_starts_with($photo, 'http') ? $photo : "{$smptUrl}/storage/" . ltrim($photo, '/');
+                $student['photo_url'] = $fullPhotoUrl;
+                $account->photo_url = $fullPhotoUrl;
+            } else {
+                $account->photo_url = null;
+            }
+            $account->student = $student;
+        }
+
         return response()->json(['status' => 'success', 'data' => $account]);
+    }
+
+    /**
+     * Proxy / streaming foto profil santri dari microservice SMPT
+     */
+    public function photo(string $accountNumber)
+    {
+        $account = Account::where('account_number', $accountNumber)
+            ->orWhere('card_number', $accountNumber)
+            ->first();
+
+        $photoPath = null;
+        $smptUrl = rtrim($this->smptBaseUrl(), '/');
+
+        if ($account && !empty($account->customer_id)) {
+            try {
+                $studentRes = $this->smptHttp()->get("{$smptUrl}/api/main/student/{$account->customer_id}");
+                if ($studentRes->successful()) {
+                    $photoPath = $studentRes->json('data.photo') ?? $studentRes->json('data.photo_url');
+                }
+            } catch (\Exception $e) {}
+        }
+
+        if (!$photoPath) {
+            try {
+                $cardRes = $this->smptHttp()->get("{$smptUrl}/api/main/student/card/{$accountNumber}");
+                if ($cardRes->successful()) {
+                    $photoPath = $cardRes->json('data.card.student.photo') ?? $cardRes->json('data.card.student.photo_url');
+                }
+            } catch (\Exception $e) {}
+        }
+
+        if (!$photoPath) {
+            abort(404, 'Foto santri tidak ditemukan.');
+        }
+
+        $fullUrl = str_starts_with($photoPath, 'http') ? $photoPath : "{$smptUrl}/storage/" . ltrim($photoPath, '/');
+
+        try {
+            $res = Http::timeout(5)->get($fullUrl);
+            if ($res->successful()) {
+                return response($res->body(), 200)
+                    ->header('Content-Type', $res->header('Content-Type') ?: 'image/jpeg')
+                    ->header('Cache-Control', 'public, max-age=86400');
+            }
+        } catch (\Exception $e) {}
+
+        abort(404, 'Gagal mengambil file foto santri.');
     }
 
     public function update(Request $request, string $accountNumber)

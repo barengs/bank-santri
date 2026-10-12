@@ -78,6 +78,7 @@ Route::group(['prefix' => 'main', 'middleware' => ['autoprovision', 'auth:api']]
     // Rekening santri & Instansi
     Route::get('account/smpt-search', [AccountController::class, 'smptSearch']);
     Route::post('account/instansi', [AccountController::class, 'storeInstansi']);
+    Route::get('account/{accountNumber}/photo', [AccountController::class, 'photo']);
     Route::get('account/{accountNumber}/rekening-koran/print', [AccountController::class, 'printRekeningKoran']);
     Route::apiResource('account', AccountController::class);
 
@@ -146,6 +147,9 @@ Route::group(['prefix' => 'koperasi', 'middleware' => ['koperasi.key']], functio
     Route::get('transactions',        [KoperasiController::class, 'transactions']);
 });
 
+// Foto Profil Santri (Public streaming agar bisa diakses oleh <img> dan Image.network)
+Route::get('koperasi/student-photo/{identifier}', [KoperasiController::class, 'studentPhoto']);
+
 // Midtrans Webhook (public — validasi via signature di dalam method)
 Route::post('midtrans/webhook', [TopUpController::class, 'midtransWebhook']);
 
@@ -161,6 +165,11 @@ Route::group(['prefix' => 'internal', 'middleware' => ['internal.key']], functio
     Route::get('account/{accountNumber}', [AccountController::class, 'showInternal']);
     Route::get('account/{accountNumber}/transactions', [\App\Http\Controllers\Api\Main\TransactionController::class, 'getByAccountInternal']);
     Route::get('account/{accountNumber}/arrears', [\App\Http\Controllers\Api\Main\BillController::class, 'getArrearsInternal']);
+    // Fitur Keuangan Wali Santri (Proxy dari SMPT)
+    Route::get('payment-packages', [\App\Http\Controllers\Api\Master\PaymentPackageController::class, 'index']);
+    Route::get('transaction-items/addons', [\App\Http\Controllers\Api\Master\TransactionItemController::class, 'index']);
+    Route::get('account/{accountNumber}/top-ups', [\App\Http\Controllers\Api\Main\TopUpController::class, 'byAccountInternal']);
+    Route::post('top-up/bank-transfer', [\App\Http\Controllers\Api\Main\TopUpController::class, 'bankTransferTopUp']);
 });
 
 // Protected Security & Admin Routes

@@ -114,6 +114,36 @@ class KoperasiController extends Controller
             });
         }
 
+        // Fallback jika belum dapat dari customer_id, cari via NIS / Kartu
+        if (!$studentData && !empty($account->account_number)) {
+            $studentData = Cache::remember("smpt:student:nis:{$account->account_number}", 1800, function () use ($account) {
+                try {
+                    $smptUrl = config('services.smpt.url');
+                    $internalKey = config('services.smpt.internal_key') ?: config('services.bank_santri.key');
+                    if (!$smptUrl) return null;
+
+                    $res = Http::connectTimeout(1)
+                        ->timeout(1.5)
+                        ->withHeaders(['X-Internal-Key' => $internalKey])
+                        ->get("{$smptUrl}/api/main/student/card/{$account->account_number}");
+
+                    return $res->successful() ? $res->json('data.card.student') : null;
+                } catch (\Throwable $e) {
+                    return null;
+                }
+            });
+        }
+
+        // Format photo_url lengkap
+        if ($studentData) {
+            $photo = $studentData['photo_url'] ?? $studentData['photo'] ?? null;
+            if ($photo) {
+                $smptUrl = rtrim(config('services.smpt.url'), '/');
+                $fullPhotoUrl = str_starts_with($photo, 'http') ? $photo : "{$smptUrl}/storage/" . ltrim($photo, '/');
+                $studentData['photo_url'] = $fullPhotoUrl;
+            }
+        }
+
         // 3. Hitung limit harian belanja KOPERASI (tiered berdasarkan saldo)
         // KEBIJAKAN: Limit ini HANYA berlaku untuk belanja koperasi (COOP-BUY).
         // Tarik tunai di teller TIDAK punya limit harian (aturan di luar sistem).
@@ -186,6 +216,7 @@ class KoperasiController extends Controller
                 'remaining_daily_limit'=> $remainingLimit,
                 'remaining_limit'     => $remainingLimit,
                 'student'             => $studentData,
+                'photo_url'           => $studentData['photo_url'] ?? null,
                 'kitchen_status'      => $kitchenStatus,
             ],
         ]);
@@ -552,5 +583,58 @@ class KoperasiController extends Controller
                 'recent_transactions' => $recentTransactions,
             ],
         ]);
+    }
+
+    /**
+     * Proxy / streaming foto profil santri dari SMPT microservice
+     */
+    public function studentPhoto(string $identifier)
+    {
+        $account = Account::where('account_number', $identifier)
+            ->orWhere('card_number', $identifier)
+            ->first();
+
+        $photoPath = null;
+        $smptUrl = rtrim(config('services.smpt.url'), '/');
+        $internalKey = config('services.smpt.internal_key') ?: config('services.bank_santri.key');
+
+        if ($account && !empty($account->customer_id)) {
+            try {
+                $res = Http::timeout(2)
+                    ->withHeaders(['X-Internal-Key' => $internalKey])
+                    ->get("{$smptUrl}/api/main/student/{$account->customer_id}");
+                if ($res->successful()) {
+                    $photoPath = $res->json('data.photo') ?? $res->json('data.photo_url');
+                }
+            } catch (\Throwable $e) {}
+        }
+
+        if (!$photoPath) {
+            try {
+                $res = Http::timeout(2)
+                    ->withHeaders(['X-Internal-Key' => $internalKey])
+                    ->get("{$smptUrl}/api/main/student/card/{$identifier}");
+                if ($res->successful()) {
+                    $photoPath = $res->json('data.card.student.photo') ?? $res->json('data.card.student.photo_url');
+                }
+            } catch (\Throwable $e) {}
+        }
+
+        if (!$photoPath) {
+            abort(404, 'Foto santri tidak ditemukan.');
+        }
+
+        $fullUrl = str_starts_with($photoPath, 'http') ? $photoPath : "{$smptUrl}/storage/" . ltrim($photoPath, '/');
+
+        try {
+            $imageRes = Http::timeout(5)->get($fullUrl);
+            if ($imageRes->successful()) {
+                return response($imageRes->body(), 200)
+                    ->header('Content-Type', $imageRes->header('Content-Type') ?: 'image/jpeg')
+                    ->header('Cache-Control', 'public, max-age=86400');
+            }
+        } catch (\Throwable $e) {}
+
+        abort(404, 'Gagal mengambil gambar foto santri.');
     }
 }

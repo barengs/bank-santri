@@ -174,12 +174,25 @@ class TopUpController extends Controller
      */
     public function bankTransferTopUp(Request $request)
     {
+        // Decode addon_item_ids if passed as JSON string (common in multipart forms)
+        $addonItemIds = $request->input('addon_item_ids');
+        if (is_string($addonItemIds)) {
+            $decoded = json_decode($addonItemIds, true);
+            if (is_array($decoded)) {
+                $addonItemIds = $decoded;
+                $request->merge(['addon_item_ids' => $addonItemIds]);
+            }
+        }
+
         $validator = Validator::make($request->all(), [
             'account_number'     => 'required|exists:accounts,account_number',
-            'payment_package_id' => 'required|exists:payment_packages,id',
+            'payment_package_id' => 'nullable|exists:payment_packages,id',
+            'addon_item_ids'     => 'nullable|array',
+            'addon_item_ids.*'   => 'integer|exists:transaction_items,id',
             'amount'             => 'required|numeric|min:10000',
-            'payment_proof'      => 'required|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'payment_proof'      => 'required|file|mimes:jpeg,png,jpg,webp,pdf|max:5120',
             'notes'              => 'nullable|string',
+            'requested_by_type'  => 'nullable|string|in:wali,teller',
         ]);
 
         if ($validator->fails()) {
@@ -192,6 +205,8 @@ class TopUpController extends Controller
         $topUp = TopUpRequest::create([
             'account_number'     => $request->account_number,
             'payment_package_id' => $request->payment_package_id,
+            'addon_item_ids'     => $addonItemIds,
+            'requested_by_type'  => $request->input('requested_by_type', 'wali'),
             'amount'             => $request->amount,
             'channel'            => 'bank_transfer',
             'status'             => 'waiting_verification',
@@ -255,10 +270,40 @@ class TopUpController extends Controller
                     }
                 }
 
+                // Proses item Add-on jika ada
+                $processedAddons = [];
+                if (!empty($topUp->addon_item_ids) && is_array($topUp->addon_item_ids)) {
+                    $addonItems = \App\Models\TransactionItem::whereIn('id', $topUp->addon_item_ids)
+                        ->where('is_active', true)
+                        ->get();
+
+                    foreach ($addonItems as $addon) {
+                        try {
+                            app(\App\Services\AccountingService::class)->recordPackageItemTransaction(
+                                $addon,
+                                (float) $addon->default_amount,
+                                $topUp->account_number,
+                                $addon->destination_account,
+                                "Biaya Add-On: {$addon->item_name} [{$topUp->payment_ref}]",
+                                'bank_transfer',
+                                ['reference_number' => $topUp->payment_ref . '-ADD' . $addon->id]
+                            );
+                            $processedAddons[] = [
+                                'id'     => $addon->id,
+                                'name'   => $addon->item_name,
+                                'amount' => (float) $addon->default_amount,
+                            ];
+                        } catch (\Exception $e) {
+                            \Illuminate\Support\Facades\Log::warning("Gagal memproses add-on transfer {$addon->item_name}: " . $e->getMessage());
+                        }
+                    }
+                }
+
                 return response()->json([
                     'status'          => 'success',
                     'message'         => 'Top-up berhasil diverifikasi.' . ($paymentWarning ? " Catatan: {$paymentWarning}" : ($topUp->payment_package_id ? " Pembayaran paket diproses." : "")),
                     'data'            => $topUp,
+                    'addons'          => $processedAddons,
                     'payment_warning' => $paymentWarning,
                 ]);
 
@@ -269,6 +314,23 @@ class TopUpController extends Controller
                 ], 422);
             }
         });
+    }
+
+    /**
+     * Riwayat top-up per santri (Internal API for SMPT proxy)
+     */
+    public function byAccountInternal(string $accountNumber, Request $request)
+    {
+        $perPage = $request->get('per_page', 20);
+        $requests = TopUpRequest::with('package')
+            ->where('account_number', $accountNumber)
+            ->latest()
+            ->paginate($perPage);
+
+        return response()->json([
+            'status' => 'success',
+            'data'   => $requests
+        ]);
     }
 
     /**

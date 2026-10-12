@@ -6,17 +6,19 @@ import {
     Loader2, AlertCircle, Printer
 } from 'lucide-react';
 import { useGetTransactionsQuery } from '../store/transactionApi';
-import { useGetAccountsQuery } from '../store/accountApi';
+import { useGetAccountDetailQuery, useGetAccountsQuery } from '../store/accountApi';
 import RekeningKoranModal from '../components/RekeningKoranModal';
 
 const NasabahDetailPage = () => {
     const { accountNumber } = useParams();
     const navigate = useNavigate();
     const [isKoranOpen, setIsKoranOpen] = useState(false);
+    const [imageError, setImageError] = useState(false);
 
-    // Fetch Account Info
-    const { data: accountsRes, isLoading: isLoadingAccount } = useGetAccountsQuery({ search: accountNumber });
-    const account = accountsRes?.data?.data?.find(acc => acc.account_number === accountNumber);
+    // Fetch Account Info lengkap termasuk data santri & foto dari SMPT
+    const { data: accountDetailRes, isLoading: isLoadingAccount } = useGetAccountDetailQuery(accountNumber);
+    const { data: accountsRes } = useGetAccountsQuery({ search: accountNumber }, { skip: !!accountDetailRes?.data });
+    const account = accountDetailRes?.data || accountsRes?.data?.data?.find(acc => acc.account_number === accountNumber);
 
     // Fetch Transactions
     const { data: transactionsRes, isLoading: isLoadingTx } = useGetTransactionsQuery({ account_number: accountNumber });
@@ -101,15 +103,39 @@ const NasabahDetailPage = () => {
                 <div className="lg:col-span-1 space-y-4">
                     {/* Account Card */}
                     <div className="bg-white border border-gray-200 rounded-md p-4 space-y-4 shadow-none">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-md bg-blue-600 text-white flex items-center justify-center font-bold text-base shrink-0">
-                                {account.customer_name?.[0] || 'S'}
+                        <div className="flex items-center gap-3.5">
+                            {/* Foto Profil Santri */}
+                            <div className="relative shrink-0">
+                                {(account.photo_url || account.student?.photo_url) && !imageError ? (
+                                    <img 
+                                        src={account.photo_url || account.student?.photo_url} 
+                                        alt={account.customer_name}
+                                        onError={() => setImageError(true)}
+                                        className="w-14 h-14 rounded-lg object-cover border-2 border-emerald-500 shadow-sm"
+                                    />
+                                ) : (
+                                    <div className="w-14 h-14 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-xl shadow-sm">
+                                        {account.customer_name?.[0] || 'S'}
+                                    </div>
+                                )}
                             </div>
-                            <div className="min-w-0">
+                            <div className="min-w-0 flex-1">
                                 <h3 className="font-bold text-sm text-gray-800 leading-tight truncate">{account.customer_name}</h3>
-                                <span className="inline-block mt-0.5 px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 uppercase">
-                                    {account.status || 'Aktif'}
-                                </span>
+                                <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                                    <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 uppercase">
+                                        {account.status || 'Aktif'}
+                                    </span>
+                                    {(account.student?.current_class?.class_name || account.student?.class_name) && (
+                                        <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-blue-50 text-blue-700 border border-blue-200">
+                                            Kelas {account.student.current_class?.class_name || account.student.class_name}
+                                        </span>
+                                    )}
+                                    {(account.student?.hostel?.name || account.student?.hostel_name) && (
+                                        <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-purple-50 text-purple-700 border border-purple-200">
+                                            {account.student.hostel?.name || account.student.hostel_name}
+                                        </span>
+                                    )}
+                                </div>
                             </div>
                         </div>
 
