@@ -458,6 +458,7 @@ class AccountController extends Controller
         $validator = Validator::make($request->all(), [
             'product_id' => 'sometimes|exists:products,id',
             'status'     => 'sometimes|in:AKTIF,TIDAK AKTIF,TUTUP,TERBLOKIR,DIBEKUKAN',
+            'akad_type'  => 'sometimes|in:wadiah,mudharabah',
             'card_number' => 'sometimes|nullable|string|unique:accounts,card_number,' . $account->account_number . ',account_number',
             'daily_withdrawal_limit' => 'sometimes|nullable|numeric|min:0',
         ]);
@@ -473,14 +474,14 @@ class AccountController extends Controller
             ], 422);
         }
 
-        $account->update($request->only(['product_id', 'status', 'card_number', 'daily_withdrawal_limit']));
+        $account->update($request->only(['product_id', 'status', 'akad_type', 'card_number', 'daily_withdrawal_limit']));
 
         if ($request->status === 'TUTUP') {
             $account->close_date = now()->toDateString();
             $account->save();
         }
 
-        return response()->json(['status' => 'success', 'data' => $account]);
+        return response()->json(['status' => 'success', 'data' => $account->load('product')]);
     }
 
     public function destroy(string $accountNumber)

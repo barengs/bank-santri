@@ -170,7 +170,7 @@ const MutasiPage = () => {
                                 <div className="grid grid-cols-2 gap-2 text-xs">
                                     <div className="bg-gray-50 border border-gray-200 p-2 rounded">
                                         <p className="text-[10px] text-gray-400 uppercase">Produk</p>
-                                        <p className="font-semibold text-gray-700 truncate">{account.product?.name || 'TABUNGAN'}</p>
+                                        <p className="font-semibold text-gray-700 truncate">{account.product?.product_name || account.product?.name || 'TABUNGAN'}</p>
                                     </div>
                                     <div className="bg-gray-50 border border-gray-200 p-2 rounded">
                                         <p className="text-[10px] text-gray-400 uppercase">Status</p>

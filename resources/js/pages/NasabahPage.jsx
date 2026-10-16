@@ -32,6 +32,8 @@ const NasabahPage = () => {
     const [editingAccount, setEditingAccount] = useState(null);
     const [editCardNumber, setEditCardNumber] = useState('');
     const [editDailyLimit, setEditDailyLimit] = useState('');
+    const [editProductId, setEditProductId] = useState('');
+    const [editAkadType, setEditAkadType] = useState('wadiah');
 
     // Close Account State
     const [isCloseModalOpen, setIsCloseModalOpen] = useState(false);
@@ -175,10 +177,12 @@ const NasabahPage = () => {
                             setEditingAccount(row.original);
                             setEditCardNumber(row.original.card_number || '');
                             setEditDailyLimit(row.original.daily_withdrawal_limit !== null && row.original.daily_withdrawal_limit !== undefined ? row.original.daily_withdrawal_limit : '');
+                            setEditProductId(row.original.product_id ? String(row.original.product_id) : (row.original.product?.id ? String(row.original.product.id) : ''));
+                            setEditAkadType(row.original.akad_type || 'wadiah');
                             setIsEditModalOpen(true);
                         }}
                         className="px-2 py-0.5 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded text-xs font-medium inline-flex items-center gap-1 transition-colors"
-                        title="Pengaturan Kartu & Limit Rekening"
+                        title="Pengaturan Rekening, Produk & Limit"
                     >
                         <CreditCard className="w-3 h-3 text-gray-500" />
                         Edit
@@ -250,14 +254,16 @@ const NasabahPage = () => {
             await updateAccount({
                 accountNumber: editingAccount.account_number,
                 card_number: editCardNumber,
+                product_id: editProductId ? Number(editProductId) : undefined,
+                akad_type: editAkadType,
                 daily_withdrawal_limit: editDailyLimit === '' ? null : Number(editDailyLimit)
             }).unwrap();
             
             setIsEditModalOpen(false);
             setEditingAccount(null);
-            toast.success('Nomor kartu berhasil diperbarui!');
+            toast.success('Pengaturan rekening & produk berhasil diperbarui!');
         } catch (err) {
-            toast.error('Gagal memperbarui kartu: ' + (err.data?.message || 'Terjadi kesalahan'));
+            toast.error('Gagal memperbarui rekening: ' + (err.data?.message || 'Terjadi kesalahan'));
         }
     };
 
@@ -566,9 +572,12 @@ const NasabahPage = () => {
                 <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
                     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => !isUpdating && setIsEditModalOpen(false)}></div>
                     
-                    <div className="relative w-full max-w-sm bg-white rounded-md shadow-xl overflow-hidden animate-in fade-in zoom-in duration-200 border border-gray-200">
+                    <div className="relative w-full max-w-md bg-white rounded-md shadow-xl overflow-hidden animate-in fade-in zoom-in duration-200 border border-gray-200">
                         <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
-                            <h2 className="text-xs font-bold text-gray-900 uppercase tracking-wider">Pengaturan Rekening & Limit</h2>
+                            <div>
+                                <h2 className="text-xs font-bold text-gray-900 uppercase tracking-wider">Pengaturan Rekening, Produk & Limit</h2>
+                                <p className="text-[10px] text-gray-500 mt-0.5">Ganti produk, akad, kartu, dan limit harian</p>
+                            </div>
                             <button onClick={() => setIsEditModalOpen(false)} className="text-gray-400 hover:text-gray-600">
                                 <X className="w-4 h-4" />
                             </button>
@@ -579,6 +588,34 @@ const NasabahPage = () => {
                                 <p className="text-[10px] font-bold text-blue-500 uppercase tracking-wider">Nasabah</p>
                                 <p className="text-xs font-bold text-slate-800">{editingAccount?.customer_name}</p>
                                 <p className="text-[10px] text-blue-600 font-mono">{editingAccount?.account_number}</p>
+                            </div>
+
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold text-gray-700">Produk Tabungan</label>
+                                <select
+                                    value={editProductId}
+                                    onChange={(e) => setEditProductId(e.target.value)}
+                                    className="w-full pl-3 pr-8 py-1.5 bg-white border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all text-xs font-medium"
+                                >
+                                    {products.map((p) => (
+                                        <option key={p.id} value={p.id}>{p.product_name || p.name}</option>
+                                    ))}
+                                </select>
+                                <p className="text-[10px] text-gray-400">
+                                    Ganti produk tidak mengubah saldo; hanya menentukan batasan & biaya ke depan.
+                                </p>
+                            </div>
+
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold text-gray-700">Jenis Akad Syariah</label>
+                                <select
+                                    value={editAkadType}
+                                    onChange={(e) => setEditAkadType(e.target.value)}
+                                    className="w-full pl-3 pr-8 py-1.5 bg-white border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all text-xs font-medium capitalize"
+                                >
+                                    <option value="wadiah">Wadiah (Riba Bebas)</option>
+                                    <option value="mudharabah">Mudharabah (Bagi Hasil)</option>
+                                </select>
                             </div>
 
                             <div className="space-y-1">
@@ -600,7 +637,7 @@ const NasabahPage = () => {
                                 <label className="text-xs font-semibold text-gray-700">
                                     Limit Harian (Opsional)
                                     <span className="text-[10px] text-gray-400 font-normal ml-1">
-                                        (Kosongkan = ikut limit produk: {editingAccount?.product?.daily_withdrawal_limit ? formatIDR(editingAccount.product.daily_withdrawal_limit) : 'Bebas'})
+                                        (Kosongkan = ikut limit produk)
                                     </span>
                                 </label>
                                 <div className="relative">

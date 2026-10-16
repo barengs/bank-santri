@@ -3,10 +3,12 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { 
     ArrowLeft, CreditCard, User, ShieldCheck, 
     History, TrendingUp, TrendingDown, Clock,
-    Loader2, AlertCircle, Printer
+    Loader2, AlertCircle, Printer, Pencil
 } from 'lucide-react';
+import { toast } from 'react-toastify';
 import { useGetTransactionsQuery } from '../store/transactionApi';
-import { useGetAccountDetailQuery, useGetAccountsQuery } from '../store/accountApi';
+import { useGetAccountDetailQuery, useGetAccountsQuery, useUpdateAccountMutation } from '../store/accountApi';
+import { useGetProductsQuery } from '../store/productApi';
 import RekeningKoranModal from '../components/RekeningKoranModal';
 
 const NasabahDetailPage = () => {
@@ -23,6 +25,40 @@ const NasabahDetailPage = () => {
     // Fetch Transactions
     const { data: transactionsRes, isLoading: isLoadingTx } = useGetTransactionsQuery({ account_number: accountNumber });
     const transactions = transactionsRes?.data?.data || [];
+
+    // State untuk fitur Ganti Produk
+    const [isChangeProductOpen, setIsChangeProductOpen] = useState(false);
+    const [selectedProductId, setSelectedProductId] = useState('');
+    const [selectedAkadType, setSelectedAkadType] = useState('wadiah');
+
+    // Query daftar produk master & mutation update rekening
+    const { data: productsRes } = useGetProductsQuery();
+    const products = productsRes?.data || [];
+    const [updateAccount, { isLoading: isUpdatingProduct }] = useUpdateAccountMutation();
+
+    const openChangeProductModal = () => {
+        setSelectedProductId(account?.product_id || account?.product?.id || (products[0]?.id || ''));
+        setSelectedAkadType(account?.akad_type || 'wadiah');
+        setIsChangeProductOpen(true);
+    };
+
+    const handleChangeProduct = async (e) => {
+        if (e) e.preventDefault();
+        if (!selectedProductId) return;
+
+        try {
+            await updateAccount({
+                accountNumber: account.account_number,
+                product_id: Number(selectedProductId),
+                akad_type: selectedAkadType,
+            }).unwrap();
+
+            setIsChangeProductOpen(false);
+            toast.success('Produk tabungan berhasil diubah!');
+        } catch (err) {
+            toast.error(err?.data?.message || 'Gagal mengubah produk tabungan.');
+        }
+    };
 
     const formatIDR = (amount) => {
         return new Intl.NumberFormat('id-ID', {
@@ -75,6 +111,13 @@ const NasabahDetailPage = () => {
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
+                    <button 
+                        onClick={openChangeProductModal}
+                        className="px-3 py-1.5 border border-amber-300 text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-md text-xs font-medium transition-colors inline-flex items-center gap-1.5"
+                    >
+                        <Pencil className="w-3.5 h-3.5" />
+                        Ganti Produk
+                    </button>
                     <button 
                         onClick={() => setIsKoranOpen(true)}
                         className="px-3 py-1.5 border border-emerald-400 text-emerald-600 rounded-md text-xs font-medium hover:bg-emerald-50 transition-colors inline-flex items-center gap-1.5"
@@ -152,12 +195,31 @@ const NasabahDetailPage = () => {
 
                             <div className="grid grid-cols-2 gap-2 text-xs pt-1">
                                 <div className="bg-gray-50 border border-gray-200 p-2 rounded">
-                                    <p className="text-[10px] text-gray-400 uppercase">Produk</p>
-                                    <p className="font-semibold text-gray-700 truncate">{account.product?.name || 'Wadiah'}</p>
+                                    <div className="flex items-center justify-between">
+                                        <p className="text-[10px] text-gray-400 uppercase">Produk</p>
+                                        <button 
+                                            onClick={openChangeProductModal}
+                                            className="text-[10px] font-semibold text-blue-600 hover:text-blue-800 inline-flex items-center gap-0.5 hover:underline"
+                                            title="Ubah Produk Tabungan"
+                                        >
+                                            <Pencil className="w-2.5 h-2.5" /> Ganti
+                                        </button>
+                                    </div>
+                                    <p className="font-semibold text-gray-700 truncate" title={account.product?.product_name || account.product?.name || '-'}>
+                                        {account.product?.product_name || account.product?.name || '-'}
+                                    </p>
+                                    {account.product?.product_code && (
+                                        <p className="text-[9px] font-mono text-gray-400">{account.product.product_code}</p>
+                                    )}
                                 </div>
                                 <div className="bg-gray-50 border border-gray-200 p-2 rounded">
                                     <p className="text-[10px] text-gray-400 uppercase">Akad</p>
-                                    <p className="font-semibold text-gray-700 capitalize">{account.product?.contract_type || 'Wadiah'}</p>
+                                    <p className="font-semibold text-gray-700 capitalize">
+                                        {account.akad_type || 'Wadiah'}
+                                    </p>
+                                    <p className="text-[9px] text-gray-400 capitalize">
+                                        {account.product?.product_type || 'Tabungan'}
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -251,6 +313,151 @@ const NasabahDetailPage = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Modal Ganti Produk Tabungan */}
+            {isChangeProductOpen && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+                    <div 
+                        className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" 
+                        onClick={() => !isUpdatingProduct && setIsChangeProductOpen(false)}
+                    ></div>
+                    
+                    <div className="relative w-full max-w-md bg-white rounded-md shadow-xl overflow-hidden animate-in fade-in zoom-in duration-200 border border-gray-200">
+                        <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <div className="p-1.5 bg-amber-100 text-amber-700 rounded-md">
+                                    <Pencil className="w-4 h-4" />
+                                </div>
+                                <div>
+                                    <h2 className="text-xs font-bold text-gray-900 uppercase tracking-wider">Ganti Produk Tabungan</h2>
+                                    <p className="text-[11px] text-gray-500">Sesuaikan jenis produk tabungan & akad santri</p>
+                                </div>
+                            </div>
+                            <button 
+                                onClick={() => !isUpdatingProduct && setIsChangeProductOpen(false)} 
+                                className="text-gray-400 hover:text-gray-600 p-1"
+                            >
+                                <span className="text-lg leading-none">&times;</span>
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleChangeProduct} className="p-4 space-y-3.5">
+                            {/* Summary Santri */}
+                            <div className="p-3 bg-slate-50 border border-gray-200 rounded-md space-y-1.5">
+                                <div className="flex justify-between items-center text-xs">
+                                    <span className="text-gray-500 font-medium">Nasabah</span>
+                                    <span className="font-bold text-gray-900">{account.customer_name}</span>
+                                </div>
+                                <div className="flex justify-between items-center text-xs">
+                                    <span className="text-gray-500 font-medium">Nomor Rekening / NIS</span>
+                                    <span className="font-mono font-semibold text-blue-700">{account.account_number}</span>
+                                </div>
+                                <div className="flex justify-between items-center text-xs">
+                                    <span className="text-gray-500 font-medium">Saldo Tabungan Saat Ini</span>
+                                    <span className="font-bold text-emerald-700">{formatIDR(account.balance)}</span>
+                                </div>
+                                <div className="flex justify-between items-center text-xs">
+                                    <span className="text-gray-500 font-medium">Produk Saat Ini</span>
+                                    <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-gray-200 text-gray-800">
+                                        {account.product?.product_name || account.product?.name || 'Wadiah'}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Pilihan Produk Baru */}
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold text-gray-700">
+                                    Pilih Produk Bank / Tabungan Baru <span className="text-red-500">*</span>
+                                </label>
+                                <select 
+                                    value={selectedProductId}
+                                    onChange={(e) => setSelectedProductId(e.target.value)}
+                                    className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-xs font-medium focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                    required
+                                >
+                                    <option value="" disabled>Pilih Produk Bank</option>
+                                    {products.map(p => (
+                                        <option key={p.id} value={p.id}>
+                                            {p.product_name} ({p.product_code}) - {p.product_type}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {/* Info Produk Terpilih */}
+                            {selectedProductId && (() => {
+                                const prod = products.find(p => String(p.id) === String(selectedProductId));
+                                if (!prod) return null;
+                                return (
+                                    <div className="p-2.5 bg-blue-50/60 border border-blue-200 rounded-md text-xs space-y-1 text-blue-900">
+                                        <p className="font-bold text-[11px] text-blue-800 flex items-center justify-between">
+                                            <span>Rincian Produk: {prod.product_name}</span>
+                                            <span className="text-[10px] font-normal uppercase bg-blue-100 px-1.5 py-0.5 rounded text-blue-700 font-mono">{prod.product_code}</span>
+                                        </p>
+                                        <div className="grid grid-cols-2 gap-1.5 text-[11px] pt-0.5">
+                                            <div>
+                                                <span className="text-gray-500">Biaya Admin:</span>{' '}
+                                                <span className="font-semibold">{Number(prod.admin_fee) > 0 ? formatIDR(prod.admin_fee) : 'Gratis (Rp 0)'}</span>
+                                            </div>
+                                            <div>
+                                                <span className="text-gray-500">Saldo Minimal:</span>{' '}
+                                                <span className="font-semibold">{formatIDR(prod.minimum_balance || 0)}</span>
+                                            </div>
+                                            <div>
+                                                <span className="text-gray-500">Limit Belanja:</span>{' '}
+                                                <span className="font-semibold">{prod.daily_withdrawal_limit ? formatIDR(prod.daily_withdrawal_limit) : 'Sesuai Tier'}</span>
+                                            </div>
+                                            <div>
+                                                <span className="text-gray-500">Nisbah/Bagi Hasil:</span>{' '}
+                                                <span className="font-semibold">{prod.interest_rate || 0}%</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })()}
+
+                            {/* Pilihan Jenis Akad */}
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold text-gray-700">
+                                    Jenis Akad Syariah <span className="text-red-500">*</span>
+                                </label>
+                                <select 
+                                    value={selectedAkadType}
+                                    onChange={(e) => setSelectedAkadType(e.target.value)}
+                                    className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-xs font-medium focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                >
+                                    <option value="wadiah">Wadiah (Titipan Murni - Tanpa Biaya/Bunga)</option>
+                                    <option value="mudharabah">Mudharabah (Bagi Hasil Syariah)</option>
+                                </select>
+                            </div>
+
+                            <div className="p-2.5 bg-amber-50 border border-amber-200 rounded-md text-[11px] text-amber-800 flex items-start gap-2">
+                                <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                                <span>Perubahan produk tabungan akan memperbarui jenis tabungan nasabah santri tanpa mempengaruhi saldo maupun riwayat mutasi transaksi yang telah berjalan.</span>
+                            </div>
+
+                            <div className="pt-2 border-t border-gray-100 flex justify-end gap-2">
+                                <button 
+                                    type="button"
+                                    onClick={() => setIsChangeProductOpen(false)}
+                                    disabled={isUpdatingProduct}
+                                    className="px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded-md transition-all"
+                                >
+                                    Batal
+                                </button>
+                                <button 
+                                    type="submit"
+                                    disabled={!selectedProductId || isUpdatingProduct}
+                                    className="flex items-center justify-center gap-1.5 px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-semibold text-xs transition-all disabled:opacity-50"
+                                >
+                                    {isUpdatingProduct ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ShieldCheck className="w-3.5 h-3.5" />}
+                                    Simpan Perubahan Produk
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
