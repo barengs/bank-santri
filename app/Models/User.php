@@ -42,6 +42,33 @@ class User extends Authenticatable implements JWTSubject
         ];
     }
 
+    /**
+     * Dapatkan Product ID aktif dari role user (jika role dibatasi per produk bank).
+     * Mengembalikan null jika admin/adminbank/pimpinan atau jika role bersifat global.
+     */
+    public function getActiveProductId(): ?int
+    {
+        if ($this->hasRole('admin') || $this->hasRole('adminbank') || $this->hasRole('pimpinan')) {
+            return null;
+        }
+
+        foreach ($this->roles as $r) {
+            if (!empty($r->product_id)) {
+                return (int) $r->product_id;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Cek apakah user memiliki akses cross-product (Global scope).
+     */
+    public function isGlobalProductScope(): bool
+    {
+        return $this->getActiveProductId() === null;
+    }
+
     // JWT
     public function getJWTIdentifier()
     {
@@ -50,9 +77,20 @@ class User extends Authenticatable implements JWTSubject
 
     public function getJWTCustomClaims()
     {
+        $activeRole = $this->roles->first();
+        $productId = $this->getActiveProductId();
+
         return [
-            'role'  => $this->roles->first()?->name ?? 'staff',
-            'roles' => $this->getRoleNames()->toArray(),
+            'name'       => $this->name,
+            'email'      => $this->email,
+            'role'       => $this->role ?? $activeRole?->name ?? 'teller',
+            'roles'      => $this->getRoleNames()->toArray(),
+            'product_id' => $productId,
+            'product'    => $activeRole?->product ? [
+                'id'           => $activeRole->product->id,
+                'product_name' => $activeRole->product->product_name,
+                'product_code' => $activeRole->product->product_code,
+            ] : null,
         ];
     }
 

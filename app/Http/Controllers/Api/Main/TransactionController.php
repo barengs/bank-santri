@@ -22,7 +22,15 @@ class TransactionController extends Controller
      */
     public function index(Request $request)
     {
-        $transactions = Transaction::with(['sourceAccount:account_number,customer_name', 'destinationAccount:account_number,customer_name', 'transactionType:id,name,code'])
+        $user = auth('api')->user();
+        $transactions = Transaction::with(['sourceAccount:account_number,customer_name,product_id', 'destinationAccount:account_number,customer_name,product_id', 'transactionType:id,name,code'])
+            ->when($user && method_exists($user, 'getActiveProductId') && !$user->isGlobalProductScope(), function ($q) use ($user) {
+                $activeProductId = $user->getActiveProductId();
+                $q->where(function ($trxQ) use ($activeProductId) {
+                    $trxQ->whereHas('sourceAccount', fn($aq) => $aq->where('product_id', $activeProductId))
+                         ->orWhereHas('destinationAccount', fn($aq) => $aq->where('product_id', $activeProductId));
+                });
+            })
             ->when($request->account_number, function ($q, $an) {
                 $q->where(function ($query) use ($an) {
                     $query->where('source_account', $an)
@@ -62,6 +70,20 @@ class TransactionController extends Controller
     {
         $transaction = Transaction::with(['ledgerEntries', 'sourceAccount', 'destinationAccount', 'transactionType'])
             ->findOrFail($id);
+
+        $user = auth('api')->user();
+        if ($user && method_exists($user, 'getActiveProductId') && !$user->isGlobalProductScope()) {
+            $activeProductId = $user->getActiveProductId();
+            $hasAccess = ($transaction->sourceAccount && $transaction->sourceAccount->product_id == $activeProductId)
+                || ($transaction->destinationAccount && $transaction->destinationAccount->product_id == $activeProductId);
+
+            if (!$hasAccess) {
+                return response()->json([
+                    'status'  => 'error',
+                    'message' => 'Anda tidak memiliki hak akses untuk transaksi produk bank ini.',
+                ], 403);
+            }
+        }
 
         return response()->json(['status' => 'success', 'data' => $transaction]);
     }
@@ -113,6 +135,17 @@ class TransactionController extends Controller
             'description'    => 'nullable|string',
         ]);
 
+        $user = auth('api')->user();
+        if ($user && method_exists($user, 'getActiveProductId') && !$user->isGlobalProductScope()) {
+            $destAcc = Account::where('account_number', $request->account_number)->first();
+            if ($destAcc && $destAcc->product_id != $user->getActiveProductId()) {
+                return response()->json([
+                    'status'  => 'error',
+                    'message' => 'Rekening tujuan bukan merupakan rekening produk binaan Anda.',
+                ], 403);
+            }
+        }
+
         try {
             $typeCode = TransactionType::where('code', 'TOPUP-SANTRI')->exists() ? 'TOPUP-SANTRI' : 'CASH-DEP';
 
@@ -157,6 +190,16 @@ class TransactionController extends Controller
 
         try {
             $account = Account::with('product')->where('account_number', $request->account_number)->firstOrFail();
+
+            $user = auth('api')->user();
+            if ($user && method_exists($user, 'getActiveProductId') && !$user->isGlobalProductScope()) {
+                if ($account->product_id != $user->getActiveProductId()) {
+                    return response()->json([
+                        'status'  => 'error',
+                        'message' => 'Rekening bukan merupakan rekening produk binaan Anda.',
+                    ], 403);
+                }
+            }
 
             if ($account->status !== 'AKTIF') {
                 return response()->json([
@@ -218,6 +261,17 @@ class TransactionController extends Controller
             'amount'              => 'required|numeric|min:1000',
             'description'         => 'nullable|string',
         ]);
+
+        $user = auth('api')->user();
+        if ($user && method_exists($user, 'getActiveProductId') && !$user->isGlobalProductScope()) {
+            $srcAcc = Account::where('account_number', $request->source_account)->first();
+            if ($srcAcc && $srcAcc->product_id != $user->getActiveProductId()) {
+                return response()->json([
+                    'status'  => 'error',
+                    'message' => 'Rekening sumber bukan merupakan rekening produk binaan Anda.',
+                ], 403);
+            }
+        }
 
         try {
             $transaction = app(AccountingService::class)->recordTransaction(

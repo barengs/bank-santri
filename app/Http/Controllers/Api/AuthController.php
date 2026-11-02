@@ -90,12 +90,23 @@ class AuthController extends Controller
     protected function respondWithToken($token, ?\App\Models\User $user = null)
     {
         $user = $user ?? auth('api')->user();
+        if ($user) {
+            $user->loadMissing('roles.product');
+        }
         $roles = $user ? $user->getRoleNames()->toArray() : [];
         $activeRole = !empty($roles) ? $roles[0] : ($user?->role ?? 'kasir_koperasi');
+        $activeRoleModel = $user?->roles->first();
+        $productId = $user && method_exists($user, 'getActiveProductId') ? $user->getActiveProductId() : null;
 
         $userData = $user ? array_merge($user->toArray(), [
-            'role'  => $activeRole,
-            'roles' => $roles,
+            'role'       => $activeRole,
+            'roles'      => $roles,
+            'product_id' => $productId,
+            'product'    => $activeRoleModel?->product ? [
+                'id'           => $activeRoleModel->product->id,
+                'product_name' => $activeRoleModel->product->product_name,
+                'product_code' => $activeRoleModel->product->product_code,
+            ] : null,
         ]) : null;
 
         return response()->json([

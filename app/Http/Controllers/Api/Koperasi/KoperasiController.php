@@ -23,6 +23,9 @@ class KoperasiController extends Controller
     public function config(Request $request)
     {
         $merchant = $request->get('koperasi_merchant');
+        if ($merchant) {
+            $merchant->loadMissing('account');
+        }
 
         // Ambil konfigurasi sesi makan dari database
         $sessionsSetting = Setting::where('key', 'dapur_meal_sessions')->value('value');
@@ -49,8 +52,11 @@ class KoperasiController extends Controller
             'status' => 'success',
             'data'   => [
                 'merchant' => $merchant ? [
-                    'id'   => $merchant->id,
-                    'name' => $merchant->name,
+                    'id'             => $merchant->id,
+                    'name'           => $merchant->name,
+                    'account_number' => $merchant->account_number,
+                    'account_name'   => $merchant->account?->customer_name,
+                    'balance'        => (float) ($merchant->account?->balance ?? 0),
                 ] : null,
                 'server_time'   => now()->toDateTimeString(),
                 'server_hour'   => $nowTime,
@@ -355,12 +361,16 @@ class KoperasiController extends Controller
             $outletName = $request->outlet_name ?: ($outletType === 'dapur' ? "Dapur Umum [{$mealSession}]" : "Koperasi Pesantren");
             $cashierNote = $request->cashier_note ?: ($mealSession ? "session:{$mealSession}" : null);
 
+            // Tentukan rekening tujuan koperasi dari merchant yang terdaftar
+            $merchant = $request->get('koperasi_merchant');
+            $destAccount = ($merchant && !empty($merchant->account_number)) ? $merchant->account_number : null;
+
             // 1. Eksekusi Double-Entry Accounting
             app(AccountingService::class)->recordTransaction(
                 $typeCode,
                 $amount,
                 $account->account_number,
-                null,
+                $destAccount,
                 "{$desc} [{$ref}]",
                 'koperasi',
                 ['reference_number' => $ref]
@@ -471,6 +481,9 @@ class KoperasiController extends Controller
     public function dashboard(Request $request)
     {
         $merchant = $request->get('koperasi_merchant');
+        if ($merchant) {
+            $merchant->loadMissing('account');
+        }
         $today = now()->toDateString();
 
         // 1. Ambil staff / user yang sedang login jika token JWT disertakan

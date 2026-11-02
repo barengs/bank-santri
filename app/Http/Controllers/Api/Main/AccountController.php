@@ -65,7 +65,10 @@ class AccountController extends Controller
 
         $query = Account::with('product');
 
-        if ($productId) {
+        $user = auth('api')->user();
+        if ($user && method_exists($user, 'getActiveProductId') && !$user->isGlobalProductScope()) {
+            $query->where('product_id', $user->getActiveProductId());
+        } elseif ($productId) {
             $query->where('product_id', $productId);
         }
 
@@ -170,6 +173,16 @@ class AccountController extends Controller
                 'message' => $validator->errors()->first(),
                 'errors'  => $validator->errors()
             ], 422);
+        }
+
+        $user = auth('api')->user();
+        if ($user && method_exists($user, 'getActiveProductId') && !$user->isGlobalProductScope()) {
+            if ($request->product_id != $user->getActiveProductId()) {
+                return response()->json([
+                    'status'  => 'error',
+                    'message' => 'Anda hanya berwenang membuka rekening untuk produk bank yang ditugaskan kepada Anda.',
+                ], 403);
+            }
         }
 
         $cardNumber = $request->card_number;
@@ -399,6 +412,16 @@ class AccountController extends Controller
                 $account->photo_url = null;
             }
             $account->student = $student;
+        }
+
+        $user = auth('api')->user();
+        if ($account && $user && method_exists($user, 'getActiveProductId') && !$user->isGlobalProductScope()) {
+            if ($account->product_id != $user->getActiveProductId()) {
+                return response()->json([
+                    'status'  => 'error',
+                    'message' => 'Anda tidak memiliki hak akses untuk mengelola rekening produk bank ini.',
+                ], 403);
+            }
         }
 
         return response()->json(['status' => 'success', 'data' => $account]);

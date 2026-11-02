@@ -8,6 +8,7 @@ class KoperasiMerchant extends Model
 {
     protected $fillable = [
         'name',
+        'account_number',
         'api_key_hash',
         'is_active',
         'notes',
@@ -27,5 +28,10 @@ class KoperasiMerchant extends Model
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function account()
+    {
+        return $this->belongsTo(Account::class, 'account_number', 'account_number');
     }
 }

@@ -36,6 +36,24 @@ export const transactionItemApi = baseApi.injectEndpoints({
             }),
             invalidatesTags: ['TransactionItem'],
         }),
+        getUnclaimedItemTransactions: builder.query({
+            query: (id) => `/master/transaction-item/${id}/unclaimed`,
+            providesTags: (result, error, id) => [{ type: 'TransactionItem', id: `unclaimed-${id}` }],
+        }),
+        claimUnclaimedItemTransactions: builder.mutation({
+            query: ({ id, destination_account }) => ({
+                url: `/master/transaction-item/${id}/claim`,
+                method: 'POST',
+                body: { destination_account },
+            }),
+            invalidatesTags: (result, error, { id }) => [
+                { type: 'TransactionItem', id },
+                { type: 'TransactionItem', id: `unclaimed-${id}` },
+                'TransactionItem',
+                'Account',
+                'Transaction',
+            ],
+        }),
     }),
 });
 
@@ -45,4 +63,6 @@ export const {
     useCreateTransactionItemMutation,
     useUpdateTransactionItemMutation,
     useDeleteTransactionItemMutation,
+    useLazyGetUnclaimedItemTransactionsQuery,
+    useClaimUnclaimedItemTransactionsMutation,
 } = transactionItemApi;

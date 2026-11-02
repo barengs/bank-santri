@@ -168,9 +168,15 @@ class AccountingService
                     }
 
                     if ($ledgerAmount > 0) {
+                        $coaCode = $rule->coa_code;
+                        // Jika ada rekening tujuan (misal rekening koperasi), dana tidak keluar fisik dari bank melainkan berpindah ke simpanan koperasi (2100)
+                        if (!empty($transaction->destination_account) && $rule->entry_type === 'credit' && in_array($rule->coa_code, ['1101', '1102'])) {
+                            $coaCode = '2100';
+                        }
+
                         TransactionLedger::create([
                             'transaction_id' => $transaction->id,
-                            'coa_code'       => $rule->coa_code,
+                            'coa_code'       => $coaCode,
                             'debit'          => $rule->entry_type === 'debit' ? $ledgerAmount : 0,
                             'credit'         => $rule->entry_type === 'credit' ? $ledgerAmount : 0,
                             'description'    => $rule->description ?? $transaction->description,
@@ -344,6 +350,276 @@ class AccountingService
                     'description'    => $transaction->description,
                 ]);
             }
+        });
+    }
+
+    /**
+     * Sinkronisasi package_snapshot pada tagihan (bills) yang belum lunas
+     * ketika Master TransactionItem diperbarui (destination_account atau coa_code berubah).
+     */
+    public function syncUnpaidBillSnapshots(TransactionItem $item): int
+    {
+        $bills = \App\Models\Bill::whereIn('status', [
+            \App\Models\Bill::STATUS_UNPAID,
+            \App\Models\Bill::STATUS_PARTIAL,
+            \App\Models\Bill::STATUS_OVERDUE,
+        ])->get();
+
+        $updatedCount = 0;
+
+        foreach ($bills as $bill) {
+            $snapshot = $bill->package_snapshot;
+            if (!is_array($snapshot) || empty($snapshot['items']) || !is_array($snapshot['items'])) {
+                continue;
+            }
+
+            $changed = false;
+            foreach ($snapshot['items'] as &$snapItem) {
+                $snapItemId = $snapItem['transaction_item_id'] ?? null;
+                if ($snapItemId && (int) $snapItemId === (int) $item->id) {
+                    if (($snapItem['destination_account'] ?? null) !== $item->destination_account
+                        || ($snapItem['coa_code'] ?? null) !== $item->coa_code) {
+                        $snapItem['destination_account'] = $item->destination_account;
+                        $snapItem['coa_code'] = $item->coa_code;
+                        $changed = true;
+                    }
+                }
+            }
+            unset($snapItem);
+
+            if ($changed) {
+                $bill->package_snapshot = $snapshot;
+                $bill->save();
+                $updatedCount++;
+            }
+        }
+
+        return $updatedCount;
+    }
+
+    /**
+     * Cari seluruh transaksi berstatus 'success' milik suatu TransactionItem
+     * yang belum memiliki rekening tujuan (destination_account IS NULL)
+     * dan belum pernah dikreditkan ke rekening manapun di account_movements.
+     */
+    public function findUnclaimedItemTransactions(TransactionItem $item)
+    {
+        // Kumpulkan semua variasi nama item (dari master, payment_package_items, dan payment_record_items)
+        $itemNames = [trim($item->item_name)];
+
+        $pkgNames = DB::table('payment_package_items')
+            ->where('transaction_item_id', $item->id)
+            ->where('is_saku', false)
+            ->pluck('item_name')
+            ->toArray();
+
+        $recNames = DB::table('payment_record_items')
+            ->where('transaction_item_id', $item->id)
+            ->where('is_saku', false)
+            ->pluck('item_name')
+            ->toArray();
+
+        foreach (array_merge($pkgNames, $recNames) as $alias) {
+            $alias = trim((string) $alias);
+            if ($alias !== '') {
+                $itemNames[] = $alias;
+            }
+        }
+        $itemNames = array_values(array_unique($itemNames));
+
+        // 1. Cari ID transaksi yang cocok melalui payment_record_items
+        $matchedTxIds = [];
+        $priRecords = DB::table('payment_record_items as pri')
+            ->join('payment_records as pr', 'pr.id', '=', 'pri.payment_record_id')
+            ->where('pri.transaction_item_id', $item->id)
+            ->where('pri.is_saku', false)
+            ->select('pr.reference_number as pr_ref', 'pri.package_item_id', 'pri.id as pri_id', 'pri.item_name')
+            ->get();
+
+        if ($priRecords->isNotEmpty()) {
+            $exactRefs = [];
+            foreach ($priRecords as $pri) {
+                if (!empty($pri->pr_ref)) {
+                    if (!empty($pri->package_item_id)) {
+                        $exactRefs[] = $pri->pr_ref . '-' . $pri->package_item_id;
+                    }
+                    $exactRefs[] = $pri->pr_ref . '-' . $pri->pri_id;
+                }
+            }
+            $exactRefs = array_values(array_unique($exactRefs));
+
+            if (!empty($exactRefs)) {
+                $ids = DB::table('transactions')
+                    ->whereIn('reference_number', $exactRefs)
+                    ->pluck('id')
+                    ->toArray();
+                $matchedTxIds = array_merge($matchedTxIds, $ids);
+            }
+        }
+
+        return Transaction::with(['sourceAccount:account_number,customer_name'])
+            ->where('status', 'success')
+            ->where(function ($q) {
+                $q->whereNull('destination_account')
+                  ->orWhere('destination_account', '');
+            })
+            ->where('amount', '>', 0)
+            ->whereDoesntHave('movements', function ($q) {
+                $q->where('type', 'credit');
+            })
+            ->where(function ($q) use ($item, $itemNames, $matchedTxIds) {
+                // a) ID dari payment_record_items
+                if (!empty($matchedTxIds)) {
+                    $q->orWhereIn('id', $matchedTxIds);
+                }
+
+                // b) Referensi Add-On (-ADD{id})
+                $q->orWhere('reference_number', 'like', '%-ADD' . $item->id);
+
+                // c) Pola deskripsi standar dari PaymentService, BillingService, dan TopUpController
+                foreach ($itemNames as $name) {
+                    $lowerName = mb_strtolower($name);
+                    $escaped = addcslashes($lowerName, '%_\\');
+
+                    $q->orWhereRaw('LOWER(description) LIKE ?', ['pembayaran ' . $escaped . ' [%'])
+                      ->orWhereRaw('LOWER(description) LIKE ?', ['pelunasan [%] - ' . $escaped . ' (santri:%'])
+                      ->orWhereRaw('LOWER(description) LIKE ?', ['biaya add-on: ' . $escaped . ' [%'])
+                      ->orWhereRaw('LOWER(description) = ?', [$lowerName]);
+                }
+            })
+            ->orderBy('created_at', 'asc')
+            ->get();
+    }
+
+    /**
+     * Klaim / pindahkan dana dari seluruh transaksi rincian item yang belum memiliki
+     * destination_account ke Rekening Instansi tujuan.
+     */
+    public function claimUnclaimedItemTransactions(TransactionItem $item, ?string $targetAccountNumber = null): array
+    {
+        $destAccountNumber = $targetAccountNumber ?: $item->destination_account;
+
+        if (empty($destAccountNumber)) {
+            throw new \Exception("Rekening instansi tujuan belum ditentukan untuk rincian '{$item->item_name}'.");
+        }
+
+        return DB::transaction(function () use ($item, $destAccountNumber) {
+            $dstAccount = Account::where('account_number', $destAccountNumber)
+                ->lockForUpdate()
+                ->first();
+
+            if (!$dstAccount) {
+                throw new \Exception("Rekening tujuan ({$destAccountNumber}) tidak ditemukan.");
+            }
+
+            if ($dstAccount->status !== 'AKTIF') {
+                throw new \Exception("Rekening tujuan ({$dstAccount->account_number} - {$dstAccount->customer_name}) tidak aktif (Status: {$dstAccount->status}).");
+            }
+
+            // Pastikan master item juga menyimpan destination_account ini
+            if ($item->destination_account !== $destAccountNumber) {
+                $item->destination_account = $destAccountNumber;
+                $item->save();
+            }
+
+            // Sinkronkan tagihan yang belum lunas
+            $this->syncUnpaidBillSnapshots($item);
+
+            $transactions = $this->findUnclaimedItemTransactions($item);
+
+            if ($transactions->isEmpty()) {
+                return [
+                    'claimed_count'        => 0,
+                    'total_claimed_amount' => 0.0,
+                    'destination_account'  => $dstAccount->account_number,
+                    'destination_name'     => $dstAccount->customer_name,
+                    'balance_before'       => (float) $dstAccount->balance,
+                    'balance_after'        => (float) $dstAccount->balance,
+                    'transactions'         => [],
+                ];
+            }
+
+            $balanceBeforeAll = (float) $dstAccount->balance;
+            $runningBalance   = $balanceBeforeAll;
+            $totalClaimed     = 0.0;
+            $claimedDetails   = [];
+
+            foreach ($transactions as $tx) {
+                // Lock transaksi untuk mencegah race condition / double claim
+                $lockedTx = Transaction::where('id', $tx->id)->lockForUpdate()->first();
+                if (!$lockedTx || !empty($lockedTx->destination_account)) {
+                    continue;
+                }
+
+                $alreadyCredited = AccountMovement::where('transaction_id', $lockedTx->id)
+                    ->where('type', 'credit')
+                    ->exists();
+                if ($alreadyCredited) {
+                    continue;
+                }
+
+                $amount = (float) $lockedTx->amount;
+                $before = $runningBalance;
+                $runningBalance += $amount;
+                $totalClaimed   += $amount;
+
+                // 1. Update destination_account pada transaksi
+                $lockedTx->destination_account = $dstAccount->account_number;
+                $lockedTx->save();
+
+                // 2. Buat mutasi masuk (credit) pada Rekening Instansi
+                AccountMovement::create([
+                    'account_number' => $dstAccount->account_number,
+                    'transaction_id' => $lockedTx->id,
+                    'amount'         => $amount,
+                    'type'           => 'credit',
+                    'balance_before' => $before,
+                    'balance_after'  => $runningBalance,
+                    'description'    => $lockedTx->description,
+                ]);
+
+                // 3. Sinkronkan coa_code pada jurnal (ledger) sisi item jika coa_code master sudah diperbaiki
+                if (!empty($item->coa_code)) {
+                    $contraCoa = $lockedTx->source_account ? '2100' : '1101';
+                    $itemLedger = TransactionLedger::where('transaction_id', $lockedTx->id)
+                        ->where(function ($q) use ($item) {
+                            if ($item->entry_type === 'credit') {
+                                $q->where('credit', '>', 0);
+                            } else {
+                                $q->where('debit', '>', 0);
+                            }
+                        })
+                        ->first();
+
+                    if ($itemLedger && $itemLedger->coa_code !== $item->coa_code) {
+                        $itemLedger->coa_code = $item->coa_code;
+                        $itemLedger->save();
+                    }
+                }
+
+                $claimedDetails[] = [
+                    'id'               => $lockedTx->id,
+                    'reference_number' => $lockedTx->reference_number,
+                    'source_account'   => $lockedTx->source_account,
+                    'amount'           => $amount,
+                    'description'      => $lockedTx->description,
+                    'date'             => $lockedTx->created_at?->toDateTimeString(),
+                ];
+            }
+
+            // 4. Simpan saldo akhir Rekening Instansi
+            $dstAccount->balance = $runningBalance;
+            $dstAccount->save();
+
+            return [
+                'claimed_count'        => count($claimedDetails),
+                'total_claimed_amount' => $totalClaimed,
+                'destination_account'  => $dstAccount->account_number,
+                'destination_name'     => $dstAccount->customer_name,
+                'balance_before'       => $balanceBeforeAll,
+                'balance_after'        => (float) $dstAccount->balance,
+                'transactions'         => $claimedDetails,
+            ];
         });
     }
 }

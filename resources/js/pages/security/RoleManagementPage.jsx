@@ -9,12 +9,13 @@ import {
     useUpdateRoleMutation,
     useDestroyRoleMutation
 } from '../../store/securityApi';
+import { useGetProductsQuery } from '../../store/productApi';
 import { toast } from 'react-toastify';
 import { 
     Shield, 
     Save, 
     Plus, 
-    Edit2,
+    Edit2, 
     Trash2, 
     ChevronDown, 
     ChevronRight,
@@ -47,7 +48,7 @@ const RoleManagementPage = () => {
     
     // Modal state for Edit / Add Role
     const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
-    const [roleFormData, setRoleFormData] = useState({ name: '', slug: '', description: '' });
+    const [roleFormData, setRoleFormData] = useState({ name: '', product_id: '' });
     const [editingRole, setEditingRole] = useState(null);
     const [modalCheckedMenus, setModalCheckedMenus] = useState([]);
     const [modalCheckedPermissions, setModalCheckedPermissions] = useState([]);
@@ -58,6 +59,7 @@ const RoleManagementPage = () => {
     const { data: rolesRes, isLoading: rolesLoading } = useGetRolesQuery();
     const { data: menusRes, isLoading: menusLoading } = useGetMenusQuery();
     const { data: permissionsRes, isLoading: permissionsLoading } = useGetPermissionsQuery();
+    const { data: productsRes } = useGetProductsQuery();
     
     const [syncMenus, { isLoading: isSyncing }] = useSyncRoleMenusMutation();
     const [syncPermissions, { isLoading: isSyncingPermissions }] = useSyncRolePermissionsMutation();
@@ -68,6 +70,7 @@ const RoleManagementPage = () => {
     const roles = rolesRes?.data || [];
     const menus = menusRes?.data || [];
     const permissions = permissionsRes?.data || [];
+    const products = Array.isArray(productsRes?.data) ? productsRes.data : (productsRes?.data?.data || []);
 
     // Helper to generate consistent menu slug
     const getMenuSlug = (menu) => {
@@ -83,6 +86,11 @@ const RoleManagementPage = () => {
     useEffect(() => {
         if (roles.length > 0 && !selectedRole) {
             setSelectedRole(roles[0]);
+        } else if (selectedRole) {
+            const refreshed = roles.find((r) => r.id === selectedRole.id);
+            if (refreshed) {
+                setSelectedRole(refreshed);
+            }
         }
     }, [roles]);
 
@@ -118,6 +126,32 @@ const RoleManagementPage = () => {
 
     const toggleExpand = (menuId) => {
         setExpandedMenus(prev => ({ ...prev, [menuId]: !prev[menuId] }));
+    };
+
+    // Badge helper
+    const renderProductBadge = (role) => {
+        const prodId = role?.product_id;
+        const prodCode = role?.product?.product_code;
+
+        if (prodId === 1 || prodCode === 'TAB001') {
+            return (
+                <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-sky-100 text-sky-800 border border-sky-300">
+                    Tibyan
+                </span>
+            );
+        }
+        if (prodId === 2 || prodCode === 'TAB002') {
+            return (
+                <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                    Kubar
+                </span>
+            );
+        }
+        return (
+            <span className="px-1.5 py-0.5 rounded text-[9px] font-medium bg-slate-100 text-slate-600 border border-slate-200">
+                Global
+            </span>
+        );
     };
 
     // Helper: Render Lucide icon matching database icon name
@@ -294,7 +328,10 @@ const RoleManagementPage = () => {
     const handleOpenRoleModal = (role = null) => {
         if (role) {
             setEditingRole(role);
-            setRoleFormData({ name: role.name, slug: role.slug, description: role.description || '' });
+            setRoleFormData({
+                name: role.name,
+                product_id: role.product_id ? String(role.product_id) : '',
+            });
             setModalCheckedMenus(role.menus?.map(m => m.id) || []);
             const permIds = role.permissions?.map(p => p.id) || [];
             const permNames = role.permissions?.map(p => p.name) || [];
@@ -305,7 +342,7 @@ const RoleManagementPage = () => {
             }
         } else {
             setEditingRole(null);
-            setRoleFormData({ name: '', slug: '', description: '' });
+            setRoleFormData({ name: '', product_id: '' });
             setModalCheckedMenus([]);
             setModalCheckedPermissions([]);
         }
@@ -316,12 +353,17 @@ const RoleManagementPage = () => {
     const handleRoleSubmit = async (e) => {
         e.preventDefault();
         try {
+            const payload = {
+                name: roleFormData.name,
+                product_id: roleFormData.product_id ? parseInt(roleFormData.product_id, 10) : null,
+            };
+
             let roleId;
             if (editingRole) {
-                await updateRole({ id: editingRole.id, ...roleFormData }).unwrap();
+                await updateRole({ id: editingRole.id, ...payload }).unwrap();
                 roleId = editingRole.id;
             } else {
-                const res = await createRole(roleFormData).unwrap();
+                const res = await createRole(payload).unwrap();
                 roleId = res.data?.id;
             }
 
@@ -338,13 +380,18 @@ const RoleManagementPage = () => {
     };
 
     // Delete role handler
-    const handleDeleteRole = async (id, e) => {
+    const handleDeleteRole = async (role, e) => {
         e.stopPropagation();
-        if (window.confirm('Yakin ingin menghapus role ini? Semua user dengan role ini akan kehilangan akses.')) {
+        if (['admin', 'adminbank', 'pimpinan', 'teller', 'kasir_koperasi', 'petugas_dpu'].includes(role.name)) {
+            toast.warning('Role sistem bawaan tidak dapat dihapus.');
+            return;
+        }
+
+        if (window.confirm(`Yakin ingin menghapus role "${role.name}"? Semua user dengan role ini akan kehilangan akses.`)) {
             try {
-                await destroyRole(id).unwrap();
+                await destroyRole(role.id).unwrap();
                 toast.success('Role berhasil dihapus');
-                if (selectedRole?.id === id) setSelectedRole(roles[0] || null);
+                if (selectedRole?.id === role.id) setSelectedRole(roles[0] || null);
             } catch (err) {
                 toast.error(err.data?.message || 'Gagal menghapus role');
             }
@@ -398,30 +445,26 @@ const RoleManagementPage = () => {
                                 <React.Fragment key={menu.id}>
                                     {/* Parent / Standalone Menu Row */}
                                     <tr className={`transition-colors ${hasChildren ? 'bg-slate-50/70 hover:bg-slate-100/70 font-semibold' : 'hover:bg-slate-50'}`}>
-                                        <td className="px-3.5 py-2.5">
+                                        <td className="px-3 py-2 text-gray-800">
                                             <div className="flex items-center gap-2">
                                                 {hasChildren ? (
-                                                    <button 
+                                                    <button
                                                         type="button"
                                                         onClick={() => toggleExpand(menu.id)}
-                                                        className="text-gray-400 hover:text-gray-700 transition-colors p-0.5"
+                                                        className="p-0.5 hover:bg-slate-200 rounded text-slate-500"
                                                     >
                                                         {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
                                                     </button>
                                                 ) : (
-                                                    <div className="w-4" />
+                                                    <span className="w-4" />
                                                 )}
-                                                <div className="flex items-center gap-2">
-                                                    {renderMenuIcon(menu.icon, hasChildren)}
-                                                    <span className={`text-xs ${hasChildren ? 'text-gray-900 font-bold' : 'text-gray-800'}`}>
-                                                        {menu.name}
-                                                    </span>
-                                                </div>
+                                                {renderMenuIcon(menu.icon, hasChildren)}
+                                                <span className="text-xs font-semibold">{menu.name}</span>
                                             </div>
                                         </td>
 
                                         {/* VIEW Checkbox */}
-                                        <td className="text-center px-2 py-2.5">
+                                        <td className="text-center px-2 py-2">
                                             <input
                                                 type="checkbox"
                                                 checked={isMenuChecked}
@@ -434,7 +477,7 @@ const RoleManagementPage = () => {
                                         {actionColumns.map(action => {
                                             const isChecked = isPermCheckedIn(menuSlug, action, permList);
                                             return (
-                                                <td key={action} className="text-center px-2 py-2.5">
+                                                <td key={action} className="text-center px-2 py-2">
                                                     <input
                                                         type="checkbox"
                                                         checked={isChecked}
@@ -446,7 +489,7 @@ const RoleManagementPage = () => {
                                         })}
 
                                         {/* Toggle Row All */}
-                                        <td className="text-center px-2 py-2.5">
+                                        <td className="text-center px-2 py-2">
                                             <input
                                                 type="checkbox"
                                                 checked={isRowAllChecked}
@@ -456,16 +499,17 @@ const RoleManagementPage = () => {
                                         </td>
                                     </tr>
 
-                                    {/* Child Submenu Rows */}
+                                    {/* Children Submenu Rows */}
                                     {hasChildren && isExpanded && menu.children.map(child => {
                                         const childSlug = getMenuSlug(child);
                                         const isChildChecked = menuList.includes(child.id);
                                         const isChildRowAllChecked = isChildChecked && allActions.every(a => isPermCheckedIn(childSlug, a, permList));
 
                                         return (
-                                            <tr key={child.id} className="hover:bg-blue-50/40 transition-colors bg-white">
-                                                <td className="px-3.5 py-2 pl-9 sm:pl-11">
+                                            <tr key={child.id} className="hover:bg-slate-50/80 transition-colors bg-white">
+                                                <td className="px-3 py-1.5 pl-8 text-gray-700">
                                                     <div className="flex items-center gap-2">
+                                                        <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
                                                         {renderMenuIcon(child.icon, false)}
                                                         <span className="text-xs text-gray-700">{child.name}</span>
                                                     </div>
@@ -527,7 +571,7 @@ const RoleManagementPage = () => {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 pb-3">
                 <div>
                     <h2 className="text-base font-bold text-gray-800">Role & Hak Akses</h2>
-                    <p className="text-xs text-gray-500">Atur pemetaan akses menu dan matriks izin aksi granular untuk setiap peran pengguna</p>
+                    <p className="text-xs text-gray-500">Atur pemetaan akses menu, cakupan produk bank, dan matriks izin aksi granular untuk setiap peran</p>
                 </div>
                 <button 
                     onClick={() => handleOpenRoleModal()}
@@ -540,61 +584,76 @@ const RoleManagementPage = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
                 {/* Left: Role List */}
-                <div className="lg:col-span-3 space-y-2">
-                    <span className="text-xs font-bold text-gray-600 uppercase tracking-wider block">Daftar Role</span>
+                <div className="lg:col-span-4 space-y-2">
+                    <span className="text-xs font-bold text-gray-600 uppercase tracking-wider block">Daftar Role ({roles.length})</span>
                     <div className="border border-gray-200 rounded-md overflow-hidden divide-y divide-gray-100">
-                        {roles.map((role) => (
-                            <div 
-                                key={role.id}
-                                onClick={() => setSelectedRole(role)}
-                                className={`group flex items-center justify-between p-2.5 cursor-pointer text-xs transition-colors ${
-                                    selectedRole?.id === role.id 
-                                        ? 'bg-blue-50 border-l-4 border-l-blue-600 font-semibold' 
-                                        : 'hover:bg-gray-50 border-l-4 border-l-transparent text-gray-700'
-                                }`}
-                            >
-                                <div className="flex items-center gap-2">
-                                    <div className={`p-1.5 rounded ${selectedRole?.id === role.id ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-500'}`}>
-                                        <Shield size={14} />
+                        {roles.map((role) => {
+                            const isSystemRole = ['admin', 'adminbank', 'pimpinan', 'teller', 'kasir_koperasi', 'petugas_dpu'].includes(role.name);
+                            const isSelected = selectedRole?.id === role.id;
+
+                            return (
+                                <div 
+                                    key={role.id}
+                                    onClick={() => setSelectedRole(role)}
+                                    className={`group flex items-center justify-between p-2.5 cursor-pointer text-xs transition-colors ${
+                                        isSelected 
+                                            ? 'bg-blue-50 border-l-4 border-l-blue-600 font-semibold' 
+                                            : 'hover:bg-gray-50 border-l-4 border-l-transparent text-gray-700'
+                                    }`}
+                                >
+                                    <div className="flex items-center gap-2 min-w-0">
+                                        <div className={`p-1.5 rounded shrink-0 ${isSelected ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-500'}`}>
+                                            <Shield size={14} />
+                                        </div>
+                                        <div className="min-w-0">
+                                            <div className="flex items-center gap-1.5 flex-wrap">
+                                                <span className="font-semibold uppercase text-gray-800 truncate">{role.name}</span>
+                                                {renderProductBadge(role)}
+                                            </div>
+                                            <div className="text-[10px] text-gray-400 font-normal mt-0.5">
+                                                {role.menus?.length || 0} Menu • {role.permissions?.length || 0} Permission
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <div className="font-semibold capitalize text-gray-800">{role.name}</div>
-                                        <div className="text-[10px] text-gray-400 font-mono">{role.slug}</div>
+                                    <div className="flex items-center gap-1 shrink-0 ml-2">
+                                        <button 
+                                            type="button"
+                                            onClick={(e) => { e.stopPropagation(); handleOpenRoleModal(role); }}
+                                            className="border border-blue-200 text-blue-600 hover:bg-blue-50 rounded px-1.5 py-0.5 text-[11px] font-medium transition-colors"
+                                        >
+                                            Edit
+                                        </button>
+                                        {!isSystemRole && (
+                                            <button 
+                                                type="button"
+                                                onClick={(e) => handleDeleteRole(role, e)}
+                                                className="border border-rose-200 text-rose-600 hover:bg-rose-50 rounded px-1.5 py-0.5 text-[11px] font-medium transition-colors"
+                                            >
+                                                Hapus
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-1">
-                                    <button 
-                                        type="button"
-                                        onClick={(e) => { e.stopPropagation(); handleOpenRoleModal(role); }}
-                                        className="border border-blue-200 text-blue-600 hover:bg-blue-50 rounded px-1.5 py-0.5 text-[11px] font-medium transition-colors"
-                                    >
-                                        Edit
-                                    </button>
-                                    <button 
-                                        type="button"
-                                        onClick={(e) => handleDeleteRole(role.id, e)}
-                                        className="border border-rose-200 text-rose-600 hover:bg-rose-50 rounded px-1.5 py-0.5 text-[11px] font-medium transition-colors"
-                                    >
-                                        Hapus
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 </div>
 
                 {/* Right: Inline Role Matrix Management */}
-                <div className="lg:col-span-9 space-y-2">
+                <div className="lg:col-span-8 space-y-2">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-slate-50 border border-slate-200 p-2.5 rounded-md">
                         <div>
-                            <span className="text-xs font-bold text-gray-700 uppercase tracking-wide block">
-                                Matriks Hak Akses: <span className="text-blue-700 font-bold uppercase">{selectedRole?.name || '-'}</span>
-                            </span>
-                            <span className="text-[11px] text-gray-500">
+                            <div className="flex items-center gap-2 flex-wrap">
+                                <span className="text-xs font-bold text-gray-700 uppercase tracking-wide">
+                                    Matriks Hak Akses: <span className="text-blue-700 font-bold uppercase">{selectedRole?.name || '-'}</span>
+                                </span>
+                                {selectedRole && renderProductBadge(selectedRole)}
+                            </div>
+                            <span className="text-[11px] text-gray-500 block mt-0.5">
                                 Klik kotak pada setiap kolom untuk menentukan izin aksi, atau klik header kolom untuk pilih semua.
                             </span>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 shrink-0">
                             {selectedRole && (
                                 <button
                                     type="button"
@@ -629,7 +688,7 @@ const RoleManagementPage = () => {
                 </div>
             </div>
 
-            {/* Modal Edit / Tambah Role (Matches exact screenshot layout) */}
+            {/* Modal Edit / Tambah Role */}
             <Modal
                 isOpen={isRoleModalOpen}
                 onClose={() => setIsRoleModalOpen(false)}
@@ -637,18 +696,42 @@ const RoleManagementPage = () => {
                 size="xl"
             >
                 <form onSubmit={handleRoleSubmit} className="space-y-4">
-                    <div className="space-y-1">
-                        <label className="text-xs font-semibold text-gray-700 block">
-                            Nama Peran <span className="text-rose-500">*</span>
-                        </label>
-                        <input
-                            type="text"
-                            required
-                            className="w-full px-3 py-2 bg-white border border-gray-300 rounded text-xs focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                            placeholder="Contoh: Developer"
-                            value={roleFormData.name}
-                            onChange={(e) => setRoleFormData({...roleFormData, name: e.target.value})}
-                        />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                            <label className="text-xs font-semibold text-gray-700 block">
+                                Nama Peran <span className="text-rose-500">*</span>
+                            </label>
+                            <input
+                                type="text"
+                                required
+                                className="w-full px-3 py-2 bg-white border border-gray-300 rounded text-xs focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                                placeholder="Contoh: teller-tibyan"
+                                value={roleFormData.name}
+                                onChange={(e) => setRoleFormData({...roleFormData, name: e.target.value})}
+                                disabled={editingRole && ['admin', 'pimpinan'].includes(editingRole.name)}
+                            />
+                        </div>
+
+                        <div className="space-y-1">
+                            <label className="text-xs font-semibold text-gray-700 block">
+                                Cakupan Produk Bank
+                            </label>
+                            <select
+                                value={roleFormData.product_id}
+                                onChange={(e) => setRoleFormData({...roleFormData, product_id: e.target.value})}
+                                className="w-full px-3 py-2 bg-white border border-gray-300 rounded text-xs focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                            >
+                                <option value="">Global (Semua Produk Bank / Lintas Produk)</option>
+                                {products.map((p) => (
+                                    <option key={p.id} value={p.id}>
+                                        {p.product_name} ({p.product_code})
+                                    </option>
+                                ))}
+                            </select>
+                            <p className="text-[10px] text-gray-400">
+                                Pilih produk bank jika peran dibatasi (contoh: Teller Tibyan / Teller Kubar).
+                            </p>
+                        </div>
                     </div>
 
                     <div className="space-y-1.5">
@@ -660,7 +743,7 @@ const RoleManagementPage = () => {
                                 Berikan tanda centang pada aksi yang diizinkan untuk peran ini
                             </span>
                         </div>
-                        <div className="border border-gray-200 rounded overflow-hidden max-h-[400px] overflow-y-auto">
+                        <div className="border border-gray-200 rounded overflow-hidden max-h-[380px] overflow-y-auto">
                             {renderMatrixTable(modalCheckedMenus, setModalCheckedMenus, modalCheckedPermissions, setModalCheckedPermissions)}
                         </div>
                     </div>

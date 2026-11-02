@@ -58,6 +58,11 @@ class Transaction extends Model
         return $this->hasMany(TransactionLedger::class, 'transaction_id', 'id');
     }
 
+    public function movements()
+    {
+        return $this->hasMany(AccountMovement::class, 'transaction_id', 'id');
+    }
+
     // Activity Log
     public function getActivitylogOptions(): LogOptions
     {

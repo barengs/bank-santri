@@ -11,7 +11,8 @@ class TransactionItemController extends Controller
 {
     public function index(Request $request)
     {
-        $items = TransactionItem::when($request->search, fn($q, $s) => $q->where('item_name', 'like', "%{$s}%"))
+        $items = TransactionItem::with(['coa:coa_code,account_name', 'destinationAccount:account_number,customer_name,balance'])
+            ->when($request->search, fn($q, $s) => $q->where('item_name', 'like', "%{$s}%"))
             ->when(isset($request->is_active), fn($q) => $q->where('is_active', filter_var($request->is_active, FILTER_VALIDATE_BOOLEAN)))
             ->when($request->exclude_package_id, function($q, $pkgId) {
                 $excludedItemIds = \App\Models\PaymentPackageItem::where('package_id', $pkgId)
@@ -76,7 +77,74 @@ class TransactionItemController extends Controller
 
         $item->update($request->all());
 
-        return response()->json(['status' => 'success', 'data' => $item]);
+        // Sinkronisasi snapshot tagihan (bills) yang belum lunas
+        app(\App\Services\AccountingService::class)->syncUnpaidBillSnapshots($item);
+
+        return response()->json(['status' => 'success', 'data' => $item->load(['coa', 'destinationAccount'])]);
+    }
+
+    /**
+     * Preview transaksi historis milik rincian ini yang belum memiliki rekening tujuan (destination_account IS NULL)
+     */
+    public function unclaimed(string $id)
+    {
+        $item = TransactionItem::with(['coa', 'destinationAccount'])->findOrFail($id);
+        $transactions = app(\App\Services\AccountingService::class)->findUnclaimedItemTransactions($item);
+
+        return response()->json([
+            'status' => 'success',
+            'data'   => [
+                'item'           => $item,
+                'unclaimed_count'=> $transactions->count(),
+                'total_amount'   => (float) $transactions->sum('amount'),
+                'transactions'   => $transactions->map(fn($tx) => [
+                    'id'                  => $tx->id,
+                    'reference_number'    => $tx->reference_number,
+                    'source_account'      => $tx->source_account,
+                    'source_account_name' => $tx->sourceAccount?->customer_name,
+                    'amount'              => (float) $tx->amount,
+                    'description'         => $tx->description,
+                    'channel'             => $tx->channel,
+                    'created_at'          => $tx->created_at?->toDateTimeString(),
+                ])->values(),
+            ],
+        ]);
+    }
+
+    /**
+     * Klaim / pindahkan dana dari transaksi yang belum memiliki rekening tujuan ke Rekening Instansi
+     */
+    public function claim(Request $request, string $id)
+    {
+        $item = TransactionItem::findOrFail($id);
+
+        $validator = Validator::make($request->all(), [
+            'destination_account' => 'nullable|string|exists:accounts,account_number',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['status' => 'error', 'errors' => $validator->errors()], 422);
+        }
+
+        try {
+            $result = app(\App\Services\AccountingService::class)->claimUnclaimedItemTransactions(
+                $item,
+                $request->input('destination_account')
+            );
+
+            return response()->json([
+                'status'  => 'success',
+                'message' => $result['claimed_count'] > 0
+                    ? "Berhasil memindahkan {$result['claimed_count']} transaksi (Total Rp " . number_format($result['total_claimed_amount'], 0, ',', '.') . ") ke rekening {$result['destination_name']} ({$result['destination_account']})."
+                    : "Tidak ada transaksi tanpa rekening tujuan yang perlu dipindahkan.",
+                'data'    => $result,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => $e->getMessage(),
+            ], 422);
+        }
     }
 
     public function destroy(string $id)

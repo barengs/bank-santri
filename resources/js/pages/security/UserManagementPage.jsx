@@ -111,11 +111,29 @@ const UserManagementPage = () => {
             accessorKey: 'roles',
             cell: ({ row }) => (
                 <div className="flex flex-wrap gap-1">
-                    {row.original.roles?.length > 0 ? row.original.roles.map(role => (
-                        <span key={role.id} className="px-2 py-0.5 bg-blue-50 text-blue-700 text-[10px] font-semibold rounded border border-blue-200 uppercase">
-                            {role.name}
-                        </span>
-                    )) : (
+                    {row.original.roles?.length > 0 ? row.original.roles.map(role => {
+                        let badgeColor = 'bg-blue-50 text-blue-700 border-blue-200';
+                        let prodBadge = null;
+
+                        if (role.product_id === 1 || role.name?.includes('tibyan')) {
+                            badgeColor = 'bg-sky-50 text-sky-800 border-sky-300';
+                            prodBadge = 'Tibyan';
+                        } else if (role.product_id === 2 || role.name?.includes('kubar')) {
+                            badgeColor = 'bg-emerald-50 text-emerald-800 border-emerald-300';
+                            prodBadge = 'Kubar';
+                        }
+
+                        return (
+                            <span key={role.id} className={`inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold rounded border uppercase ${badgeColor}`}>
+                                <span>{role.name}</span>
+                                {prodBadge && (
+                                    <span className="text-[8px] font-bold px-1 py-0.2 bg-white/80 rounded border border-black/10">
+                                        {prodBadge}
+                                    </span>
+                                )}
+                            </span>
+                        );
+                    }) : (
                         <span className="text-gray-400 text-xs italic">Tanpa Role</span>
                     )}
                 </div>
@@ -244,7 +262,24 @@ const UserManagementPage = () => {
                                     }`}>
                                         {formData.role_ids.includes(role.id) && <Check size={12} className="text-white" />}
                                     </div>
-                                    <span className="font-semibold capitalize text-xs">{role.name}</span>
+                                    <div className="flex flex-col min-w-0">
+                                        <div className="flex items-center gap-1.5 flex-wrap">
+                                            <span className="font-semibold uppercase text-xs">{role.name}</span>
+                                            {role.product_id === 1 ? (
+                                                <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-sky-100 text-sky-800 border border-sky-300">
+                                                    Tibyan
+                                                </span>
+                                            ) : role.product_id === 2 ? (
+                                                <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                                    Kubar
+                                                </span>
+                                            ) : (
+                                                <span className="px-1.5 py-0.2 rounded text-[9px] font-medium bg-slate-100 text-slate-600 border border-slate-200">
+                                                    Global
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
                                 </div>
                             ))}
                         </div>

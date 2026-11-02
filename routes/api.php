@@ -48,11 +48,13 @@ Route::group(['prefix' => 'master', 'middleware' => ['autoprovision', 'auth:api'
     Route::get('chart-of-account/detail-accounts', [ChartOfAccountController::class, 'detailAccounts']);
     Route::apiResource('chart-of-account', ChartOfAccountController::class);
 
-    // Transaction Item Export / Import / Backup
+    // Transaction Item Export / Import / Backup & Claim Unclaimed Funds
     Route::get('transaction-item/export', [\App\Http\Controllers\Api\Master\TransactionItemController::class, 'export']);
     Route::get('transaction-item/backup', [\App\Http\Controllers\Api\Master\TransactionItemController::class, 'backup']);
     Route::get('transaction-item/import/template', [\App\Http\Controllers\Api\Master\TransactionItemController::class, 'downloadTemplate']);
     Route::post('transaction-item/import', [\App\Http\Controllers\Api\Master\TransactionItemController::class, 'import']);
+    Route::get('transaction-item/{id}/unclaimed', [\App\Http\Controllers\Api\Master\TransactionItemController::class, 'unclaimed']);
+    Route::post('transaction-item/{id}/claim', [\App\Http\Controllers\Api\Master\TransactionItemController::class, 'claim']);
     Route::apiResource('transaction-item', \App\Http\Controllers\Api\Master\TransactionItemController::class);
 
     Route::apiResource('user', UserController::class);

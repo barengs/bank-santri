@@ -12,33 +12,39 @@ class KoperasiMerchantController extends Controller
 {
     public function index()
     {
-        $merchants = KoperasiMerchant::with('creator:id,name')->get();
+        $merchants = KoperasiMerchant::with([
+            'creator:id,name',
+            'account:account_number,customer_name,balance,status'
+        ])->get();
+
         return response()->json([
             'status' => 'success',
-            'data' => $merchants
+            'data'   => $merchants
         ]);
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'notes' => 'nullable|string',
+            'name'           => 'required|string|max:255',
+            'account_number' => 'nullable|exists:accounts,account_number',
+            'notes'          => 'nullable|string',
         ]);
 
         $rawKey = 'KOP-' . Str::random(32);
 
         $merchant = KoperasiMerchant::create([
-            'name' => $request->name,
-            'api_key_hash' => Hash::make($rawKey),
-            'notes' => $request->notes,
-            'created_by' => auth('api')->id(),
+            'name'           => $request->name,
+            'account_number' => $request->account_number,
+            'api_key_hash'   => Hash::make($rawKey),
+            'notes'          => $request->notes,
+            'created_by'     => auth('api')->id(),
         ]);
 
         return response()->json([
-            'status' => 'success',
+            'status'  => 'success',
             'message' => 'Merchant berhasil dibuat.',
-            'data' => $merchant,
+            'data'    => $merchant->load('account:account_number,customer_name,balance,status'),
             'api_key' => $rawKey, // Only shown once
         ], 201);
     }
@@ -48,17 +54,18 @@ class KoperasiMerchantController extends Controller
         $merchant = KoperasiMerchant::findOrFail($id);
 
         $request->validate([
-            'name' => 'sometimes|string|max:255',
-            'is_active' => 'sometimes|boolean',
-            'notes' => 'nullable|string',
+            'name'           => 'sometimes|string|max:255',
+            'account_number' => 'nullable|exists:accounts,account_number',
+            'is_active'      => 'sometimes|boolean',
+            'notes'          => 'nullable|string',
         ]);
 
-        $merchant->update($request->only(['name', 'is_active', 'notes']));
+        $merchant->update($request->only(['name', 'account_number', 'is_active', 'notes']));
 
         return response()->json([
-            'status' => 'success',
+            'status'  => 'success',
             'message' => 'Merchant berhasil diperbarui.',
-            'data' => $merchant
+            'data'    => $merchant->load('account:account_number,customer_name,balance,status')
         ]);
     }
 
@@ -68,7 +75,7 @@ class KoperasiMerchantController extends Controller
         $merchant->delete();
 
         return response()->json([
-            'status' => 'success',
+            'status'  => 'success',
             'message' => 'Merchant berhasil dihapus.'
         ]);
     }
@@ -83,7 +90,7 @@ class KoperasiMerchantController extends Controller
         ]);
 
         return response()->json([
-            'status' => 'success',
+            'status'  => 'success',
             'message' => 'API Key berhasil di-generate ulang.',
             'api_key' => $rawKey, // Only shown once
         ]);
