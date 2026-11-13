@@ -1,0 +1,43 @@
+services:
+  bms-app:
+    image: ghcr.io/barengs/bank-santri:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bms-app
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - bms_storage:/var/www/html/storage/app/public
+    networks:
+      - tamjid-net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost/up || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  bms-worker:
+    image: ghcr.io/barengs/bank-santri:latest
+    container_name: bms-worker
+    restart: unless-stopped
+    env_file:
+      - .env
+    command: ["php", "artisan", "queue:work", "--tries=3", "--timeout=90"]
+    volumes:
+      - bms_storage:/var/www/html/storage/app/public
+    networks:
+      - tamjid-net
+    depends_on:
+      bms-app:
+        condition: service_healthy
+
+volumes:
+  bms_storage:
+    name: bms_storage
+
+networks:
+  tamjid-net:
+    external: true
