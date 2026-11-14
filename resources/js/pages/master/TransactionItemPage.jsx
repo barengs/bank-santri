@@ -60,6 +60,21 @@ const TransactionItemPage = () => {
         }).format(amount || 0);
     };
 
+    const extractDestinationAccount = (item) => {
+        const raw = item?.destination_account;
+        if (raw && typeof raw === 'object') {
+            return {
+                accountNumber: raw.account_number || '',
+                customerName: raw.customer_name || '',
+            };
+        }
+        const rel = item?.destination_account_rel || item?.destinationAccount;
+        return {
+            accountNumber: typeof raw === 'string' ? raw : (rel?.account_number || ''),
+            customerName: rel?.customer_name || '',
+        };
+    };
+
     const columns = useMemo(() => [
         {
             accessorKey: 'item_name',
@@ -91,18 +106,19 @@ const TransactionItemPage = () => {
         {
             accessorKey: 'destination_account',
             header: 'Rekening Instansi',
-            cell: ({ row }) => (
-                row.original.destination_account ? (
+            cell: ({ row }) => {
+                const { accountNumber, customerName } = extractDestinationAccount(row.original);
+                return accountNumber ? (
                     <div className="flex flex-col">
                         <span className="text-xs font-medium text-blue-700">
-                            {row.original.destination_account_rel?.customer_name || row.original.destinationAccount?.customer_name || 'Rekening Instansi'}
+                            {customerName || 'Rekening Instansi'}
                         </span>
-                        <span className="text-[10px] font-mono text-gray-500">{row.original.destination_account}</span>
+                        <span className="text-[10px] font-mono text-gray-500">{accountNumber}</span>
                     </div>
                 ) : (
                     <span className="text-[11px] text-amber-600 italic">Langsung ke COA</span>
-                )
-            )
+                );
+            }
         },
         {
             accessorKey: 'is_active',
@@ -147,12 +163,13 @@ const TransactionItemPage = () => {
     ], []);
 
     const handleEdit = (item) => {
+        const { accountNumber } = extractDestinationAccount(item);
         setEditingItem(item);
         setFormData({
             item_name: item.item_name,
             default_amount: item.default_amount,
             coa_code: item.coa_code,
-            destination_account: item.destination_account || '',
+            destination_account: accountNumber,
             entry_type: item.entry_type || 'credit',
             value_mode: item.value_mode || 'fixed',
             description: item.description || '',
@@ -162,8 +179,9 @@ const TransactionItemPage = () => {
     };
 
     const handleOpenClaimModal = async (item) => {
+        const { accountNumber } = extractDestinationAccount(item);
         setClaimModalItem(item);
-        setClaimTargetAccount(item.destination_account || '');
+        setClaimTargetAccount(accountNumber);
         try {
             await fetchUnclaimed(item.id).unwrap();
         } catch (err) {
