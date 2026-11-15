@@ -2,12 +2,11 @@
 
 // Handle Preflight (OPTIONS) requests for CORS
 if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    // LOGGING: Check if this file is created in your 'public' folder to verify if hit
-    file_put_contents(__DIR__ . '/cors_debug.txt', date('Y-m-d H:i:s') . " - OPTIONS " . ($_SERVER['HTTP_ORIGIN'] ?? 'NO_ORIGIN') . " " . ($_SERVER['REQUEST_URI'] ?? 'NO_URI') . "\n", FILE_APPEND);
-    
-    header('Access-Control-Allow-Origin: ' . ($_SERVER['HTTP_ORIGIN'] ?? '*'));
-    header('Access-Control-Allow-Methods: POST, GET, OPTIONS, PUT, DELETE');
-    header('Access-Control-Allow-Headers: *'); // Allow all headers
+    $origin = $_SERVER['HTTP_ORIGIN'] ?? '*';
+    $requestHeaders = $_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS'] ?? 'Authorization, Content-Type, X-Requested-With, Accept, Origin, X-Internal-Api-Key, X-Koperasi-Key';
+    header('Access-Control-Allow-Origin: ' . $origin);
+    header('Access-Control-Allow-Methods: POST, GET, OPTIONS, PUT, PATCH, DELETE');
+    header('Access-Control-Allow-Headers: ' . $requestHeaders);
     header('Access-Control-Allow-Credentials: true');
     header('HTTP/1.1 200 OK');
     die();
