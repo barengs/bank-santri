@@ -12,16 +12,50 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('roles', function (Blueprint $table) {
-            $table->foreignId('product_id')
-                ->nullable()
-                ->after('guard_name')
-                ->constrained('products')
-                ->nullOnDelete();
-        });
+        if (!Schema::hasColumn('roles', 'product_id')) {
+            Schema::table('roles', function (Blueprint $table) {
+                $table->foreignId('product_id')
+                    ->nullable()
+                    ->after('guard_name')
+                    ->constrained('products')
+                    ->nullOnDelete();
+            });
+        }
+
+        $now = now();
+
+        // Pastikan default products tersedia terlebih dahulu agar foreign key valid
+        DB::table('products')->updateOrInsert(
+            ['id' => 1],
+            [
+                'product_code' => 'TAB001',
+                'product_name' => 'Tabungan Tibyan',
+                'product_type' => 'Tabungan',
+                'interest_rate' => 0,
+                'admin_fee' => 0,
+                'opening_fee' => 50000,
+                'is_active' => 1,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]
+        );
+
+        DB::table('products')->updateOrInsert(
+            ['id' => 2],
+            [
+                'product_code' => 'TAB002',
+                'product_name' => 'Tabungan Kubar',
+                'product_type' => 'Tabungan',
+                'interest_rate' => 0,
+                'admin_fee' => 0,
+                'opening_fee' => 50000,
+                'is_active' => 1,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]
+        );
 
         // Seed / inisialisasi default roles berbasis cakupan produk bank (Tibyan vs Kubar)
-        $now = now();
         $rolesToSeed = [
             [
                 'name'       => 'teller-tibyan',
