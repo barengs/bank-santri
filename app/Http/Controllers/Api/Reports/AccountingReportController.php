@@ -854,9 +854,9 @@ class AccountingReportController extends Controller
             COALESCE(SUM(CASE WHEN customer_id = 0 THEN balance ELSE 0 END), 0) as instansi_balance
         ")->first();
 
-        $paginated = $this->buildAccountBalancesQuery($request)
-            ->paginate($perPage)
-            ->withQueryString();
+        $data = $request->boolean('all')
+            ? $this->buildAccountBalancesQuery($request)->get()
+            : $this->buildAccountBalancesQuery($request)->paginate($perPage)->withQueryString();
 
         return response()->json([
             'status'  => 'success',
@@ -868,7 +868,7 @@ class AccountingReportController extends Controller
                 'instansi_count'   => (int) ($summaryRow->instansi_count ?? 0),
                 'instansi_balance' => (float) ($summaryRow->instansi_balance ?? 0),
             ],
-            'data' => $paginated,
+            'data' => $data,
         ]);
     }
 

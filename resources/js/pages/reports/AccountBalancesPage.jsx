@@ -10,8 +10,10 @@ import {
     ChevronLeft,
     ChevronRight
 } from 'lucide-react';
-import { useGetAccountBalancesQuery } from '../../store/reportApi';
+import { useGetAccountBalancesQuery, useLazyGetAccountBalancesQuery } from '../../store/reportApi';
 import { useGetProductsQuery } from '../../store/productApi';
+import { printAccountBalancesPdf } from '../../utils/reportPdf';
+import { toast } from 'react-toastify';
 
 const AccountBalancesPage = () => {
     const [search, setSearch] = useState('');
@@ -34,6 +36,7 @@ const AccountBalancesPage = () => {
         account_type: accountType !== 'all' ? accountType : undefined,
         status: status || undefined,
     });
+    const [fetchAllBalances, { isFetching: isGeneratingPdf }] = useLazyGetAccountBalancesQuery();
 
     const accounts = res?.data?.data || [];
     const meta = res?.data || {};
@@ -81,8 +84,32 @@ const AccountBalancesPage = () => {
         window.open(buildExportUrl('export'), '_blank');
     };
 
-    const handlePrintPdf = () => {
-        window.open(buildExportUrl('print'), '_blank');
+    const handlePrintPdf = async () => {
+        try {
+            const allRes = await fetchAllBalances({
+                all: 1,
+                search: search.trim() || undefined,
+                product_id: productId || undefined,
+                account_type: accountType !== 'all' ? accountType : undefined,
+                status: status || undefined,
+            }).unwrap();
+
+            const allAccounts = Array.isArray(allRes?.data) ? allRes.data : (allRes?.data?.data || []);
+            const selectedProd = products.find((p) => String(p.id) === String(productId));
+
+            printAccountBalancesPdf(allAccounts, allRes?.summary || summary, {
+                productName: selectedProd?.product_name,
+                accountTypeLabel:
+                    accountType === 'santri'
+                        ? 'Rekening Santri'
+                        : accountType === 'instansi'
+                        ? 'Rekening Instansi'
+                        : 'Semua Rekening',
+                status,
+            });
+        } catch (err) {
+            toast.error('Gagal membuat PDF: ' + (err?.data?.message || err?.message || 'Terjadi kesalahan'));
+        }
     };
 
     const startNumber = ((meta.current_page || 1) - 1) * (meta.per_page || 25);
@@ -109,10 +136,11 @@ const AccountBalancesPage = () => {
                     <button
                         type="button"
                         onClick={handlePrintPdf}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-xs font-semibold transition-colors"
+                        disabled={isGeneratingPdf}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-md text-xs font-semibold transition-colors"
                     >
-                        <Printer size={14} />
-                        Cetak PDF
+                        {isGeneratingPdf ? <Loader2 size={14} className="animate-spin" /> : <Printer size={14} />}
+                        {isGeneratingPdf ? 'Membuat PDF...' : 'Cetak PDF'}
                     </button>
                 </div>
             </div>

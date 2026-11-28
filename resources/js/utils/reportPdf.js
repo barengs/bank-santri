@@ -589,3 +589,111 @@ export const printReceiptPdf = (data, title = 'BUKTI TRANSAKSI') => {
     
     doc.save(`Kuitansi_${data.reference_number || data.payment_ref || Date.now()}.pdf`);
 };
+
+/**
+ * 7. LAPORAN SALDO TERKINI SEMUA REKENING PDF
+ */
+export const printAccountBalancesPdf = (accounts, summary, filterInfo = {}) => {
+    const doc = new jsPDF('portrait');
+
+    const subtitleParts = [
+        'Dokumen Acuan Mitigasi & Rekonsiliasi Saldo Nasabah',
+        filterInfo.productName ? `Produk: ${filterInfo.productName}` : 'Semua Produk',
+        filterInfo.accountTypeLabel || 'Semua Jenis',
+        filterInfo.status ? `Status: ${filterInfo.status}` : 'Semua Status',
+    ];
+
+    let startY = generateBankSantriHeader(
+        doc,
+        'LAPORAN SALDO TERKINI SEMUA REKENING',
+        subtitleParts.join(' • ')
+    );
+
+    // Ringkasan saldo
+    autoTable(doc, {
+        startY,
+        head: [[
+            'Total Rekening',
+            'Total Saldo Keseluruhan',
+            `Saldo Santri (${summary?.santri_count || 0})`,
+            `Saldo Instansi (${summary?.instansi_count || 0})`
+        ]],
+        body: [[
+            `${Number(summary?.total_accounts || 0).toLocaleString('id-ID')} Rekening`,
+            formatIDR(summary?.total_balance || 0),
+            formatIDR(summary?.santri_balance || 0),
+            formatIDR(summary?.instansi_balance || 0),
+        ]],
+        theme: 'grid',
+        headStyles: { fillColor: [241, 245, 249], textColor: [51, 65, 85], fontSize: 7.5, halign: 'center' },
+        bodyStyles: { fontSize: 8.5, fontStyle: 'bold', halign: 'center', textColor: [15, 23, 42] },
+        margin: { left: 14, right: 14 },
+    });
+
+    const tableY = (doc.lastAutoTable?.finalY || startY + 18) + 6;
+
+    const formatLastTx = (val) => {
+        if (!val) return '-';
+        const d = new Date(String(val).replace(' ', 'T'));
+        if (Number.isNaN(d.getTime())) return String(val);
+        return d.toLocaleDateString('id-ID', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+        }) + ' ' + d.toLocaleTimeString('id-ID', {
+            hour: '2-digit',
+            minute: '2-digit',
+        });
+    };
+
+    const tableBody = (accounts || []).map((acc, idx) => [
+        idx + 1,
+        acc.account_number || '-',
+        acc.customer_name || '-',
+        Number(acc.customer_id) === 0 ? 'Instansi' : 'Santri',
+        acc.product_name || acc.product?.product_name || '-',
+        acc.status || '-',
+        formatIDR(acc.balance),
+        formatLastTx(acc.last_transaction_at),
+    ]);
+
+    autoTable(doc, {
+        startY: tableY,
+        head: [[
+            'No',
+            'No. Rekening / NIS',
+            'Nama Pemilik',
+            'Jenis',
+            'Produk Bank',
+            'Status',
+            'Saldo Terkini',
+            'Tgl Transaksi Terakhir'
+        ]],
+        body: tableBody,
+        foot: [[
+            '', '', '', '', '',
+            'TOTAL',
+            formatIDR(summary?.total_balance || 0),
+            ''
+        ]],
+        theme: 'grid',
+        headStyles: { fillColor: [30, 58, 138], textColor: [255, 255, 255], fontSize: 7.5 },
+        bodyStyles: { fontSize: 7.5, textColor: [30, 41, 59] },
+        footStyles: { fillColor: [226, 232, 240], textColor: [15, 23, 42], fontStyle: 'bold', fontSize: 8 },
+        columnStyles: {
+            0: { halign: 'center', cellWidth: 10 },
+            1: { cellWidth: 26 },
+            3: { halign: 'center', cellWidth: 16 },
+            5: { halign: 'center', cellWidth: 16 },
+            6: { halign: 'right', cellWidth: 28 },
+            7: { halign: 'center', cellWidth: 28 },
+        },
+        margin: { left: 14, right: 14, bottom: 18 },
+        showFoot: 'lastPage',
+    });
+
+    generatePageNumbers(doc);
+
+    const timestamp = new Date().toISOString().slice(0, 19).replace(/[-:T]/g, '');
+    doc.save(`Laporan_Saldo_Terkini_Rekening_${timestamp}.pdf`);
+};

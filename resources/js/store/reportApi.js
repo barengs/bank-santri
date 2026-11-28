@@ -67,4 +67,5 @@ export const {
     useGetReconciliationQuery,
     useGetRekapitulasiQuery,
     useGetAccountBalancesQuery,
+    useLazyGetAccountBalancesQuery,
 } = reportApi;
