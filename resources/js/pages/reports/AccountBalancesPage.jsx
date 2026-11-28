@@ -269,7 +269,7 @@ const AccountBalancesPage = () => {
                                             </span>
                                         </td>
                                         <td className="px-3 py-2 text-gray-600">
-                                            {acc.product?.product_name || '-'}
+                                            {acc.product_name || acc.product?.product_name || '-'}
                                         </td>
                                         <td className="px-3 py-2 text-center">
                                             <span

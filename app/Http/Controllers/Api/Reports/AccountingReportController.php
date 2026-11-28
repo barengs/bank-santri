@@ -771,44 +771,69 @@ class AccountingReportController extends Controller
     }
 
     /**
-     * Query builder bersama untuk Laporan Saldo Terkini Semua Rekening.
+     * Terapkan filter bersama untuk query Laporan Saldo Terkini Rekening.
      */
-    private function buildAccountBalancesQuery(Request $request)
+    private function applyAccountBalanceFilters($query, Request $request): void
     {
         $productId   = $request->get('product_id');
         $status      = $request->get('status');
         $accountType = $request->get('account_type', 'all');
         $search      = $request->get('search');
 
-        $query = Account::with('product')
-            ->withMax('movements as last_transaction_at', 'created_at');
-
         $user = auth('api')->user();
         if ($user && method_exists($user, 'getActiveProductId') && !$user->isGlobalProductScope()) {
-            $query->where('product_id', $user->getActiveProductId());
+            $query->where('accounts.product_id', $user->getActiveProductId());
         } elseif (!empty($productId)) {
-            $query->where('product_id', $productId);
+            $query->where('accounts.product_id', $productId);
         }
 
         if (!empty($status)) {
-            $query->where('status', $status);
+            $query->where('accounts.status', $status);
         }
 
         if ($accountType === 'santri') {
-            $query->where('customer_id', '>', 0);
+            $query->where('accounts.customer_id', '>', 0);
         } elseif ($accountType === 'instansi') {
-            $query->where('customer_id', 0);
+            $query->where('accounts.customer_id', 0);
         }
 
         if (!empty($search)) {
             $query->where(function ($q) use ($search) {
-                $q->where('account_number', 'like', "%{$search}%")
-                  ->orWhere('customer_name', 'like', "%{$search}%");
+                $q->where('accounts.account_number', 'like', "%{$search}%")
+                  ->orWhere('accounts.customer_name', 'like', "%{$search}%");
             });
         }
+    }
 
-        return $query->orderByRaw('CASE WHEN customer_id = 0 THEN 0 ELSE 1 END')
-            ->orderBy('customer_name', 'asc');
+    /**
+     * Query builder bersama untuk Laporan Saldo Terkini Semua Rekening.
+     */
+    private function buildAccountBalancesQuery(Request $request)
+    {
+        $lastMovements = DB::table('account_movements')
+            ->select('account_number', DB::raw('MAX(created_at) as last_transaction_at'))
+            ->groupBy('account_number');
+
+        $query = DB::table('accounts')
+            ->leftJoin('products', 'accounts.product_id', '=', 'products.id')
+            ->leftJoinSub($lastMovements, 'lm', function ($join) {
+                $join->on('accounts.account_number', '=', 'lm.account_number');
+            })
+            ->select(
+                'accounts.account_number',
+                'accounts.customer_id',
+                'accounts.customer_name',
+                'accounts.status',
+                'accounts.balance',
+                'products.product_name',
+                'lm.last_transaction_at'
+            );
+
+        $this->applyAccountBalanceFilters($query, $request);
+
+        return $query
+            ->orderByRaw('CASE WHEN accounts.customer_id = 0 THEN 0 ELSE 1 END')
+            ->orderBy('accounts.customer_name', 'asc');
     }
 
     /**
@@ -817,9 +842,10 @@ class AccountingReportController extends Controller
     public function accountBalances(Request $request)
     {
         $perPage = (int) $request->get('per_page', 25);
-        $baseQuery = $this->buildAccountBalancesQuery($request);
 
-        $summaryRow = (clone $baseQuery)->reorder()->selectRaw("
+        $summaryQuery = DB::table('accounts');
+        $this->applyAccountBalanceFilters($summaryQuery, $request);
+        $summaryRow = $summaryQuery->selectRaw("
             COUNT(*) as total_accounts,
             COALESCE(SUM(balance), 0) as total_balance,
             COALESCE(SUM(CASE WHEN customer_id > 0 THEN 1 ELSE 0 END), 0) as santri_count,
@@ -828,7 +854,9 @@ class AccountingReportController extends Controller
             COALESCE(SUM(CASE WHEN customer_id = 0 THEN balance ELSE 0 END), 0) as instansi_balance
         ")->first();
 
-        $paginated = $baseQuery->paginate($perPage)->withQueryString();
+        $paginated = $this->buildAccountBalancesQuery($request)
+            ->paginate($perPage)
+            ->withQueryString();
 
         return response()->json([
             'status'  => 'success',
@@ -863,6 +891,9 @@ class AccountingReportController extends Controller
      */
     public function printAccountBalances(Request $request)
     {
+        @ini_set('memory_limit', '1024M');
+        @set_time_limit(300);
+
         $accounts = $this->buildAccountBalancesQuery($request)->get();
         $productId = $request->get('product_id');
         $selectedProduct = $productId ? Product::find($productId) : null;
