@@ -66,7 +66,9 @@ class AccountController extends Controller
         $query = Account::with('product');
 
         $user = auth('api')->user();
-        if ($user && method_exists($user, 'getActiveProductId') && !$user->isGlobalProductScope()) {
+        $isInstansiFilter = ($isInstansi == '1' || $isInstansi === true || $isInstansi === 'true');
+        $forTransfer = $request->boolean('for_transfer');
+        if (!($forTransfer && $isInstansiFilter) && $user && method_exists($user, 'getActiveProductId') && !$user->isGlobalProductScope()) {
             $query->where('product_id', $user->getActiveProductId());
         } elseif ($productId) {
             $query->where('product_id', $productId);
@@ -76,15 +78,23 @@ class AccountController extends Controller
             $query->where('status', $status);
         }
 
+        if ($isInstansi !== null && $isInstansi !== '') {
+            if ($isInstansiFilter) {
+                $query->where('customer_id', 0);
+            } elseif ($isInstansi == '0' || $isInstansi === false || $isInstansi === 'false') {
+                $query->where('customer_id', '>', 0);
+            }
+        }
+
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('account_number', 'like', "%{$search}%")
                   ->orWhere('customer_name', 'like', "%{$search}%");
             });
 
-            // If no local results, try auto-provisioning from SMPT
+            // If no local results (and not filtering instansi), try auto-provisioning from SMPT
             $count = (clone $query)->count();
-            if ($count === 0 && strlen($search) >= 3) {
+            if (!$isInstansiFilter && $count === 0 && strlen($search) >= 3) {
                 try {
                     $smptUrl = $this->smptBaseUrl();
                     $studentRes = $this->smptHttp($request)->get("{$smptUrl}/api/main/student", [
@@ -134,14 +144,6 @@ class AccountController extends Controller
                 } catch (\Exception $e) {
                     \Illuminate\Support\Facades\Log::error("Failed to auto-provision in index search: " . $e->getMessage());
                 }
-            }
-        }
-
-        if ($isInstansi !== null && $isInstansi !== '') {
-            if ($isInstansi == '1' || $isInstansi === true || $isInstansi === 'true') {
-                $query->where('customer_id', 0);
-            } elseif ($isInstansi == '0' || $isInstansi === false || $isInstansi === 'false') {
-                $query->where('customer_id', '>', 0);
             }
         }
 
@@ -376,15 +378,12 @@ class AccountController extends Controller
             abort(404, "Rekening atau nomor kartu tidak ditemukan.");
         }
 
-        if (!isset($account->student)) {
+        if (!isset($account->student) && !empty($account->customer_id)) {
             try {
                 $smptUrl = $this->smptBaseUrl();
-                $studentRes = null;
-                if (!empty($account->customer_id)) {
-                    $studentRes = $this->smptHttp()->get("{$smptUrl}/api/main/student/{$account->customer_id}");
-                    if ($studentRes->successful()) {
-                        $account->student = $studentRes->json('data');
-                    }
+                $studentRes = $this->smptHttp()->get("{$smptUrl}/api/main/student/{$account->customer_id}");
+                if ($studentRes->successful()) {
+                    $account->student = $studentRes->json('data');
                 }
 
                 // Jika belum dapat dari customer_id, cari berdasarkan NIS (account_number)

@@ -102,6 +102,7 @@ class TransactionMasterSeeder extends Seeder
             ['code' => 'TOPUP-CASH',    'name' => 'Top-Up Tunai',            'category' => 'topup',   'description' => 'Pengisian saldo tabungan via kasir'],
             ['code' => 'TOPUP-TRF',     'name' => 'Top-Up Transfer Bank',    'category' => 'topup',   'description' => 'Pengisian saldo tabungan via transfer bank'],
             ['code' => 'WDR-SANTRI',    'name' => 'Penarikan Tabungan',      'category' => 'cash_operation', 'description' => 'Penarikan tunai saldo santri'],
+            ['code' => 'FUND-TRF',      'name' => 'Transfer Antar Rekening', 'category' => 'transfer', 'description' => 'Pemindahbukuan saldo antar rekening santri dan/atau instansi'],
         ];
 
         foreach ($types as $t) {
@@ -152,5 +153,10 @@ class TransactionMasterSeeder extends Seeder
         // Simpanan Wadiah (D) / Kas (C)
         $tWdr->rules()->create(['transaction_item_id' => $wadIn->id,  'coa_code' => $wadIn->coa_code,  'entry_type' => 'debit',  'value_mode' => 'total']);
         $tWdr->rules()->create(['transaction_item_id' => $kasOut->id, 'coa_code' => $kasOut->coa_code, 'entry_type' => 'credit', 'value_mode' => 'total']);
+
+        // --- FUND-TRF Rules ---
+        $tFundTrf = TransactionType::where('code', 'FUND-TRF')->first();
+        $tFundTrf->rules()->create(['transaction_item_id' => $wadIn->id, 'coa_code' => $wadIn->coa_code, 'entry_type' => 'debit',  'value_mode' => 'total']);
+        $tFundTrf->rules()->create(['transaction_item_id' => $wadIn->id, 'coa_code' => $wadIn->coa_code, 'entry_type' => 'credit', 'value_mode' => 'total']);
     }
 }
