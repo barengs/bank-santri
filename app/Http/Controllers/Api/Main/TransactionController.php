@@ -353,35 +353,31 @@ class TransactionController extends Controller
                 'akad_type'           => $original->akad_type,
             ]);
 
-            // Balik saldo
-            if ($original->destination_account) {
-                $destAcc = Account::where('account_number', $original->destination_account)->lockForUpdate()->firstOrFail();
-                $dBefore = $destAcc->balance;
-                $destAcc->balance -= $original->amount;
-                $destAcc->save();
-                AccountMovement::create([
-                    'account_number' => $destAcc->account_number,
-                    'transaction_id' => $reversal->id,
-                    'amount'         => $original->amount,
-                    'type'           => 'debit',
-                    'balance_before' => $dBefore,
-                    'balance_after'  => $destAcc->balance,
-                    'description'    => $reversal->description,
-                ]);
-            }
+            // Balik saldo hanya jika transaksi asli benar-benar memutasi saldo rekening
+            // (transaksi tagihan / pending / REG-* tidak memiliki AccountMovement sehingga tidak boleh menambah saldo santri)
+            $originalMovements = AccountMovement::where('transaction_id', $original->id)->get();
 
-            if ($original->source_account) {
-                $srcAcc = Account::where('account_number', $original->source_account)->lockForUpdate()->firstOrFail();
-                $sBefore = $srcAcc->balance;
-                $srcAcc->balance += $original->amount;
-                $srcAcc->save();
+            foreach ($originalMovements as $movement) {
+                $acc = Account::where('account_number', $movement->account_number)->lockForUpdate()->firstOrFail();
+                $before = $acc->balance;
+
+                if ($movement->type === 'debit') {
+                    $acc->balance += $movement->amount;
+                    $reversalType = 'credit';
+                } else {
+                    $acc->balance -= $movement->amount;
+                    $reversalType = 'debit';
+                }
+
+                $acc->save();
+
                 AccountMovement::create([
-                    'account_number' => $srcAcc->account_number,
+                    'account_number' => $acc->account_number,
                     'transaction_id' => $reversal->id,
-                    'amount'         => $original->amount,
-                    'type'           => 'credit',
-                    'balance_before' => $sBefore,
-                    'balance_after'  => $srcAcc->balance,
+                    'amount'         => $movement->amount,
+                    'type'           => $reversalType,
+                    'balance_before' => $before,
+                    'balance_after'  => $acc->balance,
                     'description'    => $reversal->description,
                 ]);
             }
