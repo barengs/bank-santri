@@ -13,7 +13,10 @@ import {
     AlertTriangle,
     Layers,
     CheckSquare,
-    Square
+    Square,
+    Bluetooth,
+    Usb,
+    Unplug
 } from 'lucide-react';
 import { useLazyGetAccountDetailQuery } from '../../store/accountApi';
 import { useGetPaymentPackagesQuery } from '../../store/paymentApi';
@@ -22,6 +25,19 @@ import { useLazyGetBillsByAccountQuery } from '../../store/billApi';
 import { useCashTopUpMutation } from '../../store/topUpApi';
 import { toast } from 'react-toastify';
 import { printReceiptPdf } from '../../utils/reportPdf';
+import {
+    subscribePrinterState,
+    connectBluetoothPrinter,
+    connectUsbPrinter,
+    disconnectPrinter,
+    printThermalReceipt,
+    getPaperWidth,
+    setPaperWidth,
+    getAutoPrint,
+    setAutoPrint,
+    isBluetoothSupported,
+    isUsbSupported,
+} from '../../utils/thermalPrinter';
 
 const TopUpCashPage = () => {
     const [nis, setNis] = useState('');
@@ -34,6 +50,17 @@ const TopUpCashPage = () => {
     // Receipt Modal State
     const [showReceipt, setShowReceipt] = useState(false);
     const [receiptData, setReceiptData] = useState(null);
+
+    // POS Thermal Printer State
+    const [printerState, setPrinterState] = useState({ connected: false, type: null, name: '' });
+    const [paperWidth, setPaperWidthState] = useState(() => getPaperWidth());
+    const [autoPrint, setAutoPrintState] = useState(() => getAutoPrint());
+    const [isConnectingPrinter, setIsConnectingPrinter] = useState(false);
+    const [isPrintingPos, setIsPrintingPos] = useState(false);
+
+    useEffect(() => {
+        return subscribePrinterState(setPrinterState);
+    }, []);
 
     // API Hooks
     const [fetchAccount, { data: accountRes, isFetching: isChecking }] = useLazyGetAccountDetailQuery();
@@ -317,6 +344,21 @@ const TopUpCashPage = () => {
             }
 
             setShowReceipt(true);
+            if (autoPrint && printerState.connected) {
+                const posReceipt = {
+                    payment_ref: res?.data?.payment_ref || res?.data?.reference_number || 'TRX-' + Date.now(),
+                    account_number: accountData.account_number,
+                    customer_name: accountData.customer_name,
+                    package_name: isPayingBills
+                        ? `Pelunasan ${selectedBillIds.length} Tagihan`
+                        : (selectedPackage?.package_name || 'Setoran Saldo Tabungan Bebas'),
+                    amount: rawAmount,
+                    description: notes || undefined,
+                };
+                printThermalReceipt(posReceipt, 'BUKTI SETORAN TUNAI')
+                    .then(() => toast.success('Struk berhasil dicetak ke Printer POS!'))
+                    .catch((printErr) => toast.warning('Transaksi berhasil, namun gagal cetak POS: ' + printErr.message));
+            }
             // Refresh data setelah berhasil
             if (accountData.account_number) {
                 fetchBills(accountData.account_number);
@@ -342,6 +384,52 @@ const TopUpCashPage = () => {
         handleResetForm();
     };
 
+    const handleConnectBluetooth = async () => {
+        setIsConnectingPrinter(true);
+        try {
+            const state = await connectBluetoothPrinter();
+            toast.success(`Terhubung ke ${state.name} (Bluetooth)`);
+        } catch (err) {
+            if (err?.name !== 'NotFoundError') {
+                toast.error(err?.message || 'Gagal menghubungkan printer Bluetooth');
+            }
+        } finally {
+            setIsConnectingPrinter(false);
+        }
+    };
+
+    const handleConnectUsb = async () => {
+        setIsConnectingPrinter(true);
+        try {
+            const state = await connectUsbPrinter();
+            toast.success(`Terhubung ke ${state.name} (USB)`);
+        } catch (err) {
+            if (err?.name !== 'NotFoundError') {
+                toast.error(err?.message || 'Gagal menghubungkan printer USB');
+            }
+        } finally {
+            setIsConnectingPrinter(false);
+        }
+    };
+
+    const handleDisconnectPrinter = async () => {
+        await disconnectPrinter();
+        toast.info('Koneksi printer POS diputus.');
+    };
+
+    const handlePrintPos = async () => {
+        if (!receiptData) return;
+        setIsPrintingPos(true);
+        try {
+            await printThermalReceipt(receiptData, 'BUKTI SETORAN TUNAI');
+            toast.success('Struk dikirim ke Printer POS!');
+        } catch (err) {
+            toast.error(err?.message || 'Gagal mencetak ke Printer POS');
+        } finally {
+            setIsPrintingPos(false);
+        }
+    };
+
     // Mode aktif transaksi
     const isPayingBills = selectedBillIds.length > 0;
     const isPayingPackage = Boolean(packageId) && !isPayingBills;
@@ -362,6 +450,77 @@ const TopUpCashPage = () => {
                     <h2 className="text-base font-bold text-gray-800">Top-Up / Setor Tunai Teller</h2>
                     <p className="text-xs text-gray-500">Penerimaan kas masuk, pembayaran tagihan paket bulanan, & saldo tabungan santri</p>
                 </div>
+                <div className="flex flex-wrap items-center gap-2">
+                    {/* Status & Kontrol Printer POS */}
+                    <div className="flex flex-wrap items-center gap-1.5 px-2.5 py-1 bg-gray-50 border border-gray-200 rounded-md text-[11px]">
+                        <span className={`w-2 h-2 rounded-full ${printerState.connected ? 'bg-emerald-500' : 'bg-gray-300'}`} />
+                        <span className="font-semibold text-gray-700">
+                            {printerState.connected ? `${printerState.name} (${printerState.type === 'usb' ? 'USB' : 'BT'})` : 'Printer POS'}
+                        </span>
+                        {!printerState.connected ? (
+                            <>
+                                {isBluetoothSupported() && (
+                                    <button
+                                        type="button"
+                                        disabled={isConnectingPrinter}
+                                        onClick={handleConnectBluetooth}
+                                        className="px-1.5 py-0.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded flex items-center gap-1 font-semibold"
+                                        title="Hubungkan Printer Thermal Bluetooth"
+                                    >
+                                        <Bluetooth className="w-3 h-3" />
+                                        BT
+                                    </button>
+                                )}
+                                {isUsbSupported() && (
+                                    <button
+                                        type="button"
+                                        disabled={isConnectingPrinter}
+                                        onClick={handleConnectUsb}
+                                        className="px-1.5 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded flex items-center gap-1 font-semibold"
+                                        title="Hubungkan Printer Thermal USB"
+                                    >
+                                        <Usb className="w-3 h-3" />
+                                        USB
+                                    </button>
+                                )}
+                            </>
+                        ) : (
+                            <button
+                                type="button"
+                                onClick={handleDisconnectPrinter}
+                                className="px-1.5 py-0.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded flex items-center gap-1 font-semibold"
+                                title="Putuskan koneksi printer"
+                            >
+                                <Unplug className="w-3 h-3" />
+                                Putus
+                            </button>
+                        )}
+                        <select
+                            value={paperWidth}
+                            onChange={(e) => {
+                                const w = Number(e.target.value);
+                                setPaperWidthState(w);
+                                setPaperWidth(w);
+                            }}
+                            className="bg-white border border-gray-300 rounded px-1 py-0.5 text-[10px] font-semibold text-gray-700"
+                            title="Lebar kertas thermal"
+                        >
+                            <option value={58}>58mm</option>
+                            <option value={80}>80mm</option>
+                        </select>
+                        <label className="inline-flex items-center gap-1 cursor-pointer text-gray-600 ml-0.5" title="Otomatis cetak saat Top-Up berhasil jika printer terhubung">
+                            <input
+                                type="checkbox"
+                                checked={autoPrint}
+                                onChange={(e) => {
+                                    setAutoPrintState(e.target.checked);
+                                    setAutoPrint(e.target.checked);
+                                }}
+                                className="rounded border-gray-300"
+                            />
+                            Auto
+                        </label>
+                    </div>
                 {isPayingBills && (
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
                         <AlertTriangle className="w-3 h-3 text-amber-600" />
@@ -374,6 +533,7 @@ const TopUpCashPage = () => {
                         Mode Paket {selectedAddonIds.length > 0 ? `+ ${selectedAddonIds.length} Add-On` : ''}
                     </span>
                 )}
+                </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -746,7 +906,17 @@ const TopUpCashPage = () => {
                             </div>
                         </div>
 
-                        <div className="px-4 py-2.5 bg-gray-50 border-t border-gray-200 flex justify-end gap-2">
+                        <div className="px-4 py-2.5 bg-gray-50 border-t border-gray-200 flex flex-wrap justify-end gap-2">
+                            <button
+                                type="button"
+                                onClick={handlePrintPos}
+                                disabled={!printerState.connected || isPrintingPos}
+                                title={printerState.connected ? 'Cetak langsung ke Printer POS' : 'Hubungkan Printer POS (BT/USB) di kanan atas terlebih dahulu'}
+                                className="px-3 py-1.5 bg-emerald-600 disabled:bg-gray-300 disabled:text-gray-500 text-white rounded text-xs font-semibold hover:bg-emerald-700 flex items-center gap-1"
+                            >
+                                {isPrintingPos ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Printer className="w-3.5 h-3.5" />}
+                                Cetak Printer POS
+                            </button>
                             <button
                                 onClick={() => printReceiptPdf(receiptData, 'BUKTI SETORAN TUNAI')}
                                 className="px-3 py-1.5 bg-blue-600 text-white rounded text-xs font-semibold hover:bg-blue-700 flex items-center gap-1"
