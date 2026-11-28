@@ -83,6 +83,12 @@ const LaporanPage = () => {
                     icon: <Wallet className="w-4 h-4 text-indigo-600" />,
                     path: '/laporan/rekapitulasi',
                     detail: 'Rekap saldo, mutasi masuk/keluar, dan rincian transaksi per produk.'
+                },
+                {
+                    name: 'Laporan Saldo Terkini Rekening',
+                    icon: <FileText className="w-4 h-4 text-emerald-600" />,
+                    path: '/laporan/saldo-rekening',
+                    detail: 'Tabel saldo terkini semua rekening & tanggal transaksi terakhir (PDF/Excel).'
                 }
             ]
         }

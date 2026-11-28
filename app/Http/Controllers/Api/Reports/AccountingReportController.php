@@ -769,4 +769,124 @@ class AccountingReportController extends Controller
             }
         });
     }
+
+    /**
+     * Query builder bersama untuk Laporan Saldo Terkini Semua Rekening.
+     */
+    private function buildAccountBalancesQuery(Request $request)
+    {
+        $productId   = $request->get('product_id');
+        $status      = $request->get('status');
+        $accountType = $request->get('account_type', 'all');
+        $search      = $request->get('search');
+
+        $query = Account::with('product')
+            ->withMax('movements as last_transaction_at', 'created_at');
+
+        $user = auth('api')->user();
+        if ($user && method_exists($user, 'getActiveProductId') && !$user->isGlobalProductScope()) {
+            $query->where('product_id', $user->getActiveProductId());
+        } elseif (!empty($productId)) {
+            $query->where('product_id', $productId);
+        }
+
+        if (!empty($status)) {
+            $query->where('status', $status);
+        }
+
+        if ($accountType === 'santri') {
+            $query->where('customer_id', '>', 0);
+        } elseif ($accountType === 'instansi') {
+            $query->where('customer_id', 0);
+        }
+
+        if (!empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('account_number', 'like', "%{$search}%")
+                  ->orWhere('customer_name', 'like', "%{$search}%");
+            });
+        }
+
+        return $query->orderByRaw('CASE WHEN customer_id = 0 THEN 0 ELSE 1 END')
+            ->orderBy('customer_name', 'asc');
+    }
+
+    /**
+     * JSON preview Laporan Saldo Terkini Semua Rekening beserta tanggal transaksi terakhir.
+     */
+    public function accountBalances(Request $request)
+    {
+        $perPage = (int) $request->get('per_page', 25);
+        $baseQuery = $this->buildAccountBalancesQuery($request);
+
+        $summaryRow = (clone $baseQuery)->reorder()->selectRaw("
+            COUNT(*) as total_accounts,
+            COALESCE(SUM(balance), 0) as total_balance,
+            COALESCE(SUM(CASE WHEN customer_id > 0 THEN 1 ELSE 0 END), 0) as santri_count,
+            COALESCE(SUM(CASE WHEN customer_id > 0 THEN balance ELSE 0 END), 0) as santri_balance,
+            COALESCE(SUM(CASE WHEN customer_id = 0 THEN 1 ELSE 0 END), 0) as instansi_count,
+            COALESCE(SUM(CASE WHEN customer_id = 0 THEN balance ELSE 0 END), 0) as instansi_balance
+        ")->first();
+
+        $paginated = $baseQuery->paginate($perPage)->withQueryString();
+
+        return response()->json([
+            'status'  => 'success',
+            'summary' => [
+                'total_accounts'   => (int) ($summaryRow->total_accounts ?? 0),
+                'total_balance'    => (float) ($summaryRow->total_balance ?? 0),
+                'santri_count'     => (int) ($summaryRow->santri_count ?? 0),
+                'santri_balance'   => (float) ($summaryRow->santri_balance ?? 0),
+                'instansi_count'   => (int) ($summaryRow->instansi_count ?? 0),
+                'instansi_balance' => (float) ($summaryRow->instansi_balance ?? 0),
+            ],
+            'data' => $paginated,
+        ]);
+    }
+
+    /**
+     * Export Excel Laporan Saldo Terkini Semua Rekening.
+     */
+    public function exportAccountBalances(Request $request)
+    {
+        $accounts = $this->buildAccountBalancesQuery($request)->get();
+        $filename = 'Laporan_Saldo_Terkini_Rekening_' . date('Ymd_His') . '.xlsx';
+
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\AccountBalanceExport($accounts),
+            $filename
+        );
+    }
+
+    /**
+     * Cetak PDF Laporan Saldo Terkini Semua Rekening.
+     */
+    public function printAccountBalances(Request $request)
+    {
+        $accounts = $this->buildAccountBalancesQuery($request)->get();
+        $productId = $request->get('product_id');
+        $selectedProduct = $productId ? Product::find($productId) : null;
+        $user = auth('api')->user();
+
+        $summary = [
+            'total_accounts'   => $accounts->count(),
+            'total_balance'    => (float) $accounts->sum('balance'),
+            'santri_count'     => $accounts->where('customer_id', '>', 0)->count(),
+            'santri_balance'   => (float) $accounts->where('customer_id', '>', 0)->sum('balance'),
+            'instansi_count'   => $accounts->where('customer_id', 0)->count(),
+            'instansi_balance' => (float) $accounts->where('customer_id', 0)->sum('balance'),
+        ];
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.account_balances', [
+            'accounts'        => $accounts,
+            'summary'         => $summary,
+            'selectedProduct' => $selectedProduct,
+            'accountType'     => $request->get('account_type', 'all'),
+            'status'          => $request->get('status'),
+            'printed_by'      => $user?->name ?? 'Admin Bank',
+            'generated_at'    => now()->translatedFormat('d F Y H:i:s'),
+        ])->setPaper('a4', 'portrait');
+
+        return $pdf->download('Laporan_Saldo_Terkini_Rekening_' . date('Ymd_His') . '.pdf');
+    }
 }

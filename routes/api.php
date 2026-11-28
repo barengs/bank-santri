@@ -202,5 +202,8 @@ Route::group(['middleware' => ['auth:api']], function () {
         Route::get('reconciliation', [\App\Http\Controllers\Api\Reports\AccountingReportController::class, 'savingsReconciliation']);
         Route::get('rekapitulasi', [\App\Http\Controllers\Api\Reports\AccountingReportController::class, 'rekapitulasi']);
         Route::get('rekapitulasi/print', [\App\Http\Controllers\Api\Reports\AccountingReportController::class, 'printRekapitulasi']);
+        Route::get('account-balances', [\App\Http\Controllers\Api\Reports\AccountingReportController::class, 'accountBalances']);
+        Route::get('account-balances/export', [\App\Http\Controllers\Api\Reports\AccountingReportController::class, 'exportAccountBalances']);
+        Route::get('account-balances/print', [\App\Http\Controllers\Api\Reports\AccountingReportController::class, 'printAccountBalances']);
     });
 });
